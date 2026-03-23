@@ -1,0 +1,21 @@
+// ============================================================
+// main.scss — Entry point, imports all partials in order
+// ============================================================
+
+// 1. Variables & mixins (no output, just definitions)
+@use 'variables';
+
+// 2. Base reset & global element styles
+@use 'base';
+
+// 3. Layout — sidebar, main content, grids
+@use 'layout';
+
+// 4. Reusable UI components
+@use 'components';
+
+// 5. Page-specific styles
+@use 'pages';
+
+// 6. Doctor management page
+@use 'doctor-management';

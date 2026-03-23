@@ -1,0 +1,95 @@
+// ============================================================
+// _variables.scss — Design tokens & mixins
+// ============================================================
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+// ── Color Palette ─────────────────────────────────────────────
+$bg:            #f0ebe3;
+$bg-card:       #faf8f5;
+$bg-dark:       #1a1410;
+
+$primary:       #c5522a;
+$primary-light: #e8744e;
+
+$accent:        #3d7a5e;
+$accent-light:  #5aaa84;
+
+$gold:          #d4a84b;
+
+$text:          #2d2520;
+$text-muted:    #7a6e68;
+
+$border:        #ddd4c8;
+
+// ── Shadows ───────────────────────────────────────────────────
+$shadow:        0 4px 24px rgba(45, 37, 32, 0.08);
+$shadow-lg:     0 12px 48px rgba(45, 37, 32, 0.14);
+
+// ── Border Radius ─────────────────────────────────────────────
+$radius:        12px;
+$radius-lg:     20px;
+
+// ── Typography ────────────────────────────────────────────────
+$font-body:     'DM Sans', sans-serif;
+$font-display:  'Playfair Display', serif;
+
+// ── Breakpoints ───────────────────────────────────────────────
+$breakpoint-md: 768px;
+
+// ── CSS Custom Properties (runtime theming) ───────────────────
+:root {
+  --bg:           #{$bg};
+  --bg-card:      #{$bg-card};
+  --bg-dark:      #{$bg-dark};
+  --primary:      #{$primary};
+  --primary-light:#{$primary-light};
+  --accent:       #{$accent};
+  --accent-light: #{$accent-light};
+  --gold:         #{$gold};
+  --text:         #{$text};
+  --text-muted:   #{$text-muted};
+  --border:       #{$border};
+  --shadow:       #{$shadow};
+  --shadow-lg:    #{$shadow-lg};
+  --radius:       #{$radius};
+  --radius-lg:    #{$radius-lg};
+}
+
+// ── Mixins ────────────────────────────────────────────────────
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin card-base {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow;
+  border: 1px solid $border;
+}
+
+@mixin display-font {
+  font-family: $font-display;
+}
+
+@mixin hover-lift {
+  transition: all 0.25s;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+@mixin responsive-mobile {
+  @media (max-width: $breakpoint-md) {
+    @content;
+  }
+}

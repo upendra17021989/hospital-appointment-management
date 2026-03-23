@@ -1,0 +1,372 @@
+// ============================================================
+// _components.scss — Cards, badges, buttons, forms, modals
+// ============================================================
+@use 'variables' as *;
+
+// ── Card ──────────────────────────────────────────────────────
+.card {
+  @include card-base;
+  padding: 24px;
+
+  &-title {
+    @include display-font;
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+}
+
+// ── Stats Grid ────────────────────────────────────────────────
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+
+  @include responsive-mobile {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  background: $bg-card;
+  border-radius: $radius;
+  padding: 20px;
+  border: 1px solid $border;
+  box-shadow: $shadow;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  &.primary::before { background: $primary; }
+  &.accent::before  { background: $accent; }
+  &.gold::before    { background: $gold; }
+  &.dark::before    { background: $bg-dark; }
+}
+
+.stat-value {
+  @include display-font;
+  font-size: 32px;
+  font-weight: 700;
+  color: $text;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.stat-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 36px;
+  opacity: 0.07;
+}
+
+// ── Table Wrap ────────────────────────────────────────────────
+.table-wrap {
+  @include card-base;
+  overflow: hidden;
+}
+
+.table-header {
+  @include flex-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid $border;
+}
+
+// ── Badges ────────────────────────────────────────────────────
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  // Status variants
+  &-pending    { background: #fff8e6; color: #c07b00; }
+  &-confirmed  { background: #e6f4ee; color: #1a7a4a; }
+  &-completed  { background: #e6ecf4; color: #1a4a7a; }
+  &-cancelled  { background: #fcecea; color: #c0220a; }
+  &-open       { background: #fff8e6; color: #c07b00; }
+  &-resolved   { background: #e6f4ee; color: #1a7a4a; }
+  &-in_progress{ background: #efe6ff; color: #5a0ac0; }
+  &-general    { background: #f0f0f0; color: #555; }
+  &-urgent     { background: #fcecea; color: #c0220a; }
+  &-high       { background: #fff0e6; color: #c05000; }
+  &-normal     { background: #f0f0f0; color: #555; }
+  &-low        { background: #e6f4ee; color: #1a7a4a; }
+}
+
+// ── Buttons ───────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: $radius;
+  font-family: $font-body;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-decoration: none;
+
+  &-primary {
+    background: $primary;
+    color: white;
+
+    &:hover {
+      background: $primary-light;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba($primary, 0.35);
+    }
+  }
+
+  &-secondary {
+    background: transparent;
+    color: $text;
+    border: 1.5px solid $border;
+
+    &:hover { background: $border; }
+  }
+
+  &-accent {
+    background: $accent;
+    color: white;
+
+    &:hover { background: $accent-light; }
+  }
+
+  &-danger {
+    background: #c0220a;
+    color: white;
+
+    &:hover { background: #a01a08; }
+  }
+
+  &-sm {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+}
+
+// ── Forms ─────────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @include responsive-mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &.full {
+    grid-column: 1 / -1;
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+.modal {
+  &-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 20, 16, 0.6);
+    backdrop-filter: blur(4px);
+    @include flex-center;
+    z-index: 1000;
+    padding: 20px;
+  }
+
+  background: $bg-card;
+  border-radius: $radius-lg;
+  padding: 32px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: $shadow-lg;
+
+  &-header {
+    @include flex-between;
+    margin-bottom: 24px;
+  }
+
+  &-title {
+    @include display-font;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  &-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: $text-muted;
+    padding: 4px;
+    line-height: 1;
+    border-radius: 6px;
+    transition: background 0.15s;
+
+    &:hover { background: $border; }
+  }
+}
+
+// ── Alerts ────────────────────────────────────────────────────
+.alert {
+  padding: 12px 16px;
+  border-radius: $radius;
+  font-size: 14px;
+  margin-bottom: 16px;
+
+  &-success {
+    background: #e6f4ee;
+    color: #1a5c37;
+    border-left: 4px solid $accent;
+  }
+
+  &-error {
+    background: #fcecea;
+    color: #8b1a0d;
+    border-left: 4px solid #c0220a;
+  }
+
+  &-info {
+    background: #e6ecf4;
+    color: #1a3c6a;
+    border-left: 4px solid #3d6fa8;
+  }
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: $text-muted;
+  font-family: $font-body;
+  transition: all 0.15s;
+
+  &:hover {
+    background: $border;
+    color: $text;
+  }
+
+  &.active {
+    background: $primary;
+    color: white;
+  }
+}
+
+// ── Token Badge ───────────────────────────────────────────────
+.token-badge {
+  font-family: $font-body;
+  font-size: 12px;
+  font-weight: 700;
+  background: $bg-dark;
+  color: $gold;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+}
+
+// ── Loading ───────────────────────────────────────────────────
+.loading {
+  @include flex-center;
+  padding: 48px;
+  color: $text-muted;
+  gap: 12px;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid $border;
+  border-top-color: $primary;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+// ── Empty State ───────────────────────────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: $text-muted;
+
+  &-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+
+  &-title {
+    @include display-font;
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+}
+
+// ── Search Bar ────────────────────────────────────────────────
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-input-wrap {
+  position: relative;
+  flex: 1;
+
+  input {
+    width: 100%;
+    padding-left: 40px;
+  }
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-muted;
+  pointer-events: none;
+}

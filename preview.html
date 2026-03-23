@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MediCare+ Hospital Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0ebe3;--bg-card:#faf8f5;--bg-dark:#1a1410;
+  --primary:#c5522a;--primary-light:#e8744e;
+  --accent:#3d7a5e;--accent-light:#5aaa84;
+  --gold:#d4a84b;--text:#2d2520;--text-muted:#7a6e68;
+  --border:#ddd4c8;
+  --shadow:0 4px 24px rgba(45,37,32,0.08);
+  --shadow-lg:0 12px 48px rgba(45,37,32,0.14);
+  --radius:12px;--radius-lg:20px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.6;overflow-x:hidden}
+.layout{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:260px;min-height:100vh;background:var(--bg-dark);color:#f0ebe3;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100}
+.sidebar-header{padding:28px 24px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.sidebar-logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#f0ebe3;display:flex;align-items:center;gap:10px}
+.logo-cross{width:28px;height:28px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sidebar-tagline{font-size:10px;color:rgba(240,235,227,0.35);text-transform:uppercase;letter-spacing:1.8px;margin-top:6px}
+.sidebar-nav{flex:1;padding:16px 0;overflow-y:auto}
+.nav-group-label{font-size:9px;text-transform:uppercase;letter-spacing:2.5px;color:rgba(240,235,227,0.25);padding:14px 24px 5px;font-weight:700}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 24px;color:rgba(240,235,227,0.6);cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;transition:all 0.2s;border-left:3px solid transparent;position:relative}
+.nav-item:hover{color:#f0ebe3;background:rgba(255,255,255,0.04)}
+.nav-item.active{color:#f0ebe3;background:rgba(197,82,42,0.18);border-left-color:var(--primary)}
+.nav-badge{margin-left:auto;background:var(--primary);color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+.sidebar-footer{padding:18px 24px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(240,235,227,0.25)}
+
+/* MAIN */
+.main-content{margin-left:260px;flex:1;padding:36px;max-width:calc(100vw - 260px);min-height:100vh}
+.page{display:none}.page.active{display:block;animation:fadeIn 0.25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:30px}
+.page-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;line-height:1.2}
+.page-subtitle{color:var(--text-muted);font-size:14px;margin-top:5px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--bg-card);border-radius:var(--radius);padding:18px 16px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden;transition:transform 0.2s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.c1::before{background:var(--primary)}
+.stat-card.c2::before{background:var(--gold)}
+.stat-card.c3::before{background:var(--accent)}
+.stat-card.c4::before{background:#6a4a8a}
+.stat-card.c5::before{background:#3a7aa8}
+.stat-card.c6::before{background:#1a1410}
+.stat-value{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;line-height:1}
+.stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:5px;font-weight:600}
+.stat-emoji{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:28px;opacity:0.09}
+
+/* CARDS */
+.card{background:var(--bg-card);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:24px;border:1px solid var(--border)}
+.card-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:16px}
+
+/* TABLE */
+.table-wrap{background:var(--bg-card);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:11px 20px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);font-weight:700;background:rgba(0,0,0,0.018);border-bottom:1px solid var(--border)}
+td{padding:14px 20px;border-bottom:1px solid rgba(0,0,0,0.04);font-size:14px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(197,82,42,0.025)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap}
+.b-pending{background:#fff8e6;color:#b07000}
+.b-confirmed{background:#e6f4ee;color:#1a6a3a}
+.b-completed{background:#e6ecf4;color:#1a3a6a}
+.b-cancelled{background:#fcecea;color:#a01a08}
+.b-open{background:#fff8e6;color:#b07000}
+.b-resolved{background:#e6f4ee;color:#1a6a3a}
+.b-in_progress{background:#efe6ff;color:#5a0ac0}
+.b-general{background:#f2f2f2;color:#555}
+.b-medical{background:#fce6e6;color:#8a1a1a}
+.b-billing{background:#e6f0fc;color:#1a3a8a}
+.b-complaint{background:#fcecea;color:#a01a08}
+.b-feedback{background:#e6f4ee;color:#1a6a3a}
+.b-appointment{background:#efe6ff;color:#5a0ac0}
+.b-urgent{background:#fcecea;color:#a01a08}
+.b-high{background:#fff0e6;color:#a04000}
+.b-normal{background:#f2f2f2;color:#555}
+.b-low{background:#e6f4ee;color:#1a6a3a}
+.b-in_person{background:#f2f2f2;color:#444}
+.b-virtual{background:#e6ecf4;color:#1a3a6a}
+.b-follow_up{background:#efe6ff;color:#5a0ac0}
+
+/* BTNS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all 0.18s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--primary);color:white}
+.btn-primary:hover{background:var(--primary-light);transform:translateY(-1px);box-shadow:0 4px 16px rgba(197,82,42,0.35)}
+.btn-secondary{background:transparent;color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover{background:var(--border)}
+.btn-accent{background:var(--accent);color:white}
+.btn-accent:hover{background:var(--accent-light)}
+.btn-gold{background:var(--gold);color:white}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:8px}
+.btn-danger{background:#c0220a;color:white}
+.btn-danger:hover{background:#a01a08}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.6px}
+input,select,textarea{padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:white;transition:border-color 0.2s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(197,82,42,0.1)}
+textarea{resize:vertical;min-height:80px}
+
+/* STEPS */
+.steps{display:flex;align-items:center;background:var(--bg-card);border-radius:var(--radius-lg);padding:16px 24px;border:1px solid var(--border);margin-bottom:24px;gap:4px}
+.step{display:flex;align-items:center;gap:9px;flex:1}
+.step-sep{color:var(--border);font-size:16px;margin:0 2px}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--border);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.step.active .step-num{background:var(--primary);color:white}
+.step.done .step-num{background:var(--accent);color:white}
+.step-label{font-size:13px;font-weight:600;color:var(--text-muted)}
+.step.active .step-label{color:var(--text)}
+
+/* DOCTOR GRID */
+.doctor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.doctor-card{background:var(--bg-card);border-radius:var(--radius-lg);padding:22px;border:1.5px solid var(--border);box-shadow:var(--shadow);transition:all 0.25s;cursor:pointer}
+.doctor-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--primary)}
+.doctor-card.selected{border-color:var(--primary);background:rgba(197,82,42,0.035)}
+.doctor-avatar{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:white;margin-bottom:14px;flex-shrink:0}
+.doctor-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;margin-bottom:2px}
+.doctor-spec{font-size:13px;color:var(--text-muted)}
+.doctor-dept-tag{font-size:11px;color:var(--accent);font-weight:700;margin-top:8px;text-transform:uppercase;letter-spacing:0.6px}
+.doctor-meta{display:flex;gap:16px;margin-top:12px}
+.doctor-meta-item label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block}
+.doctor-meta-item .val{font-weight:700;font-size:14px}
+.doctor-fee{color:var(--primary)}
+.lang-pill{font-size:11px;background:var(--bg);padding:2px 8px;border-radius:6px;border:1px solid var(--border)}
+
+/* DEPT CARDS */
+.dept-select-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:8px}
+.dept-card{padding:14px 12px;border-radius:10px;border:2px solid var(--border);background:white;cursor:pointer;text-align:center;transition:all 0.18s}
+.dept-card:hover{border-color:var(--primary);transform:translateY(-2px)}
+.dept-card.selected{border-color:var(--primary);background:rgba(197,82,42,0.06)}
+.dept-card-icon{font-size:28px;margin-bottom:6px}
+.dept-card-name{font-weight:700;font-size:13px}
+.dept-card-floor{font-size:11px;color:var(--text-muted);margin-top:3px}
+
+/* SLOTS */
+.slots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:12px}
+.slot-btn{padding:9px 6px;text-align:center;border-radius:9px;border:1.5px solid var(--border);background:white;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif}
+.slot-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary);background:rgba(197,82,42,0.05)}
+.slot-btn.selected{background:var(--primary);border-color:var(--primary);color:white}
+.slot-btn:disabled{background:#f5f5f5;color:#bbb;cursor:not-allowed;text-decoration:line-through;opacity:0.7}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,20,16,0.65);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal{background:var(--bg-card);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700}
+.modal-close{background:none;border:none;font-size:26px;cursor:pointer;color:var(--text-muted);padding:4px;line-height:1;border-radius:6px;transition:background 0.15s}
+.modal-close:hover{background:var(--border)}
+
+/* ALERTS */
+.alert{padding:13px 16px;border-radius:var(--radius);font-size:14px;margin-bottom:16px;font-weight:500}
+.alert-success{background:#e6f4ee;color:#1a5c37;border-left:4px solid var(--accent)}
+.alert-error{background:#fcecea;color:#8b1a0d;border-left:4px solid #c0220a}
+.alert-info{background:#e6ecf4;color:#1a3c6a;border-left:4px solid #3d6fa8}
+
+/* SEARCH */
+.search-row{display:flex;gap:12px;margin-bottom:20px;align-items:center}
+.search-wrap{position:relative;flex:1}
+.search-wrap input{width:100%;padding-left:40px}
+.search-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;font-size:16px}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-muted);font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.tab:hover{background:var(--border);color:var(--text)}
+.tab.active{background:var(--primary);color:white}
+.tab-count{font-size:11px;opacity:0.75;margin-left:4px}
+
+/* TOKEN */
+.token{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;background:var(--bg-dark);color:var(--gold);padding:3px 10px;border-radius:6px;letter-spacing:1px;white-space:nowrap}
+
+/* DEPT PAGE */
+.dept-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.dept-info-card{background:var(--bg-card);border-radius:var(--radius-lg);padding:24px;border:1px solid var(--border);box-shadow:var(--shadow);transition:all 0.22s}
+.dept-info-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.dept-icon-circle{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px}
+
+/* SUCCESS SCREEN */
+.success-screen{max-width:540px;margin:0 auto;text-align:center;padding:60px 0}
+.success-icon{font-size:72px;margin-bottom:20px;display:block}
+.booking-detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.booking-detail-row:last-child{border-bottom:none}
+.booking-detail-key{color:var(--text-muted)}
+.booking-detail-val{font-weight:700}
+
+/* EMPTY */
+.empty{text-align:center;padding:56px 20px;color:var(--text-muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-title{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:6px;color:var(--text)}
+.empty-sub{font-size:14px}
+
+/* GRID UTILS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+
+/* ENQUIRY PRIORITY DOT */
+.priority-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.pd-urgent{background:#c0220a}.pd-high{background:#e07000}.pd-normal{background:#888}.pd-low{background:var(--accent)}
+
+/* CONFIRM TABLE */
+.confirm-kv{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.05);font-size:14px}
+.confirm-kv:last-child{border-bottom:none}
+.confirm-k{color:var(--text-muted);font-size:13px}
+.confirm-v{font-weight:700}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-cross">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+      MediCare+
+    </div>
+    <div class="sidebar-tagline">Hospital Management System</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group-label">Overview</div>
+    <button class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <div class="nav-group-label">Appointments</div>
+    <button class="nav-item" onclick="showPage('book',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 10 16 16 11"/></svg>
+      Book Appointment
+    </button>
+    <button class="nav-item" onclick="showPage('appointments',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      All Appointments
+      <span class="nav-badge">12</span>
+    </button>
+    <div class="nav-group-label">Support</div>
+    <button class="nav-item" onclick="showPage('enquiries',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Enquiries
+      <span class="nav-badge">5</span>
+    </button>
+    <div class="nav-group-label">Directory</div>
+    <button class="nav-item" onclick="showPage('doctors',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Doctors
+    </button>
+    <button class="nav-item" onclick="showPage('departments',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Departments
+    </button>
+  </nav>
+  <div class="sidebar-footer">© 2026 MediCare+ Hospital · Mumbai</div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+
+<!-- ==================== DASHBOARD ==================== -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Good morning 👋</h1>
+      <p class="page-subtitle" id="dash-date"></p>
+    </div>
+    <button class="btn btn-primary" onclick="showPage('book', document.querySelector('.nav-item:nth-child(4)'))">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Book Appointment
+    </button>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card c1"><div class="stat-value">12</div><div class="stat-label">Today's Appts</div><div class="stat-emoji">📅</div></div>
+    <div class="stat-card c2"><div class="stat-value">4</div><div class="stat-label">Pending</div><div class="stat-emoji">⏳</div></div>
+    <div class="stat-card c3"><div class="stat-value">5</div><div class="stat-label">Open Enquiries</div><div class="stat-emoji">💬</div></div>
+    <div class="stat-card c4"><div class="stat-value">348</div><div class="stat-label">Total Patients</div><div class="stat-emoji">👥</div></div>
+    <div class="stat-card c5"><div class="stat-value">8</div><div class="stat-label">Active Doctors</div><div class="stat-emoji">👨‍⚕️</div></div>
+    <div class="stat-card c6"><div class="stat-value">10</div><div class="stat-label">Departments</div><div class="stat-emoji">🏥</div></div>
+  </div>
+  <div class="g2" style="margin-bottom:20px">
+    <div class="table-wrap">
+      <div class="table-header">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-weight:600;font-size:17px">Today's Schedule</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">12 appointments</div>
+        </div>
+        <span class="badge b-confirmed">Live</span>
+      </div>
+      <table>
+        <thead><tr><th>Token</th><th>Patient</th><th>Doctor</th><th>Time</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><span class="token">TKN-001</span></td><td><strong>Arjun Sharma</strong><br><span style="font-size:12px;color:var(--text-muted)">+91 98765 43210</span></td><td>Dr. Rajesh Sharma</td><td>09:00 AM</td><td><span class="badge b-completed">Completed</span></td></tr>
+          <tr><td><span class="token">TKN-002</span></td><td><strong>Priya Patel</strong><br><span style="font-size:12px;color:var(--text-muted)">+91 98765 43211</span></td><td>Dr. Priya Menon</td><td>09:30 AM</td><td><span class="badge b-confirmed">Confirmed</span></td></tr>
+          <tr><td><span class="token">TKN-003</span></td><td><strong>Rahul Gupta</strong><br><span style="font-size:12px;color:var(--text-muted)">+91 98765 43212</span></td><td>Dr. Amit Patel</td><td>10:00 AM</td><td><span class="badge b-pending">Pending</span></td></tr>
+          <tr><td><span class="token">TKN-004</span></td><td><strong>Sunita Joshi</strong><br><span style="font-size:12px;color:var(--text-muted)">+91 98765 43213</span></td><td>Dr. Sunita Gupta</td><td>10:30 AM</td><td><span class="badge b-pending">Pending</span></td></tr>
+          <tr><td><span class="token">TKN-005</span></td><td><strong>Vikram Singh</strong><br><span style="font-size:12px;color:var(--text-muted)">+91 98765 43214</span></td><td>Dr. Kavita Nair</td><td>11:00 AM</td><td><span class="badge b-confirmed">Confirmed</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-title">Quick Stats</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:14px">Completed Today</span>
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:120px;height:7px;background:var(--border);border-radius:10px;overflow:hidden"><div style="width:35%;height:100%;background:var(--accent);border-radius:10px"></div></div><span style="font-size:13px;font-weight:700">4/12</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:14px">Bed Occupancy</span>
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:120px;height:7px;background:var(--border);border-radius:10px;overflow:hidden"><div style="width:72%;height:100%;background:var(--primary);border-radius:10px"></div></div><span style="font-size:13px;font-weight:700">72%</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:14px">Enquiry Response</span>
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:120px;height:7px;background:var(--border);border-radius:10px;overflow:hidden"><div style="width:85%;height:100%;background:var(--gold);border-radius:10px"></div></div><span style="font-size:13px;font-weight:700">85%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="background:linear-gradient(135deg,var(--bg-dark),#2d1810);color:#f0ebe3;border:none">
+        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:600;margin-bottom:8px">Need Help?</div>
+        <p style="font-size:13px;opacity:0.7;margin-bottom:16px">Book appointments, manage enquiries, and track patient care — all in one place.</p>
+        <button class="btn btn-gold btn-sm" onclick="showPage('book', document.querySelector('.nav-item:nth-child(4)'))">Book Appointment →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== BOOK APPOINTMENT ==================== -->
+<div class="page" id="page-book">
+  <div class="page-header">
+    <div><h1 class="page-title">Book Appointment</h1><p class="page-subtitle">Schedule a consultation with our specialists</p></div>
+  </div>
+  <div class="steps">
+    <div class="step active" id="step-1"><div class="step-num">1</div><div class="step-label">Department</div></div>
+    <span class="step-sep">→</span>
+    <div class="step" id="step-2"><div class="step-num">2</div><div class="step-label">Doctor</div></div>
+    <span class="step-sep">→</span>
+    <div class="step" id="step-3"><div class="step-num">3</div><div class="step-label">Date & Time</div></div>
+    <span class="step-sep">→</span>
+    <div class="step" id="step-4"><div class="step-num">4</div><div class="step-label">Patient Info</div></div>
+    <span class="step-sep">→</span>
+    <div class="step" id="step-5"><div class="step-num">5</div><div class="step-label">Confirm</div></div>
+  </div>
+
+  <!-- Step 1: Department -->
+  <div id="book-s1" class="card">
+    <div class="card-title">Select Department</div>
+    <div class="dept-select-grid" id="dept-select-grid"></div>
+    <div style="margin-top:20px;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary" id="s1-next" onclick="bookNext(2)" disabled>Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Doctor -->
+  <div id="book-s2" class="card" style="display:none">
+    <div class="card-title" id="s2-title">Select Doctor</div>
+    <div class="doctor-grid" id="doctor-select-grid"></div>
+    <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="bookBack(1)">← Back</button>
+      <button class="btn btn-primary" id="s2-next" onclick="bookNext(3)" disabled>Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Date & Time -->
+  <div id="book-s3" class="card" style="display:none">
+    <div class="card-title">Select Date & Time</div>
+    <div class="form-group" style="max-width:280px;margin-bottom:24px">
+      <label>Appointment Date</label>
+      <input type="date" id="appt-date" onchange="loadSlots()" min="">
+    </div>
+    <div id="slots-section" style="display:none">
+      <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px">Available Slots — <span id="selected-doc-name"></span></label>
+      <div class="slots-grid" id="slots-grid"></div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="bookBack(2)">← Back</button>
+      <button class="btn btn-primary" id="s3-next" onclick="bookNext(4)" disabled>Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Patient Info -->
+  <div id="book-s4" class="card" style="display:none">
+    <div class="card-title">Patient Information</div>
+    <div class="form-grid">
+      <div class="form-group"><label>First Name *</label><input id="p-fname" placeholder="First name" oninput="checkS4()"/></div>
+      <div class="form-group"><label>Last Name *</label><input id="p-lname" placeholder="Last name" oninput="checkS4()"/></div>
+      <div class="form-group"><label>Phone Number *</label><input id="p-phone" placeholder="+91 98765 43210" oninput="checkS4()"/></div>
+      <div class="form-group"><label>Email</label><input id="p-email" type="email" placeholder="patient@email.com"/></div>
+      <div class="form-group"><label>Gender</label><select id="p-gender"><option value="">Select gender</option><option>male</option><option>female</option><option>other</option></select></div>
+      <div class="form-group"><label>Date of Birth</label><input id="p-dob" type="date"/></div>
+      <div class="form-group full"><label>Reason for Visit *</label><textarea id="p-reason" placeholder="Describe the reason for this appointment..." oninput="checkS4()"></textarea></div>
+      <div class="form-group full"><label>Symptoms (Optional)</label><textarea id="p-symptoms" placeholder="List any symptoms you're experiencing..."></textarea></div>
+      <div class="form-group"><label>Appointment Type</label><select id="p-type"><option value="in_person">In Person</option><option value="virtual">Virtual</option><option value="follow_up">Follow Up</option></select></div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="bookBack(3)">← Back</button>
+      <button class="btn btn-primary" id="s4-next" onclick="bookNext(5)" disabled>Review →</button>
+    </div>
+  </div>
+
+  <!-- Step 5: Confirm -->
+  <div id="book-s5" style="display:none">
+    <div class="g2" style="margin-bottom:20px">
+      <div class="card" style="background:var(--bg)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:14px">Appointment Details</div>
+        <div id="confirm-appt-details"></div>
+      </div>
+      <div class="card" style="background:var(--bg)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:14px">Patient Details</div>
+        <div id="confirm-patient-details"></div>
+      </div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="margin-bottom:16px;color:var(--text-muted);font-size:14px">By confirming, you agree to arrive 15 minutes before your scheduled time.</div>
+      <div style="display:flex;gap:12px;justify-content:center">
+        <button class="btn btn-secondary" onclick="bookBack(4)">← Back</button>
+        <button class="btn btn-primary" onclick="confirmBooking()">✓ Confirm Appointment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div id="book-success" class="success-screen" style="display:none">
+    <span class="success-icon">🎉</span>
+    <h2 class="page-title" style="margin-bottom:8px">Appointment Confirmed!</h2>
+    <p style="color:var(--text-muted);margin-bottom:28px">Your appointment has been successfully booked. Please save your token number.</p>
+    <div class="card" style="text-align:left;margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div style="font-family:'Playfair Display',serif;font-weight:600;font-size:18px">Booking Confirmation</div>
+        <span class="token" id="success-token" style="font-size:14px;padding:5px 14px"></span>
+      </div>
+      <div id="success-details"></div>
+    </div>
+    <button class="btn btn-primary" onclick="resetBooking()">Book Another Appointment</button>
+  </div>
+</div>
+
+<!-- ==================== APPOINTMENTS ==================== -->
+<div class="page" id="page-appointments">
+  <div class="page-header">
+    <div><h1 class="page-title">Appointments</h1><p class="page-subtitle">Manage all patient appointments</p></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <input type="date" id="apt-date-filter" style="padding:9px 12px;border-radius:10px;border:1.5px solid var(--border);background:white;font-family:'DM Sans',sans-serif;font-size:13px" onchange="filterAppts()"/>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('apt-date-filter').value='';filterAppts()">Clear</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="setApptTab('all',this)">All <span class="tab-count">(12)</span></button>
+    <button class="tab" onclick="setApptTab('pending',this)">Pending <span class="tab-count">(4)</span></button>
+    <button class="tab" onclick="setApptTab('confirmed',this)">Confirmed <span class="tab-count">(5)</span></button>
+    <button class="tab" onclick="setApptTab('completed',this)">Completed <span class="tab-count">(2)</span></button>
+    <button class="tab" onclick="setApptTab('cancelled',this)">Cancelled <span class="tab-count">(1)</span></button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Token</th><th>Patient</th><th>Doctor</th><th>Department</th><th>Date</th><th>Time</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="appts-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== ENQUIRIES ==================== -->
+<div class="page" id="page-enquiries">
+  <div class="page-header">
+    <div><h1 class="page-title">Enquiries</h1><p class="page-subtitle">Manage patient and public enquiries</p></div>
+    <button class="btn btn-primary" onclick="document.getElementById('enquiry-modal').style.display='flex'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Enquiry
+    </button>
+  </div>
+  <div id="enquiry-success-alert" class="alert alert-success" style="display:none">✓ Enquiry submitted! Our team will respond within 24 hours. <button onclick="this.parentElement.style.display='none'" style="float:right;background:none;border:none;cursor:pointer;font-weight:700;font-size:16px">×</button></div>
+  <div class="tabs">
+    <button class="tab active" onclick="setEnqTab('all',this)">All</button>
+    <button class="tab" onclick="setEnqTab('open',this)">Open</button>
+    <button class="tab" onclick="setEnqTab('in_progress',this)">In Progress</button>
+    <button class="tab" onclick="setEnqTab('resolved',this)">Resolved</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name & Contact</th><th>Subject</th><th>Type</th><th>Department</th><th>Priority</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+      <tbody id="enq-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== DOCTORS ==================== -->
+<div class="page" id="page-doctors">
+  <div class="page-header">
+    <div><h1 class="page-title">Our Doctors</h1><p class="page-subtitle">8 specialists across 10 departments</p></div>
+  </div>
+  <div class="search-row">
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input id="doc-search" placeholder="Search by name or specialization..." oninput="renderDoctors()"/>
+    </div>
+    <select id="doc-dept-filter" onchange="renderDoctors()" style="padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);min-width:180px;background:white;font-family:'DM Sans',sans-serif">
+      <option value="">All Departments</option>
+    </select>
+  </div>
+  <div class="doctor-grid" id="doctors-grid"></div>
+</div>
+
+<!-- ==================== DEPARTMENTS ==================== -->
+<div class="page" id="page-departments">
+  <div class="page-header">
+    <div><h1 class="page-title">Departments</h1><p class="page-subtitle">10 specialised medical departments</p></div>
+  </div>
+  <div class="dept-info-grid" id="dept-info-grid"></div>
+</div>
+
+</main>
+</div>
+
+<!-- ENQUIRY MODAL -->
+<div class="modal-overlay" id="enquiry-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Submit an Enquiry</div>
+      <button class="modal-close" onclick="document.getElementById('enquiry-modal').style.display='none'">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Your Name *</label><input id="enq-name" placeholder="Full name"/></div>
+      <div class="form-group"><label>Phone *</label><input id="enq-phone" placeholder="+91 98765 43210"/></div>
+      <div class="form-group"><label>Email</label><input id="enq-email" type="email" placeholder="your@email.com"/></div>
+      <div class="form-group"><label>Enquiry Type</label>
+        <select id="enq-type"><option value="general">General</option><option value="appointment">Appointment</option><option value="billing">Billing</option><option value="medical">Medical</option><option value="complaint">Complaint</option><option value="feedback">Feedback</option></select>
+      </div>
+      <div class="form-group"><label>Department</label>
+        <select id="enq-dept"><option value="">Select dept (optional)</option></select>
+      </div>
+      <div class="form-group"><label>Priority</label>
+        <select id="enq-priority"><option value="low">Low</option><option value="normal" selected>Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select>
+      </div>
+      <div class="form-group full"><label>Subject *</label><input id="enq-subject" placeholder="Brief description of your enquiry"/></div>
+      <div class="form-group full"><label>Message *</label><textarea id="enq-message" style="min-height:100px" placeholder="Please describe your enquiry in detail..."></textarea></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="document.getElementById('enquiry-modal').style.display='none'">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEnquiry()">Submit Enquiry</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// MOCK DATA
+// ============================================================
+const departments = [
+  {id:'d1',name:'Cardiology',icon:'❤️',floor:3,phone:'+91-22-1234-5601',email:'cardiology@hospital.com',description:'Heart and cardiovascular system care',docs:2},
+  {id:'d2',name:'Orthopedics',icon:'🦴',floor:2,phone:'+91-22-1234-5602',email:'ortho@hospital.com',description:'Bone, joint, and muscle disorders',docs:1},
+  {id:'d3',name:'Neurology',icon:'🧠',floor:4,phone:'+91-22-1234-5603',email:'neuro@hospital.com',description:'Brain and nervous system disorders',docs:1},
+  {id:'d4',name:'Pediatrics',icon:'👶',floor:1,phone:'+91-22-1234-5604',email:'pediatrics@hospital.com',description:'Medical care for infants and children',docs:1},
+  {id:'d5',name:'Gynecology',icon:'🌸',floor:2,phone:'+91-22-1234-5605',email:'gynecology@hospital.com',description:"Women's health and reproductive system",docs:1},
+  {id:'d6',name:'Dermatology',icon:'🔬',floor:1,phone:'+91-22-1234-5606',email:'dermatology@hospital.com',description:'Skin, hair, and nail conditions',docs:1},
+  {id:'d7',name:'Ophthalmology',icon:'👁️',floor:3,phone:'+91-22-1234-5607',email:'eye@hospital.com',description:'Eye care and vision disorders',docs:0},
+  {id:'d8',name:'ENT',icon:'👃',floor:1,phone:'+91-22-1234-5608',email:'ent@hospital.com',description:'Ear, Nose, and Throat disorders',docs:0},
+  {id:'d9',name:'General Medicine',icon:'💊',floor:1,phone:'+91-22-1234-5609',email:'general@hospital.com',description:'Primary care and general health',docs:1},
+  {id:'d10',name:'Oncology',icon:'🎗️',floor:5,phone:'+91-22-1234-5610',email:'oncology@hospital.com',description:'Cancer diagnosis and treatment',docs:0},
+];
+
+const doctors = [
+  {id:'dr1',name:'Dr. Rajesh Sharma',first:'Rajesh',last:'Sharma',spec:'Interventional Cardiologist',qual:'MBBS, MD, DM Cardiology',exp:15,dept:'Cardiology',deptId:'d1',fee:1500,langs:['English','Hindi','Marathi'],available:true},
+  {id:'dr2',name:'Dr. Priya Menon',first:'Priya',last:'Menon',spec:'Cardiac Electrophysiologist',qual:'MBBS, MD, DM Cardiology',exp:10,dept:'Cardiology',deptId:'d1',fee:1200,langs:['English','Hindi','Malayalam'],available:true},
+  {id:'dr3',name:'Dr. Amit Patel',first:'Amit',last:'Patel',spec:'Joint Replacement Surgeon',qual:'MBBS, MS Orthopedics',exp:18,dept:'Orthopedics',deptId:'d2',fee:1000,langs:['English','Hindi','Gujarati'],available:true},
+  {id:'dr4',name:'Dr. Sunita Gupta',first:'Sunita',last:'Gupta',spec:'Neurologist',qual:'MBBS, MD Neurology',exp:12,dept:'Neurology',deptId:'d3',fee:1300,langs:['English','Hindi'],available:true},
+  {id:'dr5',name:'Dr. Rahul Joshi',first:'Rahul',last:'Joshi',spec:'Pediatrician',qual:'MBBS, MD Pediatrics',exp:8,dept:'Pediatrics',deptId:'d4',fee:800,langs:['English','Hindi','Marathi'],available:true},
+  {id:'dr6',name:'Dr. Kavita Nair',first:'Kavita',last:'Nair',spec:'Obstetrician & Gynecologist',qual:'MBBS, MS Gynecology',exp:14,dept:'Gynecology',deptId:'d5',fee:1100,langs:['English','Hindi','Malayalam'],available:true},
+  {id:'dr7',name:'Dr. Vikram Singh',first:'Vikram',last:'Singh',spec:'Dermatologist',qual:'MBBS, MD Dermatology',exp:9,dept:'Dermatology',deptId:'d6',fee:900,langs:['English','Hindi','Punjabi'],available:true},
+  {id:'dr8',name:'Dr. Anita Desai',first:'Anita',last:'Desai',spec:'General Physician',qual:'MBBS, MD Medicine',exp:11,dept:'General Medicine',deptId:'d9',fee:700,langs:['English','Hindi','Marathi'],available:true},
+];
+
+const times = ['09:00 AM','09:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','02:00 PM','02:30 PM','03:00 PM','03:30 PM','04:00 PM','04:30 PM'];
+const bookedTimes = ['09:30 AM','11:00 AM','02:30 PM'];
+
+let appointments = [
+  {id:'a1',token:'TKN-20260319-001',patient:'Arjun Sharma',phone:'+91 98765 43210',doctor:'Dr. Rajesh Sharma',spec:'Cardiologist',dept:'Cardiology',date:'2026-03-19',time:'09:00 AM',type:'in_person',status:'completed'},
+  {id:'a2',token:'TKN-20260319-002',patient:'Priya Patel',phone:'+91 98765 43211',doctor:'Dr. Priya Menon',spec:'Electrophysiologist',dept:'Cardiology',date:'2026-03-19',time:'09:30 AM',type:'in_person',status:'confirmed'},
+  {id:'a3',token:'TKN-20260319-003',patient:'Rahul Gupta',phone:'+91 98765 43212',doctor:'Dr. Amit Patel',spec:'Orthopedic Surgeon',dept:'Orthopedics',date:'2026-03-19',time:'10:00 AM',type:'in_person',status:'pending'},
+  {id:'a4',token:'TKN-20260319-004',patient:'Sunita Joshi',phone:'+91 98765 43213',doctor:'Dr. Sunita Gupta',spec:'Neurologist',dept:'Neurology',date:'2026-03-19',time:'10:30 AM',type:'virtual',status:'pending'},
+  {id:'a5',token:'TKN-20260319-005',patient:'Vikram Singh',phone:'+91 98765 43214',doctor:'Dr. Kavita Nair',spec:'Gynecologist',dept:'Gynecology',date:'2026-03-19',time:'11:00 AM',type:'in_person',status:'confirmed'},
+  {id:'a6',token:'TKN-20260319-006',patient:'Meera Krishnan',phone:'+91 98765 43215',doctor:'Dr. Rahul Joshi',spec:'Pediatrician',dept:'Pediatrics',date:'2026-03-19',time:'11:30 AM',type:'follow_up',status:'confirmed'},
+  {id:'a7',token:'TKN-20260319-007',patient:'Deepak Verma',phone:'+91 98765 43216',doctor:'Dr. Vikram Singh',spec:'Dermatologist',dept:'Dermatology',date:'2026-03-19',time:'12:00 PM',type:'in_person',status:'confirmed'},
+  {id:'a8',token:'TKN-20260320-001',patient:'Asha Iyer',phone:'+91 98765 43217',doctor:'Dr. Anita Desai',spec:'General Physician',dept:'General Medicine',date:'2026-03-20',time:'09:00 AM',type:'in_person',status:'pending'},
+  {id:'a9',token:'TKN-20260320-002',patient:'Karan Mehta',phone:'+91 98765 43218',doctor:'Dr. Rajesh Sharma',spec:'Cardiologist',dept:'Cardiology',date:'2026-03-20',time:'10:00 AM',type:'virtual',status:'pending'},
+  {id:'a10',token:'TKN-20260318-001',patient:'Neha Sharma',phone:'+91 98765 43219',doctor:'Dr. Amit Patel',spec:'Orthopedic Surgeon',dept:'Orthopedics',date:'2026-03-18',time:'02:00 PM',type:'in_person',status:'completed'},
+  {id:'a11',token:'TKN-20260318-002',patient:'Rohit Bansal',phone:'+91 98765 43220',doctor:'Dr. Sunita Gupta',spec:'Neurologist',dept:'Neurology',date:'2026-03-18',time:'03:00 PM',type:'in_person',status:'cancelled'},
+  {id:'a12',token:'TKN-20260319-008',patient:'Anjali Rao',phone:'+91 98765 43221',doctor:'Dr. Priya Menon',spec:'Electrophysiologist',dept:'Cardiology',date:'2026-03-19',time:'02:00 PM',type:'in_person',status:'confirmed'},
+];
+
+let enquiries = [
+  {id:'e1',name:'Suresh Kumar',phone:'+91 98765 11111',email:'suresh@email.com',subject:'Appointment rescheduling request',message:'I need to reschedule my appointment with Dr. Sharma from March 22 to March 25 due to a work commitment.',type:'appointment',dept:'Cardiology',priority:'normal',status:'open',date:'2026-03-18'},
+  {id:'e2',name:'Meena Pillai',phone:'+91 98765 22222',email:'meena@email.com',subject:'Billing query for hospitalization',message:'I received a bill for my recent hospitalization that seems higher than expected. Please clarify the charges.',type:'billing',dept:'General Medicine',priority:'high',status:'in_progress',date:'2026-03-17'},
+  {id:'e3',name:'Arun Sharma',phone:'+91 98765 33333',email:'',subject:'Query about pediatric vaccination schedule',message:'My child is 2 months old. I want to know about the vaccination schedule available at your hospital.',type:'medical',dept:'Pediatrics',priority:'low',status:'resolved',date:'2026-03-16'},
+  {id:'e4',name:'Pooja Reddy',phone:'+91 98765 44444',email:'pooja@email.com',subject:'Complaint about waiting time',message:'I had to wait over 2 hours for my appointment despite having a confirmed slot. This is unacceptable.',type:'complaint',dept:'Orthopedics',priority:'urgent',status:'open',date:'2026-03-19'},
+  {id:'e5',name:'Rajesh Nair',phone:'+91 98765 55555',email:'rajesh@email.com',subject:'Feedback on consultation experience',message:'I wanted to share that Dr. Kavita Nair was extremely helpful and professional. Great experience overall!',type:'feedback',dept:'Gynecology',priority:'low',status:'open',date:'2026-03-19'},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let selectedDept = null, selectedDoc = null, selectedSlot = null;
+let apptTabFilter = 'all', enqTabFilter = 'all';
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = () => {
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('appt-date').min = today;
+
+  // Populate department cards in booking
+  const deptGrid = document.getElementById('dept-select-grid');
+  departments.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'dept-card';
+    card.innerHTML = `<div class="dept-card-icon">${d.icon}</div><div class="dept-card-name">${d.name}</div><div class="dept-card-floor">Floor ${d.floor}</div>`;
+    card.onclick = () => {
+      document.querySelectorAll('.dept-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedDept = d;
+      document.getElementById('s1-next').disabled = false;
+    };
+    deptGrid.appendChild(card);
+  });
+
+  // Populate dept filter on doctor page
+  const deptFilter = document.getElementById('doc-dept-filter');
+  const enqDeptSel = document.getElementById('enq-dept');
+  departments.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id; opt.textContent = d.name;
+    deptFilter.appendChild(opt.cloneNode(true));
+    enqDeptSel.appendChild(opt);
+  });
+
+  renderDoctors();
+  renderDeptInfo();
+  renderAppointments();
+  renderEnquiries();
+};
+
+// ============================================================
+// BOOKING FLOW
+// ============================================================
+function bookNext(step) {
+  for (let i=1;i<=5;i++) {
+    const el = document.getElementById('book-s'+i);
+    if (el) el.style.display = 'none';
+  }
+  document.getElementById('book-success').style.display = 'none';
+  const target = document.getElementById('book-s'+step);
+  if (target) target.style.display = 'block';
+  // Update step indicators
+  for (let i=1;i<=5;i++) {
+    const s = document.getElementById('step-'+i);
+    s.className = 'step';
+    if (i < step) s.className = 'step done';
+    if (i === step) s.className = 'step active';
+    s.querySelector('.step-num').textContent = i < step ? '✓' : i;
+  }
+  if (step === 2 && selectedDept) {
+    document.getElementById('s2-title').textContent = 'Select Doctor — ' + selectedDept.name;
+    const docGrid = document.getElementById('doctor-select-grid');
+    docGrid.innerHTML = '';
+    const deptDocs = doctors.filter(d => d.deptId === selectedDept.id);
+    if (deptDocs.length === 0) {
+      docGrid.innerHTML = '<div class="empty"><div class="empty-icon">👨‍⚕️</div><div class="empty-title">No doctors in this department</div></div>';
+    }
+    deptDocs.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'doctor-card';
+      card.innerHTML = `
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+          <div class="doctor-avatar">${d.first[0]}${d.last[0]}</div>
+          <div><div class="doctor-name">${d.name}</div><div class="doctor-spec">${d.spec}</div></div>
+        </div>
+        <div class="doctor-dept-tag">${d.dept}</div>
+        <div class="doctor-meta">
+          <div class="doctor-meta-item"><label>Experience</label><div class="val">${d.exp} yrs</div></div>
+          <div class="doctor-meta-item"><label>Fee</label><div class="val doctor-fee">₹${d.fee}</div></div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:10px">${d.qual}</div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">${d.langs.map(l=>`<span class="lang-pill">${l}</span>`).join('')}</div>`;
+      card.onclick = () => {
+        document.querySelectorAll('#doctor-select-grid .doctor-card').forEach(c=>c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedDoc = d;
+        document.getElementById('s2-next').disabled = false;
+      };
+      docGrid.appendChild(card);
+    });
+  }
+  if (step === 3) {
+    document.getElementById('selected-doc-name').textContent = selectedDoc?.name || '';
+    document.getElementById('slots-section').style.display = 'none';
+    document.getElementById('s3-next').disabled = true;
+    selectedSlot = null;
+  }
+}
+
+function bookBack(step) { bookNext(step); }
+
+function loadSlots() {
+  const date = document.getElementById('appt-date').value;
+  if (!date) return;
+  const grid = document.getElementById('slots-grid');
+  grid.innerHTML = '';
+  selectedSlot = null;
+  document.getElementById('s3-next').disabled = true;
+  document.getElementById('slots-section').style.display = 'block';
+  times.forEach(t => {
+    const isBooked = bookedTimes.includes(t);
+    const btn = document.createElement('button');
+    btn.className = 'slot-btn';
+    btn.textContent = t;
+    btn.disabled = isBooked;
+    if (!isBooked) {
+      btn.onclick = () => {
+        document.querySelectorAll('.slot-btn').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedSlot = t;
+        document.getElementById('s3-next').disabled = false;
+      };
+    }
+    grid.appendChild(btn);
+  });
+}
+
+function checkS4() {
+  const ok = document.getElementById('p-fname').value.trim() &&
+    document.getElementById('p-lname').value.trim() &&
+    document.getElementById('p-phone').value.trim() &&
+    document.getElementById('p-reason').value.trim();
+  document.getElementById('s4-next').disabled = !ok;
+}
+
+function kv(k,v){return `<div class="confirm-kv"><span class="confirm-k">${k}</span><span class="confirm-v">${v}</span></div>`;}
+
+function bookNext5() {
+  const apptDiv = document.getElementById('confirm-appt-details');
+  const ptDiv = document.getElementById('confirm-patient-details');
+  const date = document.getElementById('appt-date').value;
+  apptDiv.innerHTML = kv('Department',selectedDept?.name)+kv('Doctor',selectedDoc?.name)+kv('Specialization',selectedDoc?.spec)+kv('Date',date)+kv('Time',selectedSlot)+kv('Consultation Fee','₹'+selectedDoc?.fee)+kv('Type',document.getElementById('p-type').value.replace('_',' '));
+  ptDiv.innerHTML = kv('Name',document.getElementById('p-fname').value+' '+document.getElementById('p-lname').value)+kv('Phone',document.getElementById('p-phone').value)+kv('Email',document.getElementById('p-email').value||'—')+kv('Gender',document.getElementById('p-gender').value||'—')+'<div style="margin-top:12px"><div style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Reason for Visit</div><div style="font-size:14px">'+document.getElementById('p-reason').value+'</div></div>';
+}
+
+document.addEventListener('DOMContentLoaded', () => {});
+window.bookNext = function(step) {
+  if (step === 5) bookNext5();
+  // call the real bookNext
+  bookNextInternal(step);
+};
+// rename original
+const bookNextInternal = bookNext;
+// re-assign
+window.bookNext = function(step){
+  if(step===5) bookNext5();
+  bookNextInternal(step);
+};
+
+function confirmBooking() {
+  const fname = document.getElementById('p-fname').value.trim();
+  const lname = document.getElementById('p-lname').value.trim();
+  const date = document.getElementById('appt-date').value;
+  const now = new Date();
+  const tokenNum = `TKN-${date.replace(/-/g,'')}-${String(appointments.length+1).padStart(3,'0')}`;
+
+  const newAppt = {
+    id:'a'+(appointments.length+1),
+    token: tokenNum,
+    patient: fname+' '+lname,
+    phone: document.getElementById('p-phone').value,
+    doctor: selectedDoc.name,
+    spec: selectedDoc.spec,
+    dept: selectedDept.name,
+    date: date,
+    time: selectedSlot,
+    type: document.getElementById('p-type').value,
+    status:'pending'
+  };
+  appointments.unshift(newAppt);
+
+  // Show success
+  for(let i=1;i<=5;i++){const el=document.getElementById('book-s'+i);if(el)el.style.display='none';}
+  document.getElementById('book-success').style.display='block';
+  document.getElementById('success-token').textContent = tokenNum;
+  document.getElementById('success-details').innerHTML =
+    kv('Patient',fname+' '+lname)+kv('Doctor',selectedDoc.name)+kv('Department',selectedDept.name)+kv('Date',date)+kv('Time',selectedSlot)+kv('Type',newAppt.type.replace('_',' '))+kv('Fee','₹'+selectedDoc.fee);
+
+  renderAppointments();
+  for(let i=1;i<=5;i++){const s=document.getElementById('step-'+i);if(s){s.className='step done';s.querySelector('.step-num').textContent='✓';}}
+}
+
+function resetBooking() {
+  selectedDept=null; selectedDoc=null; selectedSlot=null;
+  document.getElementById('book-success').style.display='none';
+  document.getElementById('p-fname').value='';
+  document.getElementById('p-lname').value='';
+  document.getElementById('p-phone').value='';
+  document.getElementById('p-email').value='';
+  document.getElementById('p-reason').value='';
+  document.getElementById('p-symptoms').value='';
+  document.querySelectorAll('.dept-card').forEach(c=>c.classList.remove('selected'));
+  bookNextInternal(1);
+}
+
+// ============================================================
+// APPOINTMENTS
+// ============================================================
+function setApptTab(filter, btn) {
+  apptTabFilter = filter;
+  document.querySelectorAll('#page-appointments .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderAppointments();
+}
+
+function filterAppts() { renderAppointments(); }
+
+function updateApptStatus(id, newStatus) {
+  const appt = appointments.find(a=>a.id===id);
+  if (appt) { appt.status = newStatus; renderAppointments(); }
+}
+
+function renderAppointments() {
+  const dateFilter = document.getElementById('apt-date-filter')?.value;
+  let filtered = [...appointments];
+  if (dateFilter) filtered = filtered.filter(a=>a.date===dateFilter);
+  if (apptTabFilter !== 'all') filtered = filtered.filter(a=>a.status===apptTabFilter);
+
+  const tbody = document.getElementById('appts-tbody');
+  if (!tbody) return;
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><div class="empty-icon">📅</div><div class="empty-title">No appointments found</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(a=>`
+    <tr>
+      <td><span class="token">${a.token}</span></td>
+      <td><div style="font-weight:600">${a.patient}</div><div style="font-size:12px;color:var(--text-muted)">${a.phone}</div></td>
+      <td><div style="font-weight:600">${a.doctor}</div><div style="font-size:12px;color:var(--text-muted)">${a.spec}</div></td>
+      <td>${a.dept}</td>
+      <td>${a.date}</td>
+      <td>${a.time}</td>
+      <td><span class="badge b-${a.type}">${a.type.replace('_',' ')}</span></td>
+      <td><span class="badge b-${a.status}">${a.status}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          ${a.status==='pending'?`<button class="btn btn-accent btn-sm" onclick="updateApptStatus('${a.id}','confirmed')">Confirm</button>`:''}
+          ${a.status==='confirmed'?`<button class="btn btn-secondary btn-sm" onclick="updateApptStatus('${a.id}','completed')">Complete</button>`:''}
+          ${(a.status==='pending'||a.status==='confirmed')?`<button class="btn btn-danger btn-sm" onclick="updateApptStatus('${a.id}','cancelled')">Cancel</button>`:''}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ============================================================
+// ENQUIRIES
+// ============================================================
+function setEnqTab(filter, btn) {
+  enqTabFilter = filter;
+  document.querySelectorAll('#page-enquiries .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderEnquiries();
+}
+
+function renderEnquiries() {
+  let filtered = [...enquiries];
+  if (enqTabFilter !== 'all') filtered = filtered.filter(e=>e.status===enqTabFilter);
+  const tbody = document.getElementById('enq-tbody');
+  if (!tbody) return;
+  if (filtered.length === 0) {
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">💬</div><div class="empty-title">No enquiries found</div></div></td></tr>`;
+    return;
+  }
+  const pColors = {urgent:'#c0220a',high:'#e07000',normal:'#888',low:'var(--accent)'};
+  tbody.innerHTML = filtered.map(e=>`
+    <tr>
+      <td><div style="font-weight:600">${e.name}</div><div style="font-size:12px;color:var(--text-muted)">${e.phone}</div></td>
+      <td><div style="font-weight:500;max-width:200px">${e.subject}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px">${e.message.slice(0,55)}...</div></td>
+      <td><span class="badge b-${e.type}">${e.type}</span></td>
+      <td>${e.dept||'—'}</td>
+      <td><span style="font-weight:700;font-size:12px;color:${pColors[e.priority]}"><span class="priority-dot pd-${e.priority}"></span>${e.priority.toUpperCase()}</span></td>
+      <td><span class="badge b-${e.status}">${e.status.replace('_',' ')}</span></td>
+      <td style="font-size:13px;color:var(--text-muted)">${e.date}</td>
+      <td>
+        ${e.status==='open'?`<button class="btn btn-secondary btn-sm" onclick="updateEnqStatus('${e.id}','in_progress')">Handle</button>`:''}
+        ${e.status==='in_progress'?`<button class="btn btn-accent btn-sm" onclick="updateEnqStatus('${e.id}','resolved')">Resolve</button>`:''}
+      </td>
+    </tr>`).join('');
+}
+
+function updateEnqStatus(id, status) {
+  const enq = enquiries.find(e=>e.id===id);
+  if (enq) { enq.status = status; renderEnquiries(); }
+}
+
+function submitEnquiry() {
+  const name = document.getElementById('enq-name').value.trim();
+  const phone = document.getElementById('enq-phone').value.trim();
+  const subject = document.getElementById('enq-subject').value.trim();
+  const message = document.getElementById('enq-message').value.trim();
+  if (!name||!phone||!subject||!message) { alert('Please fill all required fields.'); return; }
+  const deptSel = document.getElementById('enq-dept');
+  const dept = deptSel.options[deptSel.selectedIndex]?.text || '';
+  enquiries.unshift({
+    id:'e'+(enquiries.length+1),
+    name, phone,
+    email: document.getElementById('enq-email').value,
+    subject, message,
+    type: document.getElementById('enq-type').value,
+    dept: dept === 'Select dept (optional)' ? '' : dept,
+    priority: document.getElementById('enq-priority').value,
+    status:'open',
+    date: new Date().toISOString().split('T')[0]
+  });
+  document.getElementById('enquiry-modal').style.display='none';
+  document.getElementById('enq-name').value='';
+  document.getElementById('enq-phone').value='';
+  document.getElementById('enq-email').value='';
+  document.getElementById('enq-subject').value='';
+  document.getElementById('enq-message').value='';
+  document.getElementById('enquiry-success-alert').style.display='block';
+  renderEnquiries();
+}
+
+// ============================================================
+// DOCTORS
+// ============================================================
+function renderDoctors() {
+  const q = (document.getElementById('doc-search')?.value||'').toLowerCase();
+  const deptId = document.getElementById('doc-dept-filter')?.value||'';
+  const filtered = doctors.filter(d=>{
+    const matchQ = !q || d.name.toLowerCase().includes(q) || d.spec.toLowerCase().includes(q);
+    const matchD = !deptId || d.deptId === deptId;
+    return matchQ && matchD;
+  });
+  const grid = document.getElementById('doctors-grid');
+  if (!grid) return;
+  if (filtered.length===0){grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">👨‍⚕️</div><div class="empty-title">No doctors found</div></div>`;return;}
+  grid.innerHTML = filtered.map(d=>`
+    <div class="doctor-card" style="cursor:default">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+        <div class="doctor-avatar">${d.first[0]}${d.last[0]}</div>
+        <div><div class="doctor-name">${d.name}</div><div class="doctor-spec">${d.spec}</div></div>
+      </div>
+      <div class="doctor-dept-tag">${d.dept}</div>
+      <div class="doctor-meta" style="margin-top:12px">
+        <div class="doctor-meta-item"><label>Experience</label><div class="val">${d.exp} Years</div></div>
+        <div class="doctor-meta-item"><label>Consultation</label><div class="val doctor-fee">₹${d.fee}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:10px">${d.qual}</div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px">${d.langs.map(l=>`<span class="lang-pill">${l}</span>`).join('')}</div>
+      <div style="margin-top:16px"><button class="btn btn-primary btn-sm" style="width:100%;justify-content:center" onclick="showPage('book',document.querySelectorAll('.nav-item')[1])">Book Appointment</button></div>
+    </div>`).join('');
+}
+
+// ============================================================
+// DEPARTMENTS
+// ============================================================
+function renderDeptInfo() {
+  const grid = document.getElementById('dept-info-grid');
+  const bgColors = ['#fce8e4','#e8f4e8','#e4eafc','#fdf4e4','#fce4f4','#e4fcf4','#fce4e4','#e4f4fc','#f4fce4','#f0e4fc'];
+  grid.innerHTML = departments.map((d,i)=>`
+    <div class="dept-info-card">
+      <div class="dept-icon-circle" style="background:${bgColors[i]}">${d.icon}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:6px">${d.name}</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${d.description}</p>
+      <div class="g2" style="gap:10px;margin-bottom:14px">
+        <div style="background:var(--bg);padding:10px;border-radius:9px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:700">Floor</div>
+          <div style="font-weight:800;font-size:18px;margin-top:2px">${d.floor}</div>
+        </div>
+        <div style="background:var(--bg);padding:10px;border-radius:9px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:700">Doctors</div>
+          <div style="font-weight:800;font-size:18px;margin-top:2px">${d.docs}</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);display:flex;flex-direction:column;gap:4px">
+        <div>📞 ${d.phone}</div>
+        <div>✉️ ${d.email}</div>
+      </div>
+    </div>`).join('');
+}
+
+// Fix bookNext override
+(function(){
+  const orig = window.bookNext;
+  window.bookNext = function(step){
+    if(step===5) bookNext5();
+    orig(step);
+  };
+})();
+</script>
+</body>
+</html>

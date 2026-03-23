@@ -1,0 +1,92 @@
+// ============================================================
+// _base.scss — Reset & global base styles
+// ============================================================
+@use 'variables' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: $font-body;
+  background: $bg;
+  color: $text;
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+// ── Form Elements ─────────────────────────────────────────────
+label {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text;
+}
+
+input,
+select,
+textarea {
+  padding: 10px 14px;
+  border: 1.5px solid $border;
+  border-radius: $radius;
+  font-family: $font-body;
+  font-size: 14px;
+  color: $text;
+  background: white;
+  transition: border-color 0.2s;
+  outline: none;
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.1);
+  }
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+// ── Table ─────────────────────────────────────────────────────
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 12px 20px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: $text-muted;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.015);
+  border-bottom: 1px solid $border;
+}
+
+td {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+tr {
+  &:last-child td {
+    border-bottom: none;
+  }
+
+  &:hover td {
+    background: rgba(0, 0, 0, 0.015);
+  }
+}
+
+// ── Keyframes ─────────────────────────────────────────────────
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
