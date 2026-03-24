@@ -3,6 +3,7 @@ package com.hospital.repository;
 import com.hospital.model.Enquiry;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,6 +16,13 @@ public interface EnquiryRepo extends JpaRepository<Enquiry, UUID> {
     List<Enquiry> findByPhone(String phone);
     List<Enquiry> findByEmail(String email);
 
+    // Multi-tenant
+    List<Enquiry> findByHospitalId(UUID hospitalId);
+    List<Enquiry> findByHospitalIdAndStatus(UUID hospitalId, Enquiry.Status status);
+
     @Query("SELECT e FROM Enquiry e WHERE e.status = 'open' OR e.status = 'in_progress' ORDER BY e.createdAt DESC")
     List<Enquiry> findActiveEnquiries();
+
+    @Query("SELECT e FROM Enquiry e WHERE e.hospital.id = :hospitalId AND (e.status = 'open' OR e.status = 'in_progress') ORDER BY e.createdAt DESC")
+    List<Enquiry> findActiveEnquiriesByHospital(@Param("hospitalId") UUID hospitalId);
 }

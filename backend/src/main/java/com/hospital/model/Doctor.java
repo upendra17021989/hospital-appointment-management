@@ -24,6 +24,12 @@ public class Doctor {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hospital_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Hospital hospital;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id")
     private Department department;

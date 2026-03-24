@@ -23,6 +23,12 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hospital_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Hospital hospital;
+
     @Column(name = "first_name", nullable = false, length = 50)
     private String firstName;
 

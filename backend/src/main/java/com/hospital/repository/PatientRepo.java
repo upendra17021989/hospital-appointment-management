@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface PatientRepo extends JpaRepository<Patient, UUID> {
     List<Patient> findByPhone(String phone);
     List<Patient> findByEmail(String email);
+    List<Patient> findByHospitalId(UUID hospitalId);
+    List<Patient> findByHospitalIdAndPhone(UUID hospitalId, String phone);
 }

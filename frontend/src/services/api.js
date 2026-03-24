@@ -1,8 +1,19 @@
 const API_BASE = 'http://localhost:8080/api';
 
+// Get JWT token from localStorage
+const getToken = () => localStorage.getItem('hms_token');
+
+// Build headers — automatically attach Bearer token if present
+const headers = (extra = {}) => {
+  const h = { 'Content-Type': 'application/json', ...extra };
+  const token = getToken();
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  return h;
+};
+
 const api = {
   get: async (path) => {
-    const res = await fetch(`${API_BASE}${path}`);
+    const res = await fetch(`${API_BASE}${path}`, { headers: headers() });
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     const data = await res.json();
     return data.data;
@@ -11,7 +22,7 @@ const api = {
   post: async (path, body) => {
     const res = await fetch(`${API_BASE}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers(),
       body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -22,7 +33,7 @@ const api = {
   patch: async (path, body) => {
     const res = await fetch(`${API_BASE}${path}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers(),
       body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -33,7 +44,7 @@ const api = {
   put: async (path, body) => {
     const res = await fetch(`${API_BASE}${path}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers(),
       body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -42,9 +53,11 @@ const api = {
   },
 
   delete: async (path) => {
-    const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE' });
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'DELETE',
+      headers: headers(),
+    });
     if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-    // some delete endpoints return no body
     const text = await res.text();
     return text ? JSON.parse(text) : null;
   },

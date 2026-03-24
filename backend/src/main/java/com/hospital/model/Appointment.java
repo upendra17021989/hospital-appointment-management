@@ -7,8 +7,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 @Entity
@@ -20,17 +20,18 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Appointment {
 
-    public enum Status {
-        pending, confirmed, cancelled, completed, no_show, rescheduled
-    }
-
-    public enum AppointmentType {
-        in_person, virtual, follow_up, emergency
-    }
+    public enum Status { pending, confirmed, cancelled, completed, no_show, rescheduled }
+    public enum AppointmentType { in_person, virtual, follow_up, emergency }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hospital_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Hospital hospital;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_id", nullable = false)

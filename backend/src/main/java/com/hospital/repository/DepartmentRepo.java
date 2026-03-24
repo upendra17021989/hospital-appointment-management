@@ -9,5 +9,9 @@ import java.util.UUID;
 
 @Repository
 public interface DepartmentRepo extends JpaRepository<Department, UUID> {
+    // Legacy (no tenant isolation)
     List<Department> findByIsActiveTrue();
+    // Multi-tenant
+    List<Department> findByHospitalIdAndIsActiveTrue(UUID hospitalId);
+    List<Department> findByHospitalId(UUID hospitalId);
 }

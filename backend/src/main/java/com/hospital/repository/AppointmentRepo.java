@@ -18,6 +18,11 @@ public interface AppointmentRepo extends JpaRepository<Appointment, UUID> {
     List<Appointment> findByAppointmentDate(LocalDate date);
     List<Appointment> findByStatus(Appointment.Status status);
 
+    // Multi-tenant
+    List<Appointment> findByHospitalId(UUID hospitalId);
+    List<Appointment> findByHospitalIdAndAppointmentDate(UUID hospitalId, LocalDate date);
+    List<Appointment> findByHospitalIdAndStatus(UUID hospitalId, Appointment.Status status);
+
     @Query("SELECT a FROM Appointment a WHERE a.appointmentDate BETWEEN :start AND :end ORDER BY a.appointmentDate, a.appointmentTime")
     List<Appointment> findByDateRange(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
