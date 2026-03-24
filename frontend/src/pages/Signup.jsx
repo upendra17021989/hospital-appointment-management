@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-const API = 'http://localhost:8080/api';
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 const STEPS = [
   { num: 1, label: 'Hospital Info' },
