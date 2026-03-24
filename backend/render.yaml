@@ -1,0 +1,30 @@
+# render.yaml (place in hospital-system/ root, NOT inside backend/)
+services:
+  - type: web
+    name: hospital-backend
+    runtime: java
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/hospital-management-1.0.0.jar
+    healthCheckPath: /api/actuator/health
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: APP_JWT_SECRET
+        sync: false
+      - key: APP_JWT_EXPIRATION_MS
+        value: 86400000
+      - key: APP_CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: SERVER_PORT
+        value: 8080
+      - key: SERVER_SERVLET_CONTEXT_PATH
+        value: /api
+      - key: JAVA_VERSION
+        value: 17
