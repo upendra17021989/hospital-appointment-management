@@ -34,6 +34,32 @@ $radius-lg:     20px;
 $font-body:     'DM Sans', sans-serif;
 $font-display:  'Playfair Display', serif;
 
+// ── Color Palette ─────────────────────────────────────────────
+$bg:            #f0ebe3;
+$bg-card:       #faf8f5;
+$bg-dark:       #1a1410;
+
+$primary:       #c5522a;
+$primary-light: #e8744e;
+
+$accent:        #3d7a5e;
+$accent-light:  #5aaa84;
+
+$gold:          #d4a84b;
+
+$text:          #2d2520;
+$text-muted:    #7a6e68;
+
+$border:        #ddd4c8;
+
+// ── Add these missing variables ───────────────────────────────
+$error:         #c0220a;
+$error-light:   #fcecea;
+$success:       #1a7a4a;
+$success-light: #e6f4ee;
+$warning:       #c07b00;
+$warning-light: #fff8e6;
+
 // ── Breakpoints ───────────────────────────────────────────────
 $breakpoint-md: 768px;
 
@@ -93,3 +119,4 @@ $breakpoint-md: 768px;
     @content;
   }
 }
+

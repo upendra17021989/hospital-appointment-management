@@ -10,6 +10,8 @@ import Enquiries from './pages/Enquiries';
 import Doctors from './pages/Doctors';
 import DoctorManagement from './pages/DoctorManagement';
 import Departments from './pages/Departments';
+import PatientForm     from './pages/PatientForm';
+import PrescriptionForm from './pages/PrescriptionForm';
 
 const PAGES = {
   dashboard:           Dashboard,
@@ -19,6 +21,8 @@ const PAGES = {
   doctors:             Doctors,
   'doctor-management': DoctorManagement,
   departments:         Departments,
+  'patient-form':      PatientForm,
+  'prescription-form': PrescriptionForm,
 };
 
 // ── Inner app — shown only when authenticated ─────────────────

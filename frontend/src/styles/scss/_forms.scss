@@ -1,0 +1,495 @@
+// ============================================================
+// _forms.scss — Patient Form & Prescription Form styles
+// ============================================================
+@use 'variables' as *;
+
+// ── Container ─────────────────────────────────────────────────
+.pf-container {
+  max-width: 100%;
+}
+
+// ── Step Indicator ────────────────────────────────────────────
+.pf-steps {
+  display: flex;
+  align-items: center;
+  background: $bg-card;
+  border-radius: $radius-lg;
+  padding: 16px 24px;
+  border: 1px solid $border;
+  margin-bottom: 24px;
+  gap: 0;
+}
+
+.pf-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+
+  &-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: $border;
+    color: $text-muted;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    transition: all 0.2s;
+  }
+
+  &-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  &-line {
+    flex: 1;
+    height: 2px;
+    background: $border;
+    margin-bottom: 20px;
+    transition: background 0.3s;
+
+    &.done { background: $accent; }
+  }
+
+  &.active {
+    .pf-step-circle { background: $primary; color: white; }
+    .pf-step-label  { color: $primary; }
+  }
+
+  &.done {
+    .pf-step-circle { background: $accent; color: white; }
+    .pf-step-label  { color: $accent; }
+  }
+}
+
+// ── Section ───────────────────────────────────────────────────
+.pf-section {
+  margin-bottom: 28px;
+
+  &-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1.5px solid $border;
+  }
+
+  &-icon { font-size: 20px; }
+
+  &-title {
+    font-family: $font-display;
+    font-size: 16px;
+    font-weight: 600;
+    color: $text;
+  }
+
+  &-body { }
+}
+
+// ── Card wrapper ──────────────────────────────────────────────
+.pf-card {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  padding: 28px;
+  border: 1px solid $border;
+  box-shadow: $shadow;
+  margin-bottom: 20px;
+}
+
+// ── Grid ──────────────────────────────────────────────────────
+.pf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @include responsive-mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Field ─────────────────────────────────────────────────────
+.pf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &.pf-field-half { grid-column: span 1; }
+
+  // Full width inside grid
+  &:has(textarea) { grid-column: 1 / -1; }
+}
+
+.pf-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: $text;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pf-required { color: $primary; margin-left: 2px; }
+.pf-error    { font-size: 12px; color: $error; margin-top: 2px; }
+.pf-hint     { font-size: 11px; color: $text-muted; margin-top: 2px; }
+
+// ── Phone field ───────────────────────────────────────────────
+.pf-phone-wrap {
+  position: relative;
+
+  input { width: 100%; padding-left: 70px; }
+}
+
+.pf-phone-prefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 700;
+  color: $text-muted;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+// ── Navigation buttons ────────────────────────────────────────
+.pf-nav {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid $border;
+}
+
+// ── Review Grid ───────────────────────────────────────────────
+.pf-review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  @include responsive-mobile { grid-template-columns: 1fr; }
+}
+
+.pf-review-block {
+  background: $bg;
+  border-radius: $radius;
+  padding: 16px;
+  border: 1px solid $border;
+
+  &-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: $text;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid $border;
+  }
+}
+
+.pf-review-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  font-size: 13px;
+
+  &:last-child { border-bottom: none; }
+}
+
+.pf-review-key { color: $text-muted; }
+.pf-review-val { font-weight: 700; color: $text; max-width: 60%; text-align: right; }
+
+// ── Success Screen ────────────────────────────────────────────
+.pf-success {
+  max-width: 540px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 48px 0;
+
+  &-icon  { font-size: 72px; margin-bottom: 16px; }
+  &-title { font-family: $font-display; font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+  &-sub   { color: $text-muted; font-size: 14px; margin-bottom: 28px; }
+
+  &-card {
+    background: $bg-card;
+    border-radius: $radius-lg;
+    padding: 24px;
+    border: 1px solid $border;
+    text-align: left;
+    margin-bottom: 24px;
+    box-shadow: $shadow;
+  }
+
+  &-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 14px;
+
+    &:last-child { border-bottom: none; }
+  }
+
+  &-key { color: $text-muted; }
+  &-val { font-weight: 700; }
+}
+
+// ============================================================
+// PRESCRIPTION FORM SPECIFIC STYLES
+// ============================================================
+
+// ── Header card ───────────────────────────────────────────────
+.rx-header-card {
+  margin-bottom: 20px;
+}
+
+// ── Selected patient/doctor display ──────────────────────────
+.rx-selected-patient {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba($accent, 0.06);
+  border: 1.5px solid rgba($accent, 0.3);
+  border-radius: $radius;
+  padding: 10px 14px;
+}
+
+.rx-clear-btn {
+  background: none;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    background: $border;
+    color: $text;
+  }
+}
+
+// ── Dropdown ──────────────────────────────────────────────────
+.rx-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: $bg-card;
+  border: 1.5px solid $border;
+  border-radius: $radius;
+  box-shadow: $shadow-lg;
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+
+  &-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: rgba($primary, 0.06); }
+  }
+}
+
+// ── Vitals grid ───────────────────────────────────────────────
+.rx-vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.rx-vital-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rx-vital-wrap {
+  position: relative;
+}
+
+.rx-vital-input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.rx-vital-unit {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: $text-muted;
+  pointer-events: none;
+}
+
+// ── Quick add pills ───────────────────────────────────────────
+.rx-quick-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.rx-quick-btn {
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1.5px solid $border;
+  background: $bg;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: $font-body;
+  color: $text;
+
+  &:hover {
+    border-color: $primary;
+    color: $primary;
+    background: rgba($primary, 0.04);
+  }
+}
+
+// ── Medicine table header ─────────────────────────────────────
+.rx-med-header {
+  display: flex;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $text-muted;
+}
+
+// ── Medicine row ──────────────────────────────────────────────
+.rx-med-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: $radius;
+  border: 1.5px solid $border;
+  background: white;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: rgba($primary, 0.3); }
+}
+
+.rx-med-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: $primary;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+
+.rx-med-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rx-med-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.rx-med-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  input, select { flex: 1; min-width: 100px; }
+}
+
+.rx-food-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 8px 0;
+
+  input[type='checkbox'] { width: auto; cursor: pointer; }
+}
+
+.rx-med-instr {
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.rx-med-remove {
+  background: none;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba($error, 0.1);
+    color: $error;
+  }
+}
+
+// ── Lab test row ──────────────────────────────────────────────
+.rx-lab-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: $radius;
+  border: 1.5px solid $border;
+  background: white;
+  margin-bottom: 8px;
+}
+
+.rx-lab-fields {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.rx-lab-name {
+  flex: 2;
+  min-width: 200px;
+  font-weight: 600;
+}

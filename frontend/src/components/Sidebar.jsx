@@ -32,6 +32,8 @@ const NAV_GROUPS = [
       { id: 'doctors',           label: 'Doctors',        icon: 'doctor' },
       { id: 'doctor-management', label: 'Manage Doctors', icon: 'doctor' },
       { id: 'departments',       label: 'Departments',    icon: 'department' },
+      { id: 'patient-form',      label: 'Register Patient', icon: 'patient' },
+      { id: 'prescription-form', label: 'Prescriptions',    icon: 'doctor'  },
     ],
   },
 ];
