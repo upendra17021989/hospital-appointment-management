@@ -19,6 +19,21 @@ const NAV_GROUPS = [
     ],
   },
   {
+    key: 'patients',
+    label: 'Patients',
+    items: [
+      { id: 'patients',     label: 'Patient Records',  icon: 'patient' },
+      { id: 'patient-form', label: 'Register Patient', icon: 'patient' },
+    ],
+  },
+  {
+    key: 'clinical',
+    label: 'Clinical',
+    items: [
+      { id: 'prescription-form', label: 'Prescriptions', icon: 'doctor' },
+    ],
+  },
+  {
     key: 'support',
     label: 'Support',
     items: [
@@ -32,8 +47,6 @@ const NAV_GROUPS = [
       { id: 'doctors',           label: 'Doctors',        icon: 'doctor' },
       { id: 'doctor-management', label: 'Manage Doctors', icon: 'doctor' },
       { id: 'departments',       label: 'Departments',    icon: 'department' },
-      { id: 'patient-form',      label: 'Register Patient', icon: 'patient' },
-      { id: 'prescription-form', label: 'Prescriptions',    icon: 'doctor'  },
     ],
   },
 ];
@@ -53,9 +66,7 @@ const Sidebar = ({ currentPage, onNavigate }) => {
       {user?.hospital && (
         <div style={{ padding: '12px 12px 0' }}>
           <div className="sidebar-hospital">
-            <div className="sidebar-hospital-name">
-              🏥 {user.hospital.name}
-            </div>
+            <div className="sidebar-hospital-name">🏥 {user.hospital.name}</div>
             {user.hospital.city && (
               <div className="sidebar-hospital-city">{user.hospital.city}</div>
             )}
@@ -85,12 +96,7 @@ const Sidebar = ({ currentPage, onNavigate }) => {
       {/* Footer — user info + logout */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         {user && (
-          <div style={{
-            padding: '14px 24px 6px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-          }}>
+          <div style={{ padding: '14px 24px 6px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 32, height: 32, borderRadius: '50%',
               background: 'linear-gradient(135deg, var(--primary), var(--gold))',
