@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-import BookAppointment from './pages/BookAppointment';
-import Appointments from './pages/Appointments';
-import Enquiries from './pages/Enquiries';
-import Doctors from './pages/Doctors';
+import Dashboard        from './pages/Dashboard';
+import BookAppointment  from './pages/BookAppointment';
+import Appointments     from './pages/Appointments';
+import Enquiries        from './pages/Enquiries';
+import Doctors          from './pages/Doctors';
 import DoctorManagement from './pages/DoctorManagement';
-import Departments from './pages/Departments';
-import PatientForm     from './pages/PatientForm';
+import Departments      from './pages/Departments';
+import PatientForm      from './pages/PatientForm';
+import PatientDetails   from './pages/PatientDetails';
 import PrescriptionForm from './pages/PrescriptionForm';
 
 const PAGES = {
@@ -22,65 +21,61 @@ const PAGES = {
   'doctor-management': DoctorManagement,
   departments:         Departments,
   'patient-form':      PatientForm,
+  patients:            PatientDetails,
   'prescription-form': PrescriptionForm,
 };
 
-// ── Inner app — shown only when authenticated ─────────────────
 const AppShell = () => {
-  const [page, setPage] = useState('dashboard');
+  const [page,      setPage]      = useState('dashboard');
+  const [pageProps, setPageProps] = useState({});
+
+  const handleNavigate = (newPage, props = {}) => {
+    setPage(newPage);
+    setPageProps(props);
+  };
+
   const ActivePage = PAGES[page] || Dashboard;
 
   return (
     <div className="layout">
-      <Sidebar currentPage={page} onNavigate={setPage} />
+      <Sidebar currentPage={page} onNavigate={handleNavigate} />
       <main className="main-content">
-        <ActivePage onNavigate={setPage} />
+        <ActivePage onNavigate={handleNavigate} {...pageProps} />
       </main>
     </div>
   );
 };
 
-// ── Auth gate — routes between Login / Signup / App ───────────
 const AuthGate = () => {
   const { isAuthenticated, loading } = useAuth();
-  const [authScreen, setAuthScreen] = useState('login'); // 'login' | 'signup'
+  const [authScreen, setAuthScreen] = useState('login');
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh', display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        background: 'var(--bg)',
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div className="spinner" style={{ width: 32, height: 32, borderWidth: 3, margin: '0 auto 12px' }} />
-          <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Loading...</div>
+      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg)' }}>
+        <div style={{ textAlign:'center' }}>
+          <div className="spinner" style={{ width:32, height:32, borderWidth:3, margin:'0 auto 12px' }} />
+          <div style={{ color:'var(--text-muted)', fontSize:14 }}>Loading...</div>
         </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    if (authScreen === 'signup') {
-      return (
-        <Signup
-          onNavigate={() => {}} // handled inside Signup via saveAuth
-          onSwitchToLogin={() => setAuthScreen('login')}
-        />
-      );
-    }
+    const Login  = React.lazy(() => import('./pages/Login'));
+    const Signup = React.lazy(() => import('./pages/Signup'));
     return (
-      <Login
-        onNavigate={() => {}} // handled inside Login via saveAuth
-        onSwitchToSignup={() => setAuthScreen('signup')}
-      />
+      <React.Suspense fallback={null}>
+        {authScreen === 'signup'
+          ? <Signup onSwitchToLogin={() => setAuthScreen('login')} />
+          : <Login  onSwitchToSignup={() => setAuthScreen('signup')} />}
+      </React.Suspense>
     );
   }
 
   return <AppShell />;
 };
 
-// ── Root ──────────────────────────────────────────────────────
 export default function App() {
   return (
     <AuthProvider>

@@ -2,7 +2,7 @@
 // main.scss — Entry point, imports all partials in order
 // ============================================================
 
-// 1. Variables & mixins (no output, just definitions)
+// 1. Variables & mixins
 @use 'variables';
 
 // 2. Base reset & global element styles
@@ -23,4 +23,8 @@
 // 7. Auth — login, signup screens
 @use 'auth';
 
+// 8. Patient & prescription forms
 @use 'forms';
+
+// 9. Patient details view
+@use 'patient-details';
