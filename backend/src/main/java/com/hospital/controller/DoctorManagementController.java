@@ -1,18 +1,24 @@
 package com.hospital.controller;
 
-import com.hospital.dto.Dtos.*;
+import com.hospital.dto.Dtos.ApiResponse;
+import com.hospital.dto.Dtos.DoctorResponse;
+import com.hospital.dto.Dtos.DepartmentResponse;
 import com.hospital.model.Department;
 import com.hospital.model.Doctor;
 import com.hospital.model.DoctorSchedule;
 import com.hospital.repository.DepartmentRepo;
 import com.hospital.repository.DoctorRepo;
 import com.hospital.repository.DoctorScheduleRepo;
+import com.hospital.security.RequireHospitalContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;

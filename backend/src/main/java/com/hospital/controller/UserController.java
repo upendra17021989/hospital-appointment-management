@@ -19,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -98,7 +100,9 @@ public class UserController {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<User> usersPage;
-        if (/* check if current user is SUPER_ADMIN */) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isSuperAdmin = auth != null && auth.getPrincipal() instanceof User currentUser && currentUser.getRole() == User.Role.SUPER_ADMIN;
+        if (isSuperAdmin) {
             // SUPER_ADMIN can see all users
             usersPage = userRepo.findAll(pageable);
         } else {
