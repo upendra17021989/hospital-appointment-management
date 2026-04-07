@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
+import RoleGuard from './components/RoleGuard';
 import Dashboard        from './pages/Dashboard';
 import BookAppointment  from './pages/BookAppointment';
 import Appointments     from './pages/Appointments';
@@ -11,6 +12,7 @@ import Departments      from './pages/Departments';
 import PatientForm      from './pages/PatientForm';
 import PatientDetails   from './pages/PatientDetails';
 import PrescriptionForm from './pages/PrescriptionForm';
+import UserManagement   from './pages/UserManagement';
 
 const PAGES = {
   dashboard:           Dashboard,
@@ -19,10 +21,22 @@ const PAGES = {
   enquiries:           Enquiries,
   doctors:             Doctors,
   'doctor-management': DoctorManagement,
+  'user-management':   UserManagement,
   departments:         Departments,
   'patient-form':      PatientForm,
   patients:            PatientDetails,
   'prescription-form': PrescriptionForm,
+};
+
+const getPageRoles = (pageId) => {
+  const roleMap = {
+    'doctor-management': ['HOSPITAL_ADMIN', 'SUPER_ADMIN'],
+    'user-management':   ['HOSPITAL_ADMIN', 'SUPER_ADMIN'],
+    'patient-form':      ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'],
+    'patients':          ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'],
+    'prescription-form': ['HOSPITAL_ADMIN', 'SUPER_ADMIN'],
+  };
+  return roleMap[pageId] || []; // Empty array means no role restrictions
 };
 
 const AppShell = () => {
@@ -35,12 +49,15 @@ const AppShell = () => {
   };
 
   const ActivePage = PAGES[page] || Dashboard;
+  const requiredRoles = getPageRoles(page);
 
   return (
     <div className="layout">
       <Sidebar currentPage={page} onNavigate={handleNavigate} />
       <main className="main-content">
-        <ActivePage onNavigate={handleNavigate} {...pageProps} />
+        <RoleGuard roles={requiredRoles}>
+          <ActivePage onNavigate={handleNavigate} {...pageProps} />
+        </RoleGuard>
       </main>
     </div>
   );

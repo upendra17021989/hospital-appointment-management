@@ -1,58 +1,88 @@
 import React from 'react';
 import { Icon } from './Common';
 import { useAuth } from '../context/AuthContext';
+import { useRole } from '../hooks/useRole';
 
-const NAV_GROUPS = [
-  {
-    key: 'main',
-    label: 'Overview',
+const getNavGroups = (role) => {
+  const baseGroups = [
+    {
+      key: 'main',
+      label: 'Overview',
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      ],
+    },
+    {
+      key: 'appointments',
+      label: 'Appointments',
+      items: [
+        { id: 'book',         label: 'Book Appointment', icon: 'appointment' },
+        { id: 'appointments', label: 'All Appointments', icon: 'appointment' },
+      ],
+    },
+  ];
+
+  // Role-based navigation items
+  const roleBasedGroups = [];
+
+  if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'management',
+      label: 'Management',
+      items: [
+        { id: 'doctor-management', label: 'Manage Doctors', icon: 'doctor' },
+        { id: 'user-management',   label: 'Manage Users',   icon: 'user' },
+        { id: 'departments',       label: 'Departments',    icon: 'department' },
+      ],
+    });
+  }
+
+  if (['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'patients',
+      label: 'Patients',
+      items: [
+        { id: 'patients',     label: 'Patient Records',  icon: 'patient' },
+        { id: 'patient-form', label: 'Register Patient', icon: 'patient' },
+      ],
+    });
+  }
+
+  if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'clinical',
+      label: 'Clinical',
+      items: [
+        { id: 'prescription-form', label: 'Prescriptions', icon: 'prescription' },
+      ],
+    });
+  }
+
+  roleBasedGroups.push({
+    key: 'directory',
+    label: 'Directory',
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { id: 'doctors',     label: 'Doctors',     icon: 'doctor' },
+      { id: 'departments', label: 'Departments', icon: 'department' },
     ],
-  },
-  {
-    key: 'appointments',
-    label: 'Appointments',
-    items: [
-      { id: 'book',         label: 'Book Appointment', icon: 'appointment' },
-      { id: 'appointments', label: 'All Appointments', icon: 'appointment' },
-    ],
-  },
-  {
-    key: 'patients',
-    label: 'Patients',
-    items: [
-      { id: 'patients',     label: 'Patient Records',  icon: 'patient' },
-      { id: 'patient-form', label: 'Register Patient', icon: 'patient' },
-    ],
-  },
-  {
-    key: 'clinical',
-    label: 'Clinical',
-    items: [
-      { id: 'prescription-form', label: 'Prescriptions', icon: 'doctor' },
-    ],
-  },
-  {
+  });
+
+  roleBasedGroups.push({
     key: 'support',
     label: 'Support',
     items: [
       { id: 'enquiries', label: 'Enquiries', icon: 'enquiry' },
     ],
-  },
-  {
-    key: 'directory',
-    label: 'Directory',
-    items: [
-      { id: 'doctors',           label: 'Doctors',        icon: 'doctor' },
-      { id: 'doctor-management', label: 'Manage Doctors', icon: 'doctor' },
-      { id: 'departments',       label: 'Departments',    icon: 'department' },
-    ],
-  },
-];
+  });
+
+  return [...baseGroups, ...roleBasedGroups];
+};
 
 const Sidebar = ({ currentPage, onNavigate }) => {
   const { user, logout } = useAuth();
+  const { role } = useRole();
+
+  const navGroups = getNavGroups(role);
 
   return (
     <aside className="sidebar">
@@ -74,10 +104,10 @@ const Sidebar = ({ currentPage, onNavigate }) => {
         </div>
       )}
 
-      {/* Navigation */}
+      {/* Navigation - Scrollable */}
       <nav className="sidebar-nav">
-        {NAV_GROUPS.map(group => (
-          <div key={group.key}>
+        {navGroups.map(group => (
+          <div key={group.key} style={{ marginBottom: '12px' }}>
             <div className="nav-section-label">{group.label}</div>
             {group.items.map(item => (
               <button
@@ -93,8 +123,8 @@ const Sidebar = ({ currentPage, onNavigate }) => {
         ))}
       </nav>
 
-      {/* Footer — user info + logout */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Footer — user info + logout - Always visible at bottom */}
+      <div className="sidebar-footer">
         {user && (
           <div style={{ padding: '14px 24px 6px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{

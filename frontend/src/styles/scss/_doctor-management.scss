@@ -303,7 +303,7 @@
   &.active {
     border-color: $accent;
     background: rgba($accent, 0.06);
-    color: darken($accent, 10%);
+    color: mix($accent, black, 10%);
   }
 
   &.inactive {
@@ -338,7 +338,7 @@
   justify-content: center;
   transition: all 0.15s;
 
-  &.deactivate { background: rgba($gold, 0.15); color: darken($gold, 20%); &:hover { background: rgba($gold, 0.3); } }
-  &.activate   { background: rgba($accent, 0.15); color: darken($accent, 10%); &:hover { background: rgba($accent, 0.3); } }
+  &.deactivate { background: rgba($gold, 0.15); color: mix($gold, black, 20%); &:hover { background: rgba($gold, 0.3); } }
+  &.activate   { background: rgba($accent, 0.15); color: mix($accent, black, 10%); &:hover { background: rgba($accent, 0.3); } }
   &.delete     { background: rgba(#c0220a, 0.1); color: #c0220a; &:hover { background: rgba(#c0220a, 0.2); } }
 }

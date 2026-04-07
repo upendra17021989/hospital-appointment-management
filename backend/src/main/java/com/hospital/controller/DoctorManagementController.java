@@ -12,9 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
@@ -88,6 +86,8 @@ public class DoctorManagementController {
     // ── Doctor CRUD ───────────────────────────────────────────────
 
     @PostMapping
+    @PreAuthorize("hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN')")
+    @RequireHospitalContext
     @Operation(summary = "Add a new doctor")
     public ResponseEntity<ApiResponse<DoctorResponse>> createDoctor(
             @Valid @RequestBody DoctorSaveRequest request) {
@@ -121,6 +121,8 @@ public class DoctorManagementController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN')")
+    @RequireHospitalContext
     @Operation(summary = "Update doctor details")
     public ResponseEntity<ApiResponse<DoctorResponse>> updateDoctor(
             @PathVariable UUID id,
@@ -155,6 +157,8 @@ public class DoctorManagementController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN')")
+    @RequireHospitalContext
     @Operation(summary = "Delete a doctor")
     public ResponseEntity<ApiResponse<String>> deleteDoctor(@PathVariable UUID id) {
         try {

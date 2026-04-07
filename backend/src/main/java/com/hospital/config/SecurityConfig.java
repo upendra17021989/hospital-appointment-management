@@ -45,12 +45,29 @@ public class SecurityConfig {
         "/swagger-ui.html",
     };
 
+    private static final String[] HOSPITAL_ADMIN_ENDPOINTS = {
+        "/doctors/**",
+        "/departments/**",
+        "/patients/**",
+        "/appointments/**",
+        "/enquiries/**",
+        "/dashboard/**",
+    };
+
+    private static final String[] STAFF_ENDPOINTS = {
+        "/patients/**",
+        "/appointments/**",
+        "/enquiries/**",
+    };
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                .requestMatchers(HOSPITAL_ADMIN_ENDPOINTS).hasAnyRole("HOSPITAL_ADMIN", "SUPER_ADMIN")
+                .requestMatchers(STAFF_ENDPOINTS).hasAnyRole("STAFF", "RECEPTIONIST", "HOSPITAL_ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(s ->
