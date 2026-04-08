@@ -240,13 +240,13 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
   const [selectedDoctor,  setSelectedDoctor]  = useState(prefillDoctor  || null);
 
   useEffect(() => {
-    api.get('/doctors').then(setDoctors).catch(() => {});
-    api.get('/appointments').then(setAppointments).catch(() => {});
+    api.get('/doctors/hospital/list').then(setDoctors).catch(() => {});
+    api.get('/appointments/hospital').then(setAppointments).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (patientSearch.length >= 2) {
-      api.get(`/patients/search?phone=${patientSearch}`).then(setPatients).catch(() => {});
+      api.get(`/patients/hospital/search?phone=${patientSearch}`).then(setPatients).catch(() => {});
     }
   }, [patientSearch]);
 

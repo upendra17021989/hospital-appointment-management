@@ -3,6 +3,7 @@ package com.hospital.service;
 import com.hospital.dto.Dtos.*;
 import com.hospital.model.*;
 import com.hospital.repository.*;
+import com.hospital.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,19 +21,29 @@ public class AppointmentService {
     private final DoctorRepo doctorRepo;
     private final PatientRepo patientRepo;
     private final DoctorScheduleRepo scheduleRepo;
+    private final TenantContext tenantContext;
 
     @Transactional
     public AppointmentResponse bookAppointment(AppointmentRequest request) {
+        UUID hospitalId = tenantContext.requireHospitalId();
         Doctor doctor = doctorRepo.findById(request.getDoctorId())
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
         Patient patient = patientRepo.findById(request.getPatientId())
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
 
+        if (doctor.getHospital() == null || !hospitalId.equals(doctor.getHospital().getId())) {
+            throw new RuntimeException("Doctor not found for current hospital");
+        }
+        if (patient.getHospital() == null || !hospitalId.equals(patient.getHospital().getId())) {
+            throw new RuntimeException("Patient not found for current hospital");
+        }
+
         // Validate availability
         validateSlotAvailability(request.getDoctorId(), request.getAppointmentDate(), request.getAppointmentTime());
 
         Appointment appointment = Appointment.builder()
+                .hospital(doctor.getHospital())
                 .patient(patient)
                 .doctor(doctor)
                 .department(doctor.getDepartment())
@@ -49,6 +60,43 @@ public class AppointmentService {
 
         Appointment saved = appointmentRepo.save(appointment);
         return mapToResponse(saved);
+    }
+
+    public List<AppointmentResponse> getHospitalAppointments(UUID hospitalId, String date, UUID doctorId, UUID patientId) {
+        List<Appointment> appointments;
+        if (date != null) {
+            appointments = appointmentRepo.findByHospitalOrDoctorHospitalIdAndAppointmentDate(
+                    hospitalId, LocalDate.parse(date));
+        } else if (doctorId != null) {
+            appointments = appointmentRepo.findByHospitalOrDoctorHospitalIdAndDoctorId(hospitalId, doctorId);
+        } else if (patientId != null) {
+            appointments = appointmentRepo.findByHospitalOrDoctorHospitalIdAndPatientId(hospitalId, patientId);
+        } else {
+            appointments = appointmentRepo.findByHospitalOrDoctorHospitalId(hospitalId);
+        }
+        return appointments.stream().map(this::mapToResponse).toList();
+    }
+
+    @Transactional
+    public AppointmentResponse updateStatusForHospital(UUID hospitalId, UUID id, AppointmentStatusUpdateRequest req) {
+        Appointment appointment = appointmentRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        UUID effectiveHospitalId = appointment.getHospital() != null
+                ? appointment.getHospital().getId()
+                : (appointment.getDoctor() != null && appointment.getDoctor().getHospital() != null
+                    ? appointment.getDoctor().getHospital().getId()
+                    : null);
+
+        if (effectiveHospitalId == null || !effectiveHospitalId.equals(hospitalId)) {
+            throw new RuntimeException("Appointment not found for current hospital");
+        }
+
+        appointment.setStatus(req.getStatus());
+        if (req.getNotes() != null) appointment.setNotes(req.getNotes());
+        if (req.getCancellationReason() != null) appointment.setCancellationReason(req.getCancellationReason());
+
+        return mapToResponse(appointmentRepo.save(appointment));
     }
 
     public List<AppointmentResponse> getAllAppointments() {

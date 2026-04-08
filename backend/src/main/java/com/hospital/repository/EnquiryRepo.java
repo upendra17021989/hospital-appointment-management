@@ -25,4 +25,14 @@ public interface EnquiryRepo extends JpaRepository<Enquiry, UUID> {
 
     @Query("SELECT e FROM Enquiry e WHERE e.hospital.id = :hospitalId AND (e.status = 'open' OR e.status = 'in_progress') ORDER BY e.createdAt DESC")
     List<Enquiry> findActiveEnquiriesByHospital(@Param("hospitalId") UUID hospitalId);
+
+    // Robust tenant scoping (covers older rows where enquiry.hospital might be null)
+    @Query("SELECT e FROM Enquiry e WHERE (e.hospital.id = :hospitalId OR e.department.hospital.id = :hospitalId) AND (e.status = 'open' OR e.status = 'in_progress') ORDER BY e.createdAt DESC")
+    List<Enquiry> findActiveEnquiriesByHospitalRobust(@Param("hospitalId") UUID hospitalId);
+
+    @Query("SELECT e FROM Enquiry e WHERE (e.hospital.id = :hospitalId OR e.department.hospital.id = :hospitalId) AND e.status = :status ORDER BY e.createdAt DESC")
+    List<Enquiry> findByHospitalOrDepartmentHospitalIdAndStatusRobust(@Param("hospitalId") UUID hospitalId, @Param("status") Enquiry.Status status);
+
+    @Query("SELECT e FROM Enquiry e WHERE (e.hospital.id = :hospitalId OR e.department.hospital.id = :hospitalId) ORDER BY e.createdAt DESC")
+    List<Enquiry> findByHospitalOrDepartmentHospitalIdRobust(@Param("hospitalId") UUID hospitalId);
 }

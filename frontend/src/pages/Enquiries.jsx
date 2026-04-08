@@ -88,19 +88,21 @@ const Enquiries = () => {
 
   const fetchEnquiries = () => {
     setLoading(true);
-    const url = statusFilter !== 'all' ? `/enquiries?status=${statusFilter}` : '/enquiries/all';
+    const url = statusFilter !== 'all'
+      ? `/enquiries/hospital?status=${statusFilter}`
+      : '/enquiries/hospital/all';
     api.get(url)
       .then(data => { setEnquiries(data || []); setLoading(false); })
       .catch(() => setLoading(false));
   };
 
   useEffect(() => { fetchEnquiries(); }, [statusFilter]);
-  useEffect(() => { api.get('/departments').then(setDepartments).catch(() => {}); }, []);
+  useEffect(() => { api.get('/departments/hospital').then(setDepartments).catch(() => {}); }, []);
 
   const handleSubmit = async (form) => {
     setSubmitting(true);
     try {
-      await api.post('/enquiries', {
+      await api.post('/enquiries/hospital', {
         ...form,
         departmentId: form.departmentId || undefined,
       });
@@ -118,7 +120,7 @@ const Enquiries = () => {
   const updateStatus = async (id, status) => {
     setUpdating(id);
     try {
-      await api.patch(`/enquiries/${id}/status?status=${status}`, {});
+      await api.patch(`/enquiries/hospital/${id}/status?status=${status}`, {});
       fetchEnquiries();
     } finally {
       setUpdating(null);

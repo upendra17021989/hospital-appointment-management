@@ -1,10 +1,13 @@
 package com.hospital.service;
 
 import com.hospital.dto.Dtos.*;
+import com.hospital.model.Hospital;
 import com.hospital.model.Department;
 import com.hospital.model.Enquiry;
+import com.hospital.repository.HospitalRepo;
 import com.hospital.repository.DepartmentRepo;
 import com.hospital.repository.EnquiryRepo;
+import com.hospital.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,15 +23,34 @@ public class EnquiryService {
 
     private final EnquiryRepo enquiryRepo;
     private final DepartmentRepo departmentRepo;
+    private final HospitalRepo hospitalRepo;
+    private final TenantContext tenantContext;
 
     @Transactional
     public EnquiryResponse submitEnquiry(EnquiryRequest request) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+
         Department department = null;
         if (request.getDepartmentId() != null) {
             department = departmentRepo.findById(request.getDepartmentId()).orElse(null);
         }
 
+        Hospital hospital = null;
+        if (department != null) {
+            hospital = department.getHospital();
+        }
+        if (hospital == null) {
+            hospital = hospitalRepo.findById(hospitalId)
+                    .orElseThrow(() -> new RuntimeException("Hospital not found"));
+        }
+
+        if (department != null && department.getHospital() != null
+                && !hospitalId.equals(department.getHospital().getId())) {
+            throw new RuntimeException("Department not found for current hospital");
+        }
+
         Enquiry enquiry = Enquiry.builder()
+                .hospital(hospital)
                 .name(request.getName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
@@ -44,6 +66,67 @@ public class EnquiryService {
                 .status(Enquiry.Status.open)
                 .build();
 
+        return mapToResponse(enquiryRepo.save(enquiry));
+    }
+
+    public List<EnquiryResponse> getHospitalActiveEnquiries(UUID hospitalId) {
+        return enquiryRepo.findActiveEnquiriesByHospitalRobust(hospitalId)
+                .stream().map(this::mapToResponse).toList();
+    }
+
+    public List<EnquiryResponse> getHospitalEnquiriesByStatus(UUID hospitalId, Enquiry.Status status) {
+        return enquiryRepo.findByHospitalOrDepartmentHospitalIdAndStatusRobust(hospitalId, status)
+                .stream().map(this::mapToResponse).toList();
+    }
+
+    public List<EnquiryResponse> getHospitalAllEnquiries(UUID hospitalId) {
+        return enquiryRepo.findByHospitalOrDepartmentHospitalIdRobust(hospitalId)
+                .stream().map(this::mapToResponse).toList();
+    }
+
+    @Transactional
+    public EnquiryResponse updateEnquiryStatusForHospital(UUID hospitalId, UUID id, Enquiry.Status status, String response) {
+        Enquiry enquiry = enquiryRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enquiry not found with id: " + id));
+
+        UUID effectiveHospitalId =
+                enquiry.getHospital() != null ? enquiry.getHospital().getId()
+                        : (enquiry.getDepartment() != null && enquiry.getDepartment().getHospital() != null
+                            ? enquiry.getDepartment().getHospital().getId()
+                            : null);
+
+        if (effectiveHospitalId == null || !effectiveHospitalId.equals(hospitalId)) {
+            throw new RuntimeException("Enquiry not found for current hospital");
+        }
+
+        enquiry.setStatus(status);
+        if (response != null && !response.isBlank()) {
+            enquiry.setResponse(response);
+        }
+        if (status == Enquiry.Status.resolved) {
+            enquiry.setResolvedAt(LocalDateTime.now());
+        }
+
+        return mapToResponse(enquiryRepo.save(enquiry));
+    }
+
+    @Transactional
+    public EnquiryResponse assignEnquiryForHospital(UUID hospitalId, UUID id, String assignedTo) {
+        Enquiry enquiry = enquiryRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enquiry not found with id: " + id));
+
+        UUID effectiveHospitalId =
+                enquiry.getHospital() != null ? enquiry.getHospital().getId()
+                        : (enquiry.getDepartment() != null && enquiry.getDepartment().getHospital() != null
+                        ? enquiry.getDepartment().getHospital().getId()
+                        : null);
+
+        if (effectiveHospitalId == null || !effectiveHospitalId.equals(hospitalId)) {
+            throw new RuntimeException("Enquiry not found for current hospital");
+        }
+
+        enquiry.setAssignedTo(assignedTo);
+        enquiry.setStatus(Enquiry.Status.in_progress);
         return mapToResponse(enquiryRepo.save(enquiry));
     }
 

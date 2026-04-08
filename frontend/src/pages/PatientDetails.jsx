@@ -238,7 +238,7 @@ const PatientList = ({ onSelect, onRegister }) => {
   const [filtered,  setFiltered]  = useState([]);
 
   useEffect(() => {
-    api.get('/patients')
+    api.get('/patients/hospital')
       .then(data => { setPatients(data || []); setFiltered(data || []); })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -358,8 +358,8 @@ const PatientDetailView = ({ patient, onBack, onNavigate }) => {
 
   useEffect(() => {
     Promise.all([
-      api.get(`/appointments?patientId=${patient.id}`).catch(() => []),
-      api.get(`/prescriptions/patient/${patient.id}`).catch(() => []),
+      api.get(`/appointments/hospital?patientId=${patient.id}`).catch(() => []),
+      api.get(`/prescriptions/hospital/patient/${patient.id}`).catch(() => []),
     ]).then(([apts, prescs]) => {
       setAppointments(apts || []);
       setPrescriptions(prescs || []);
@@ -370,7 +370,7 @@ const PatientDetailView = ({ patient, onBack, onNavigate }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.put(`/patients/${patient.id}`, {
+      await api.put(`/patients/hospital/${patient.id}`, {
         firstName:            editForm.firstName,
         lastName:             editForm.lastName,
         dateOfBirth:          editForm.dateOfBirth || null,

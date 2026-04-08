@@ -22,6 +22,24 @@ public interface AppointmentRepo extends JpaRepository<Appointment, UUID> {
     List<Appointment> findByHospitalId(UUID hospitalId);
     List<Appointment> findByHospitalIdAndAppointmentDate(UUID hospitalId, LocalDate date);
     List<Appointment> findByHospitalIdAndStatus(UUID hospitalId, Appointment.Status status);
+    List<Appointment> findByHospitalIdAndPatientId(UUID hospitalId, UUID patientId);
+    List<Appointment> findByHospitalIdAndDoctorId(UUID hospitalId, UUID doctorId);
+
+    // Robust tenant scoping (covers older rows where appointment.hospital might be null)
+    @Query("SELECT a FROM Appointment a WHERE (a.hospital.id = :hospitalId OR a.doctor.hospital.id = :hospitalId) ORDER BY a.appointmentDate, a.appointmentTime")
+    List<Appointment> findByHospitalOrDoctorHospitalId(@Param("hospitalId") UUID hospitalId);
+
+    @Query("SELECT a FROM Appointment a WHERE (a.hospital.id = :hospitalId OR a.doctor.hospital.id = :hospitalId) AND a.appointmentDate = :date ORDER BY a.appointmentDate, a.appointmentTime")
+    List<Appointment> findByHospitalOrDoctorHospitalIdAndAppointmentDate(@Param("hospitalId") UUID hospitalId, @Param("date") LocalDate date);
+
+    @Query("SELECT a FROM Appointment a WHERE (a.hospital.id = :hospitalId OR a.doctor.hospital.id = :hospitalId) AND a.status = :status ORDER BY a.appointmentDate, a.appointmentTime")
+    List<Appointment> findByHospitalOrDoctorHospitalIdAndStatus(@Param("hospitalId") UUID hospitalId, @Param("status") Appointment.Status status);
+
+    @Query("SELECT a FROM Appointment a WHERE (a.hospital.id = :hospitalId OR a.doctor.hospital.id = :hospitalId) AND a.patient.id = :patientId ORDER BY a.appointmentDate, a.appointmentTime")
+    List<Appointment> findByHospitalOrDoctorHospitalIdAndPatientId(@Param("hospitalId") UUID hospitalId, @Param("patientId") UUID patientId);
+
+    @Query("SELECT a FROM Appointment a WHERE (a.hospital.id = :hospitalId OR a.doctor.hospital.id = :hospitalId) AND a.doctor.id = :doctorId ORDER BY a.appointmentDate, a.appointmentTime")
+    List<Appointment> findByHospitalOrDoctorHospitalIdAndDoctorId(@Param("hospitalId") UUID hospitalId, @Param("doctorId") UUID doctorId);
 
     @Query("SELECT a FROM Appointment a WHERE a.appointmentDate BETWEEN :start AND :end ORDER BY a.appointmentDate, a.appointmentTime")
     List<Appointment> findByDateRange(@Param("start") LocalDate start, @Param("end") LocalDate end);

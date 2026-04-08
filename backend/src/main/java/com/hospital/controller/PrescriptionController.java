@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ public class PrescriptionController {
     private final DoctorRepo       doctorRepo;
     private final AppointmentRepo  appointmentRepo;
     private final HospitalRepo     hospitalRepo;
+    private final com.hospital.security.TenantContext tenantContext;
 
     // ── DTOs ──────────────────────────────────────────────────────
 
@@ -136,15 +138,28 @@ public class PrescriptionController {
 
     @PostMapping
     @Operation(summary = "Create a new prescription")
+    @PreAuthorize("hasAnyRole('HOSPITAL_ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PrescriptionResponse>> create(
             @Valid @RequestBody PrescriptionRequest req) {
         try {
+            UUID hospitalId = tenantContext.requireHospitalId();
+            Hospital hospital = hospitalRepo.findById(hospitalId)
+                    .orElseThrow(() -> new RuntimeException("Hospital not found"));
+
             Patient patient = patientRepo.findById(req.getPatientId())
                     .orElseThrow(() -> new RuntimeException("Patient not found"));
             Doctor doctor = doctorRepo.findById(req.getDoctorId())
                     .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
+            if (patient.getHospital() == null || !hospitalId.equals(patient.getHospital().getId())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Patient not found for current hospital"));
+            }
+            if (doctor.getHospital() == null || !hospitalId.equals(doctor.getHospital().getId())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Doctor not found for current hospital"));
+            }
+
             Prescription prescription = Prescription.builder()
+                    .hospital(hospital)
                     .patient(patient)
                     .doctor(doctor)
                     .prescriptionDate(LocalDate.now())
@@ -160,18 +175,22 @@ public class PrescriptionController {
                     .isActive(true)
                     .build();
 
-            // Link appointment
+            // Link appointment (and validate hospital scope)
             if (req.getAppointmentId() != null) {
-                appointmentRepo.findById(req.getAppointmentId())
-                        .ifPresent(prescription::setAppointment);
+                Appointment appt = appointmentRepo.findById(req.getAppointmentId())
+                        .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                UUID effectiveHospitalId = appt.getHospital() != null
+                        ? appt.getHospital().getId()
+                        : (appt.getDoctor() != null && appt.getDoctor().getHospital() != null
+                            ? appt.getDoctor().getHospital().getId()
+                            : null);
+                if (effectiveHospitalId == null || !hospitalId.equals(effectiveHospitalId)) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("Appointment not found for current hospital"));
+                }
+                prescription.setAppointment(appt);
             }
 
             // Link hospital
-            if (req.getHospitalId() != null) {
-                hospitalRepo.findById(req.getHospitalId())
-                        .ifPresent(prescription::setHospital);
-            }
-
             // Medicines
             if (req.getMedicines() != null) {
                 List<PrescriptionMedicine> meds = req.getMedicines().stream()
@@ -210,6 +229,29 @@ public class PrescriptionController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
+    }
+
+    @GetMapping("/hospital/patient/{patientId}")
+    @Operation(summary = "Get hospital prescriptions for a patient")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<List<PrescriptionResponse>>> getHospitalByPatient(
+            @PathVariable UUID patientId) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        List<PrescriptionResponse> list = prescriptionRepo
+                .findByHospitalOrDoctorOrPatientHospitalIdAndPatientIdOrderByCreatedAtDesc(hospitalId, patientId)
+                .stream().map(this::mapResponse).collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(list));
+    }
+
+    @GetMapping("/hospital/appointment/{appointmentId}")
+    @Operation(summary = "Get hospital prescription for an appointment")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<PrescriptionResponse>> getHospitalByAppointment(
+            @PathVariable UUID appointmentId) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        return prescriptionRepo.findByHospitalOrDoctorOrPatientHospitalIdAndAppointmentId(hospitalId, appointmentId)
+                .map(p -> ResponseEntity.ok(ApiResponse.success(mapResponse(p))))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}")

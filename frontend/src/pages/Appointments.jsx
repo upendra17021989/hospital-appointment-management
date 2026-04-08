@@ -11,7 +11,7 @@ const Appointments = () => {
 
   const fetchAppointments = () => {
     setLoading(true);
-    const url = dateFilter ? `/appointments?date=${dateFilter}` : '/appointments';
+    const url = dateFilter ? `/appointments/hospital?date=${dateFilter}` : '/appointments/hospital';
     api.get(url)
       .then(data => { setAppointments(data || []); setLoading(false); })
       .catch(() => setLoading(false));
@@ -22,7 +22,7 @@ const Appointments = () => {
   const updateStatus = async (id, status) => {
     setUpdating(id);
     try {
-      await api.patch(`/appointments/${id}/status`, { status });
+      await api.patch(`/appointments/hospital/${id}/status`, { status });
       fetchAppointments();
     } finally {
       setUpdating(null);

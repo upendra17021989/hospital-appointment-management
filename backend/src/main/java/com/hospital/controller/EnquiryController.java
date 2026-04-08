@@ -11,7 +11,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.hospital.security.TenantContext;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +26,61 @@ import java.util.UUID;
 public class EnquiryController {
 
     private final EnquiryService enquiryService;
+    private final TenantContext tenantContext;
+
+    @PostMapping("/hospital")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @Operation(summary = "Submit a new hospital enquiry")
+    public ResponseEntity<ApiResponse<EnquiryResponse>> createHospitalEnquiry(
+            @Valid @RequestBody EnquiryRequest request) {
+        EnquiryResponse enquiry = enquiryService.submitEnquiry(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Enquiry submitted successfully", enquiry));
+    }
+
+    @GetMapping("/hospital")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @Operation(summary = "Get hospital enquiries with optional status filter")
+    public ResponseEntity<ApiResponse<List<EnquiryResponse>>> getHospitalEnquiries(
+            @RequestParam(required = false) String status) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        List<EnquiryResponse> enquiries;
+        if (status != null) {
+            enquiries = enquiryService.getHospitalEnquiriesByStatus(
+                    hospitalId, Enquiry.Status.valueOf(status));
+        } else {
+            enquiries = enquiryService.getHospitalActiveEnquiries(hospitalId);
+        }
+        return ResponseEntity.ok(ApiResponse.success(enquiries));
+    }
+
+    @GetMapping("/hospital/all")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @Operation(summary = "Get all hospital enquiries")
+    public ResponseEntity<ApiResponse<List<EnquiryResponse>>> getAllHospitalEnquiries() {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        return ResponseEntity.ok(ApiResponse.success(enquiryService.getHospitalAllEnquiries(hospitalId)));
+    }
+
+    @PatchMapping("/hospital/{id}/status")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @Operation(summary = "Update hospital enquiry status")
+    public ResponseEntity<ApiResponse<EnquiryResponse>> updateHospitalStatus(
+            @PathVariable UUID id,
+            @RequestParam String status,
+            @RequestParam(required = false) String response) {
+        try {
+            UUID hospitalId = tenantContext.requireHospitalId();
+            EnquiryResponse updated = enquiryService.updateEnquiryStatusForHospital(
+                    hospitalId,
+                    id,
+                    Enquiry.Status.valueOf(status),
+                    response);
+            return ResponseEntity.ok(ApiResponse.success("Enquiry status updated", updated));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
 
     @PostMapping
     @Operation(summary = "Submit a new enquiry")

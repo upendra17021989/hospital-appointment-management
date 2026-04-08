@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import com.hospital.security.TenantContext;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -25,6 +27,7 @@ import java.util.UUID;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final TenantContext tenantContext;
 
     @PostMapping
     @Operation(summary = "Book a new appointment")
@@ -78,5 +81,29 @@ public class AppointmentController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
+    }
+
+    @GetMapping("/hospital")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @Operation(summary = "Get hospital-scoped appointments with optional filters")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getHospitalAppointments(
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) UUID doctorId,
+            @RequestParam(required = false) UUID patientId) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        List<AppointmentResponse> appointments = appointmentService.getHospitalAppointments(
+                hospitalId, date, doctorId, patientId);
+        return ResponseEntity.ok(ApiResponse.success(appointments));
+    }
+
+    @PatchMapping("/hospital/{id}/status")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @Operation(summary = "Update hospital-scoped appointment status")
+    public ResponseEntity<ApiResponse<AppointmentResponse>> updateHospitalStatus(
+            @PathVariable UUID id,
+            @Valid @RequestBody AppointmentStatusUpdateRequest request) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        AppointmentResponse updated = appointmentService.updateStatusForHospital(hospitalId, id, request);
+        return ResponseEntity.ok(ApiResponse.success("Status updated successfully", updated));
     }
 }
