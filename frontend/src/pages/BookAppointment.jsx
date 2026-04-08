@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { LoadingSpinner } from '../components/Common';
 
@@ -409,6 +410,7 @@ const SuccessScreen = ({ appointment, onReset }) => {
 
 // ── Main BookAppointment Page ─────────────────────────────────
 const BookAppointment = () => {
+  const { user, isAuthenticated } = useAuth();
   const [step, setStep] = useState(1);
   const [departments, setDepartments] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -425,8 +427,10 @@ const BookAppointment = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get('/departments').then(setDepartments).catch(() => {});
-  }, []);
+    if (isAuthenticated && user?.hospital) {
+      api.get('/departments/hospital').then(setDepartments).catch(() => {});
+    }
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     if (selectedDept) {
