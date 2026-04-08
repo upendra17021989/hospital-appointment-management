@@ -10,6 +10,7 @@ import com.hospital.repository.DepartmentRepo;
 import com.hospital.repository.DoctorRepo;
 import com.hospital.repository.DoctorScheduleRepo;
 import com.hospital.security.RequireHospitalContext;
+import com.hospital.security.TenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -36,6 +37,7 @@ public class DoctorManagementController {
     private final DoctorRepo doctorRepo;
     private final DepartmentRepo departmentRepo;
     private final DoctorScheduleRepo scheduleRepo;
+    private final TenantContext tenantContext;
 
     // ── Request DTOs ─────────────────────────────────────────────
 
@@ -98,7 +100,8 @@ public class DoctorManagementController {
     public ResponseEntity<ApiResponse<DoctorResponse>> createDoctor(
             @Valid @RequestBody DoctorSaveRequest request) {
         try {
-            Department dept = departmentRepo.findById(request.getDepartmentId())
+            UUID hospitalId = tenantContext.requireHospitalId();
+            Department dept = departmentRepo.findByIdAndHospitalId(request.getDepartmentId(), hospitalId)
                     .orElseThrow(() -> new RuntimeException("Department not found"));
 
             Doctor doctor = Doctor.builder()
@@ -114,6 +117,7 @@ public class DoctorManagementController {
                     .consultationFee(request.getConsultationFee() != null
                             ? request.getConsultationFee() : BigDecimal.ZERO)
                     .isAvailable(request.getIsAvailable() != null ? request.getIsAvailable() : true)
+                    .hospital(dept.getHospital())
                     .department(dept)
                     .languagesSpoken(request.getLanguagesSpoken())
                     .build();
@@ -134,10 +138,11 @@ public class DoctorManagementController {
             @PathVariable UUID id,
             @Valid @RequestBody DoctorSaveRequest request) {
         try {
-            Doctor doctor = doctorRepo.findById(id)
+            UUID hospitalId = tenantContext.requireHospitalId();
+            Doctor doctor = doctorRepo.findByIdAndHospitalId(id, hospitalId)
                     .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
-            Department dept = departmentRepo.findById(request.getDepartmentId())
+            Department dept = departmentRepo.findByIdAndHospitalId(request.getDepartmentId(), hospitalId)
                     .orElseThrow(() -> new RuntimeException("Department not found"));
 
             doctor.setFirstName(request.getFirstName());
@@ -152,6 +157,7 @@ public class DoctorManagementController {
             doctor.setConsultationFee(request.getConsultationFee() != null
                     ? request.getConsultationFee() : BigDecimal.ZERO);
             doctor.setIsAvailable(request.getIsAvailable() != null ? request.getIsAvailable() : true);
+            doctor.setHospital(dept.getHospital());
             doctor.setDepartment(dept);
             doctor.setLanguagesSpoken(request.getLanguagesSpoken());
 
@@ -168,10 +174,10 @@ public class DoctorManagementController {
     @Operation(summary = "Delete a doctor")
     public ResponseEntity<ApiResponse<String>> deleteDoctor(@PathVariable UUID id) {
         try {
-            if (!doctorRepo.existsById(id)) {
-                return ResponseEntity.notFound().build();
-            }
-            doctorRepo.deleteById(id);
+            UUID hospitalId = tenantContext.requireHospitalId();
+            Doctor doctor = doctorRepo.findByIdAndHospitalId(id, hospitalId)
+                    .orElseThrow(() -> new RuntimeException("Doctor not found"));
+            doctorRepo.delete(doctor);
             return ResponseEntity.ok(ApiResponse.success("Doctor deleted successfully", "deleted"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -198,7 +204,10 @@ public class DoctorManagementController {
     @Operation(summary = "Get all schedules for a doctor")
     public ResponseEntity<ApiResponse<List<ScheduleResponse>>> getDoctorSchedules(
             @PathVariable UUID id) {
-        List<ScheduleResponse> schedules = scheduleRepo.findByDoctorIdAndIsActiveTrue(id)
+        UUID hospitalId = tenantContext.requireHospitalId();
+        Doctor doctor = doctorRepo.findByIdAndHospitalId(id, hospitalId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+        List<ScheduleResponse> schedules = scheduleRepo.findByDoctorIdAndIsActiveTrue(doctor.getId())
                 .stream().map(this::mapSchedule).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(schedules));
     }
@@ -208,7 +217,8 @@ public class DoctorManagementController {
     public ResponseEntity<ApiResponse<ScheduleResponse>> addSchedule(
             @Valid @RequestBody ScheduleSaveRequest request) {
         try {
-            Doctor doctor = doctorRepo.findById(request.getDoctorId())
+            UUID hospitalId = tenantContext.requireHospitalId();
+            Doctor doctor = doctorRepo.findByIdAndHospitalId(request.getDoctorId(), hospitalId)
                     .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
             DoctorSchedule schedule = DoctorSchedule.builder()
@@ -236,8 +246,13 @@ public class DoctorManagementController {
     public ResponseEntity<ApiResponse<ScheduleResponse>> toggleSchedule(
             @PathVariable UUID scheduleId) {
         try {
+            UUID hospitalId = tenantContext.requireHospitalId();
             DoctorSchedule schedule = scheduleRepo.findById(scheduleId)
                     .orElseThrow(() -> new RuntimeException("Schedule not found"));
+            if (schedule.getDoctor() == null || schedule.getDoctor().getHospital() == null
+                    || !hospitalId.equals(schedule.getDoctor().getHospital().getId())) {
+                throw new RuntimeException("Schedule not found");
+            }
             schedule.setIsActive(!schedule.getIsActive());
             DoctorSchedule updated = scheduleRepo.save(schedule);
             return ResponseEntity.ok(ApiResponse.success("Schedule toggled", mapSchedule(updated)));
@@ -251,10 +266,14 @@ public class DoctorManagementController {
     public ResponseEntity<ApiResponse<String>> deleteSchedule(
             @PathVariable UUID scheduleId) {
         try {
-            if (!scheduleRepo.existsById(scheduleId)) {
-                return ResponseEntity.notFound().build();
+            UUID hospitalId = tenantContext.requireHospitalId();
+            DoctorSchedule schedule = scheduleRepo.findById(scheduleId)
+                    .orElseThrow(() -> new RuntimeException("Schedule not found"));
+            if (schedule.getDoctor() == null || schedule.getDoctor().getHospital() == null
+                    || !hospitalId.equals(schedule.getDoctor().getHospital().getId())) {
+                throw new RuntimeException("Schedule not found");
             }
-            scheduleRepo.deleteById(scheduleId);
+            scheduleRepo.delete(schedule);
             return ResponseEntity.ok(ApiResponse.success("Schedule deleted", "deleted"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));

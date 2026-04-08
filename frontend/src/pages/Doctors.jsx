@@ -51,30 +51,32 @@ const Doctors = () => {
   const [deptFilter, setDeptFilter] = useState('');
 
   useEffect(() => {
+    setLoading(true);
+    const query = new URLSearchParams();
+    if (search.trim()) query.set('search', search.trim());
+    if (deptFilter) query.set('departmentId', deptFilter);
+    const doctorsPath = query.toString()
+      ? `/doctors/hospital/list?${query.toString()}`
+      : '/doctors/hospital/list';
+
     Promise.all([
-      api.get('/doctors').catch(() => []),
-      api.get('/departments').catch(() => []),
+      api.get(doctorsPath).catch(() => []),
+      api.get('/departments/hospital').catch(() => []),
     ]).then(([d, dept]) => {
       setDoctors(d || []);
       setDepartments(dept || []);
       setLoading(false);
     });
-  }, []);
+  }, [search, deptFilter]);
 
-  const filtered = doctors.filter(d => {
-    const matchSearch = !search
-      || d.fullName?.toLowerCase().includes(search.toLowerCase())
-      || d.specialization?.toLowerCase().includes(search.toLowerCase());
-    const matchDept = !deptFilter || d.department?.id === deptFilter;
-    return matchSearch && matchDept;
-  });
+  const filtered = doctors;
 
   return (
     <div>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Our Doctors</h1>
-          <p className="page-subtitle">{doctors.length} specialists available</p>
+          <h1 className="page-title">Hospital Doctors</h1>
+          <p className="page-subtitle">{doctors.length} specialists available in your hospital</p>
         </div>
       </div>
 

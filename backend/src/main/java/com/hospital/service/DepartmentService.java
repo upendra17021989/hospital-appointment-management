@@ -26,6 +26,12 @@ public class DepartmentService {
         return departmentRepo.findById(id).map(this::mapToResponse);
     }
 
+    public List<DepartmentResponse> getActiveDepartmentsByHospitalId(UUID hospitalId) {
+        return departmentRepo.findByHospitalIdAndIsActiveTrue(hospitalId).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     public DepartmentResponse mapToResponse(Department d) {
         return DepartmentResponse.builder()
                 .id(d.getId())

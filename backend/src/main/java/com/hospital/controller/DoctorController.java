@@ -6,11 +6,13 @@ import com.hospital.dto.Dtos.DoctorResponse;
 import com.hospital.dto.Dtos.TimeSlot;
 import com.hospital.model.Doctor;
 import com.hospital.repository.DoctorRepo;
+import com.hospital.security.TenantContext;
 import com.hospital.service.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -27,6 +29,7 @@ public class DoctorController {
 
     private final DoctorRepo doctorRepo;
     private final AppointmentService appointmentService;
+    private final TenantContext tenantContext;
 
     @GetMapping
     @Operation(summary = "Get all available doctors")
@@ -41,6 +44,28 @@ public class DoctorController {
             doctors = doctorRepo.findByDepartmentIdAndIsAvailableTrue(departmentId);
         } else {
             doctors = doctorRepo.findByIsAvailableTrue();
+        }
+
+        List<DoctorResponse> response = doctors.stream()
+                .map(this::mapDoctor)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/hospital/list")
+    @PreAuthorize("hasRole('STAFF') or hasRole('RECEPTIONIST') or hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Get available doctors for current hospital")
+    public ResponseEntity<ApiResponse<List<DoctorResponse>>> getHospitalDoctors(
+            @RequestParam(required = false) UUID departmentId,
+            @RequestParam(required = false) String search) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        List<Doctor> doctors;
+        if (search != null && !search.isBlank()) {
+            doctors = doctorRepo.searchDoctorsByDepartmentHospital(hospitalId, search);
+        } else if (departmentId != null) {
+            doctors = doctorRepo.findByDepartmentHospitalIdAndDepartmentIdAndIsAvailableTrue(hospitalId, departmentId);
+        } else {
+            doctors = doctorRepo.findByDepartmentHospitalIdAndIsAvailableTrue(hospitalId);
         }
 
         List<DoctorResponse> response = doctors.stream()

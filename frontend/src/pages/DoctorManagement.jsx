@@ -337,8 +337,8 @@ const DoctorManagement = () => {
   const fetchDoctors = () => {
     setLoading(true);
     Promise.all([
-      api.get('/doctors').catch(() => []),
-      api.get('/departments').catch(() => []),
+      api.get('/doctors/hospital/list').catch(() => []),
+      api.get('/departments/hospital').catch(() => []),
     ]).then(([d, dept]) => {
       setDoctors(d || []);
       setDepartments(dept || []);
