@@ -27,7 +27,7 @@ const api = {
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.message || 'Request failed');
-    return data.data;
+    return data;
   },
 
   patch: async (path, body) => {
@@ -38,7 +38,7 @@ const api = {
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.message || 'Request failed');
-    return data.data;
+    return data;
   },
 
   put: async (path, body) => {
@@ -49,7 +49,7 @@ const api = {
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.message || 'Request failed');
-    return data.data;
+    return data;
   },
 
   delete: async (path) => {
