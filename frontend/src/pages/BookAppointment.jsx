@@ -409,7 +409,7 @@ const SuccessScreen = ({ appointment, onReset }) => {
 };
 
 // ── Main BookAppointment Page ─────────────────────────────────
-const BookAppointment = () => {
+const BookAppointment = ({ prefillPatient }) => {
   const { user, isAuthenticated } = useAuth();
   const [step, setStep] = useState(1);
   const [departments, setDepartments] = useState([]);
@@ -450,12 +450,25 @@ const BookAppointment = () => {
   const handleConfirm = async () => {
     setLoading(true); setError('');
     try {
-      const patient = await api.post('/patients', {
-        ...patientData,
-        dateOfBirth: patientData.dateOfBirth || null,
-      });
+      let patientId;
+      // Check existing patient by normalized phone
+      const normalizedPhone = normalisePhone(patientData.phone);
+      const existingPatients = await api.get(`/patients/hospital/search?phone=${normalizedPhone}`);
+      
+      if (existingPatients.length > 0) {
+        // Reuse first match (same hospital, unique phone)
+        patientId = existingPatients[0].id;
+      } else {
+        // Create new
+        const newPatient = await api.post('/patients', {
+          ...patientData,
+          dateOfBirth: patientData.dateOfBirth || null,
+        });
+        patientId = newPatient.id;
+      }
+
       const appt = await api.post('/appointments', {
-        patientId: patient.id,
+        patientId,
         doctorId: selectedDoctor.id,
         appointmentDate: selectedDate,
         appointmentTime: selectedSlot.time,
@@ -463,16 +476,29 @@ const BookAppointment = () => {
       });
       setSuccess(appt);
     } catch (e) {
-      setError(e.message);
+      setError(e.response?.data?.message || e.message);
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (prefillPatient) {
+      setPatientData({
+        firstName: prefillPatient.firstName || '',
+        lastName: prefillPatient.lastName || '',
+        phone: prefillPatient.phone || '',
+        email: prefillPatient.email || '',
+        gender: prefillPatient.gender || '',
+        dateOfBirth: prefillPatient.dateOfBirth || '',
+      });
+    }
+  }, [prefillPatient]);
+
   const handleReset = () => {
     setSuccess(null); setStep(1); setSelectedDept(null);
     setSelectedDoctor(null); setSelectedSlot(null); setSelectedDate('');
-    setPatientData({ firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '' });
+    setPatientData(prefillPatient || { firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '' });
     setVisitData({ reasonForVisit: '', symptoms: '', appointmentType: 'in_person' });
     setError('');
   };
