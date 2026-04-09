@@ -24,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import com.hospital.security.TenantContext;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,6 +37,7 @@ public class UserController {
     private final UserRepo userRepo;
     private final HospitalRepo hospitalRepo;
     private final PasswordEncoder passwordEncoder;
+    private final TenantContext tenantContext;
 
     // ── DTOs ──────────────────────────────────────────────────────
 
@@ -100,15 +102,13 @@ public class UserController {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<User> usersPage;
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isSuperAdmin = auth != null && auth.getPrincipal() instanceof User currentUser && currentUser.getRole() == User.Role.SUPER_ADMIN;
-        if (isSuperAdmin) {
+        if (tenantContext.isSuperAdmin()) {
             // SUPER_ADMIN can see all users
             usersPage = userRepo.findAll(pageable);
         } else {
             // HOSPITAL_ADMIN can only see users from their hospital
-            // This would need to be implemented based on JWT context
-            usersPage = userRepo.findAll(pageable); // Placeholder
+            UUID hospitalId = tenantContext.requireHospitalId();
+            usersPage = userRepo.findByHospitalId(hospitalId, pageable);
         }
 
         List<UserDto> userDtos = usersPage.getContent().stream()
@@ -139,12 +139,16 @@ public class UserController {
                     .body(ApiResponse.error("An account with this email already exists."));
         }
 
-        // For HOSPITAL_ADMIN, force hospital to be their own
-        // For SUPER_ADMIN, allow specifying hospital or create without hospital
-        Hospital hospital = null;
-        if (request.getHospitalId() != null) {
+        Hospital hospital;
+        if (tenantContext.isSuperAdmin() && request.getHospitalId() != null) {
+            // SUPER_ADMIN can specify hospital
             hospital = hospitalRepo.findById(request.getHospitalId())
                     .orElseThrow(() -> new RuntimeException("Hospital not found"));
+        } else {
+            // HOSPITAL_ADMIN: force current hospital; SUPER_ADMIN without id: no hospital
+            UUID currentHospitalId = tenantContext.requireHospitalId();
+            hospital = hospitalRepo.findById(currentHospitalId)
+                    .orElseThrow(() -> new RuntimeException("Current hospital not found"));
         }
 
         User user = User.builder()

@@ -1,6 +1,8 @@
 package com.hospital.repository;
 
 import com.hospital.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +15,5 @@ public interface UserRepo extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
     List<User> findByHospitalId(UUID hospitalId);
+    Page<User> findByHospitalId(UUID hospitalId, Pageable pageable);
 }

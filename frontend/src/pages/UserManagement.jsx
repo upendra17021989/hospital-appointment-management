@@ -26,55 +26,13 @@ const UserManagement = ({ onNavigate }) => {
     try {
       setLoading(true);
       const response = await api.get('/users');
-      if (response.success) {
-        setUsers(response.data);
+      if (response && response.length) {
+        setUsers(response);
       } else {
-        console.error('Failed to load users:', response.message);
-        // Fallback to mock data for now
-        setUsers([
-          {
-            id: '1',
-            firstName: 'John',
-            lastName: 'Admin',
-            email: 'admin@hospital.com',
-            role: 'HOSPITAL_ADMIN',
-            isActive: true,
-            hospital: { name: 'City General Hospital' }
-          },
-          {
-            id: '2',
-            firstName: 'Jane',
-            lastName: 'Doctor',
-            email: 'doctor@hospital.com',
-            role: 'STAFF',
-            isActive: true,
-            hospital: { name: 'City General Hospital' }
-          }
-        ]);
+        console.error('Failed to load users:', response);
       }
     } catch (error) {
       console.error('Failed to load users:', error);
-      // Fallback to mock data
-      setUsers([
-        {
-          id: '1',
-          firstName: 'John',
-          lastName: 'Admin',
-          email: 'admin@hospital.com',
-          role: 'HOSPITAL_ADMIN',
-          isActive: true,
-          hospital: { name: 'City General Hospital' }
-        },
-        {
-          id: '2',
-          firstName: 'Jane',
-          lastName: 'Doctor',
-          email: 'doctor@hospital.com',
-          role: 'STAFF',
-          isActive: true,
-          hospital: { name: 'City General Hospital' }
-        }
-      ]);
     } finally {
       setLoading(false);
     }
