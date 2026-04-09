@@ -142,6 +142,8 @@ public class PatientService {
                 .bloodGroup(p.getBloodGroup())
                 .emergencyContactName(p.getEmergencyContactName())
                 .emergencyContactPhone(p.getEmergencyContactPhone())
+                .medicalHistory(p.getMedicalHistory())
+                .allergies(p.getAllergies())
                 .createdAt(p.getCreatedAt())
                 .build();
     }

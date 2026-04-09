@@ -93,6 +93,8 @@ public class Dtos {
         private String bloodGroup;
         private String emergencyContactName;
         private String emergencyContactPhone;
+        private String medicalHistory;
+        private String allergies;
         private LocalDateTime createdAt;
     }
 
