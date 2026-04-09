@@ -163,128 +163,248 @@ const normalisePhone = (value) => {
 };
 
 // ── Step 4: Patient Info ──────────────────────────────────────
-const Step4PatientInfo = ({ patientData, setPatientData, visitData, setVisitData, onNext, onBack }) => {
+const Step4PatientInfo = ({
+  patientData, setPatientData, visitData, setVisitData,
+  isNewPatient, setIsNewPatient,
+  searchQuery, setSearchQuery,
+  searchedPatients, setSearchedPatients,
+  selectedExistingPatient, setSelectedExistingPatient,
+  searchLoading,
+  onNext, onBack
+}) => {
   const [phoneTouched, setPhoneTouched] = useState(false);
   const phoneError = phoneTouched ? validatePhone(patientData.phone) : '';
 
-  const isValid =
-    patientData.firstName.trim() &&
-    patientData.lastName.trim() &&
-    !validatePhone(patientData.phone) &&  // phone must pass validation
-    visitData.reasonForVisit.trim();
+  const isValid = (isNewPatient ? 
+    (patientData.firstName.trim() && patientData.lastName.trim() && !phoneError && visitData.reasonForVisit.trim()) :
+    (selectedExistingPatient && !phoneError && visitData.reasonForVisit.trim())
+  );
 
   const handlePhoneChange = (e) => {
-    // Only allow digits, spaces, dashes, + sign
     const raw = e.target.value.replace(/[^\d\s\-+]/g, '');
     setPatientData(p => ({ ...p, phone: raw }));
+    if (!isNewPatient) setSearchQuery(raw);
+  };
+
+  const handlePatientSelect = (patient) => {
+    setSelectedExistingPatient(patient);
+    setPatientData({
+      firstName: patient.firstName || '',
+      lastName: patient.lastName || '',
+      phone: patient.phone || '',
+      email: patient.email || '',
+      gender: patient.gender || '',
+      dateOfBirth: patient.dateOfBirth || ''
+    });
+  };
+
+  const handleToggleMode = () => {
+    setIsNewPatient(!isNewPatient);
+    if (!isNewPatient) {
+      setSelectedExistingPatient(null);
+      setPatientData({ firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '' });
+    }
+    setSearchQuery('');
+    setSearchedPatients([]);
   };
 
   const handleNext = () => {
-    // Normalise phone before proceeding
     setPatientData(p => ({ ...p, phone: normalisePhone(p.phone) }));
     onNext();
   };
 
+  const fieldDisabled = !isNewPatient;
+
   return (
     <div className="card">
       <div className="card-title">Patient Information</div>
-      <div className="form-grid">
+      
+      {/* Toggle */}
+      <div style={{ marginBottom: 20, display: 'flex', gap: 12 }}>
+        <button 
+          className={`btn ${isNewPatient ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={handleToggleMode}
+        >
+          👤 New Patient
+        </button>
+        <button 
+          className={`btn ${!isNewPatient ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={handleToggleMode}
+        >
+          🔍 Existing Patient
+        </button>
+      </div>
 
-        {/* First Name */}
-        <div className="form-group">
-          <label>First Name *</label>
-          <input
-            value={patientData.firstName}
-            onChange={e => setPatientData(p => ({ ...p, firstName: e.target.value }))}
-            placeholder="First name"
-          />
-        </div>
-
-        {/* Last Name */}
-        <div className="form-group">
-          <label>Last Name *</label>
-          <input
-            value={patientData.lastName}
-            onChange={e => setPatientData(p => ({ ...p, lastName: e.target.value }))}
-            placeholder="Last name"
-          />
-        </div>
-
-        {/* Phone with validation */}
-        <div className="form-group">
-          <label>Phone *</label>
-          <div style={{ position: 'relative' }}>
-            <span style={{
-              position: 'absolute', left: 12, top: '50%',
-              transform: 'translateY(-50%)',
-              fontSize: 13, fontWeight: 700,
-              color: 'var(--text-muted)',
-              pointerEvents: 'none',
-              userSelect: 'none',
-            }}>🇮🇳</span>
+      {!isNewPatient ? (
+        // Existing Patient Mode
+        <div>
+          <div className="form-group">
+            <label>Search by Phone</label>
             <input
-              value={patientData.phone}
+              value={searchQuery}
               onChange={handlePhoneChange}
               onBlur={() => setPhoneTouched(true)}
-              placeholder="98765 43210"
-              maxLength={15}
+              placeholder="Enter phone number (10 digits)"
               style={{
-                paddingLeft: 36,
                 borderColor: phoneError ? '#c0220a' : undefined,
                 boxShadow: phoneError ? '0 0 0 3px rgba(192,34,10,0.1)' : undefined,
               }}
             />
+            {phoneError && (
+              <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
+                ⚠ {phoneError}
+              </span>
+            )}
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+              Enter 10-digit phone to search existing patients
+            </span>
           </div>
-          {phoneError && (
-            <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
-              ⚠ {phoneError}
-            </span>
+
+          {searchLoading ? (
+            <LoadingSpinner />
+          ) : searchedPatients.length > 0 ? (
+            <div>
+              <label style={{ fontWeight: 600, marginBottom: 12, display: 'block' }}>
+                Select Patient ({searchedPatients.length} found)
+              </label>
+              <div className="doctor-grid" style={{ marginBottom: 20 }}>
+                {searchedPatients.map(p => (
+                  <div
+                    key={p.id}
+                    className="doctor-card"
+                    style={{ 
+                      cursor: 'pointer', 
+                      border: selectedExistingPatient?.id === p.id ? '2px solid var(--primary)' : undefined 
+                    }}
+                    onClick={() => handlePatientSelect(p)}
+                  >
+                    <div className="doctor-avatar">{p.firstName?.[0]}{p.lastName?.[0]}</div>
+                    <div className="doctor-name">{p.fullName || `${p.firstName} ${p.lastName}`}</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                      {p.phone}
+                    </div>
+                    {p.email && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.email}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : searchQuery.length >= 10 && !searchLoading ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">👤</div>
+              <div className="empty-state-title">No patients found</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Try a different phone number</div>
+            </div>
+          ) : null}
+
+          {selectedExistingPatient && (
+            <div style={{ background: 'var(--bg-light)', padding: 16, borderRadius: 8, marginBottom: 20 }}>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>Selected: {selectedExistingPatient.fullName}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{selectedExistingPatient.phone}</div>
+            </div>
           )}
-          {!phoneError && phoneTouched && patientData.phone && (
-            <span style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>
-              ✓ Valid Indian mobile number
+        </div>
+      ) : (
+        // New Patient Mode - Original form
+        <div className="form-grid">
+          {/* First Name */}
+          <div className="form-group">
+            <label>First Name *</label>
+            <input
+              value={patientData.firstName}
+              onChange={e => setPatientData(p => ({ ...p, firstName: e.target.value }))}
+              placeholder="First name"
+            />
+          </div>
+
+          {/* Last Name */}
+          <div className="form-group">
+            <label>Last Name *</label>
+            <input
+              value={patientData.lastName}
+              onChange={e => setPatientData(p => ({ ...p, lastName: e.target.value }))}
+              placeholder="Last name"
+            />
+          </div>
+
+          {/* Phone with validation */}
+          <div className="form-group">
+            <label>Phone *</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{
+                position: 'absolute', left: 12, top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: 13, fontWeight: 700,
+                color: 'var(--text-muted)',
+                pointerEvents: 'none',
+                userSelect: 'none',
+              }}>🇮🇳</span>
+              <input
+                value={patientData.phone}
+                onChange={handlePhoneChange}
+                onBlur={() => setPhoneTouched(true)}
+                placeholder="98765 43210"
+                maxLength={15}
+                style={{
+                  paddingLeft: 36,
+                  borderColor: phoneError ? '#c0220a' : undefined,
+                  boxShadow: phoneError ? '0 0 0 3px rgba(192,34,10,0.1)' : undefined,
+                }}
+              />
+            </div>
+            {phoneError && (
+              <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
+                ⚠ {phoneError}
+              </span>
+            )}
+            {!phoneError && phoneTouched && patientData.phone && (
+              <span style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>
+                ✓ Valid Indian mobile number
+              </span>
+            )}
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+              Accepted: 9876543210 · +91 98765 43210 · 091 98765 43210
             </span>
-          )}
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-            Accepted: 9876543210 · +91 98765 43210 · 091 98765 43210
-          </span>
-        </div>
+          </div>
 
-        {/* Email */}
-        <div className="form-group">
-          <label>Email</label>
-          <input
-            type="email"
-            value={patientData.email}
-            onChange={e => setPatientData(p => ({ ...p, email: e.target.value }))}
-            placeholder="patient@email.com"
-          />
-        </div>
+          {/* Email */}
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={patientData.email}
+              onChange={e => setPatientData(p => ({ ...p, email: e.target.value }))}
+              placeholder="patient@email.com"
+            />
+          </div>
 
-        {/* Gender */}
-        <div className="form-group">
-          <label>Gender</label>
-          <select
-            value={patientData.gender}
-            onChange={e => setPatientData(p => ({ ...p, gender: e.target.value }))}
-          >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
+          {/* Gender */}
+          <div className="form-group">
+            <label>Gender</label>
+            <select
+              value={patientData.gender}
+              onChange={e => setPatientData(p => ({ ...p, gender: e.target.value }))}
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
 
-        {/* Date of Birth */}
-        <div className="form-group">
-          <label>Date of Birth</label>
-          <input
-            type="date"
-            value={patientData.dateOfBirth}
-            onChange={e => setPatientData(p => ({ ...p, dateOfBirth: e.target.value }))}
-          />
+          {/* Date of Birth */}
+          <div className="form-group">
+            <label>Date of Birth</label>
+            <input
+              type="date"
+              value={patientData.dateOfBirth}
+              onChange={e => setPatientData(p => ({ ...p, dateOfBirth: e.target.value }))}
+            />
+          </div>
         </div>
+      )}
 
+      {/* Common Visit Fields */}
+      <div className="form-grid">
         {/* Reason for Visit */}
         <div className="form-group full">
           <label>Reason for Visit *</label>
@@ -317,7 +437,6 @@ const Step4PatientInfo = ({ patientData, setPatientData, visitData, setVisitData
             <option value="follow_up">Follow Up</option>
           </select>
         </div>
-
       </div>
 
       <div style={{ marginTop: 20, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
@@ -426,6 +545,13 @@ const BookAppointment = ({ prefillPatient }) => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState('');
 
+  // New states for existing patient toggle
+  const [isNewPatient, setIsNewPatient] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchedPatients, setSearchedPatients] = useState([]);
+  const [selectedExistingPatient, setSelectedExistingPatient] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+
   useEffect(() => {
     if (isAuthenticated && user?.hospital) {
       api.get('/departments/hospital').then(setDepartments).catch(() => {});
@@ -447,24 +573,46 @@ const BookAppointment = ({ prefillPatient }) => {
     }
   }, [selectedDoctor, selectedDate]);
 
+  // Debounced patient search
+  useEffect(() => {
+    if (searchQuery.length < 10) {
+      setSearchedPatients([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const patients = await api.get(`/patients/hospital/search?phone=${searchQuery}`);
+        setSearchedPatients(patients);
+      } catch {
+        setSearchedPatients([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const handleConfirm = async () => {
     setLoading(true); setError('');
     try {
       let patientId;
-      // Check existing patient by normalized phone
-      const normalizedPhone = normalisePhone(patientData.phone);
-      const existingPatients = await api.get(`/patients/hospital/search?phone=${normalizedPhone}`);
-      
-      if (existingPatients.length > 0) {
-        // Reuse first match (same hospital, unique phone)
-        patientId = existingPatients[0].id;
+      if (!isNewPatient && selectedExistingPatient?.id) {
+        patientId = selectedExistingPatient.id;
       } else {
-        // Create new
-        const newPatient = await api.post('/patients', {
-          ...patientData,
-          dateOfBirth: patientData.dateOfBirth || null,
-        });
-        patientId = newPatient.id;
+        // Fallback to current logic for new patient
+        const normalizedPhone = normalisePhone(patientData.phone);
+        const existingPatients = await api.get(`/patients/hospital/search?phone=${normalizedPhone}`);
+        
+        if (existingPatients.length > 0) {
+          patientId = existingPatients[0].id;
+        } else {
+          const newPatient = await api.post('/patients', {
+            ...patientData,
+            dateOfBirth: patientData.dateOfBirth || null,
+          });
+          patientId = newPatient.id;
+        }
       }
 
       const appt = await api.post('/appointments', {
@@ -500,6 +648,10 @@ const BookAppointment = ({ prefillPatient }) => {
     setSelectedDoctor(null); setSelectedSlot(null); setSelectedDate('');
     setPatientData(prefillPatient || { firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '' });
     setVisitData({ reasonForVisit: '', symptoms: '', appointmentType: 'in_person' });
+    setIsNewPatient(true);
+    setSelectedExistingPatient(null);
+    setSearchQuery('');
+    setSearchedPatients([]);
     setError('');
   };
 
@@ -553,6 +705,16 @@ const BookAppointment = ({ prefillPatient }) => {
           setPatientData={setPatientData}
           visitData={visitData}
           setVisitData={setVisitData}
+          isNewPatient={isNewPatient}
+          setIsNewPatient={setIsNewPatient}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          searchedPatients={searchedPatients}
+          setSearchedPatients={setSearchedPatients}
+          selectedExistingPatient={selectedExistingPatient}
+          setSelectedExistingPatient={setSelectedExistingPatient}
+          searchLoading={searchLoading}
+          setSearchLoading={setSearchLoading}
           onNext={() => setStep(5)}
           onBack={() => setStep(3)}
         />
