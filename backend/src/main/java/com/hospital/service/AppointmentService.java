@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -37,6 +39,12 @@ public class AppointmentService {
         }
         if (patient.getHospital() == null || !hospitalId.equals(patient.getHospital().getId())) {
             throw new RuntimeException("Patient not found for current hospital");
+        }
+
+        // Validate appointment datetime is in the future (UTC)
+        LocalDateTime proposed = LocalDateTime.of(request.getAppointmentDate(), request.getAppointmentTime());
+        if (proposed.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+            throw new RuntimeException("Appointment date and time must be in the future");
         }
 
         // Validate availability
@@ -151,7 +159,8 @@ public class AppointmentService {
         for (DoctorSchedule schedule : schedules) {
             LocalTime current = schedule.getStartTime();
             while (current.plusMinutes(schedule.getSlotDurationMinutes()).compareTo(schedule.getEndTime()) <= 0) {
-                boolean available = !bookedTimes.contains(current) && current.isAfter(LocalTime.now().minusMinutes(1));
+                boolean available = !bookedTimes.contains(current) && 
+                    (date.isEqual(LocalDate.now()) ? current.isAfter(LocalTime.now().minusMinutes(1)) : true);
                 slots.add(TimeSlot.builder()
                         .time(current)
                         .available(available)
