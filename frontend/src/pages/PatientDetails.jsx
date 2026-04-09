@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+  import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useRole } from '../hooks/useRole';
 import { LoadingSpinner, Badge, EmptyState } from '../components/Common';
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -236,6 +237,7 @@ const PatientList = ({ onSelect, onRegister }) => {
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState('');
   const [filtered,  setFiltered]  = useState([]);
+  const { isStaff, isReceptionist } = useRole();
 
   useEffect(() => {
     api.get('/patients/hospital')
@@ -326,12 +328,22 @@ const PatientList = ({ onSelect, onRegister }) => {
                   <td>{p.dateOfBirth ? formatDate(p.dateOfBirth) : '—'}</td>
                   <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatDate(p.createdAt)}</td>
                   <td>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => onSelect(p)}
-                    >
-                      👁 View
-                    </button>
+                    {isStaff() || isReceptionist() ? (
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        disabled
+                        title="View patient details available for Hospital Admin and Super Admin only"
+                      >
+                        🔒 Admin Only
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => onSelect(p)}
+                      >
+                        👁 View
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

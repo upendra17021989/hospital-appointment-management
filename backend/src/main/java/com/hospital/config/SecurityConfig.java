@@ -48,9 +48,6 @@ public class SecurityConfig {
     private static final String[] HOSPITAL_ADMIN_ENDPOINTS = {
         "/doctors/**",
         "/departments/**",
-        "/patients/**",
-        "/appointments/**",
-        "/enquiries/**",
         "/dashboard/**",
     };
 
