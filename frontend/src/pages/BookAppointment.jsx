@@ -175,9 +175,11 @@ const Step4PatientInfo = ({
   const [phoneTouched, setPhoneTouched] = useState(false);
   const phoneError = phoneTouched ? validatePhone(patientData.phone) : '';
 
+  const genderError = !patientData.gender ? 'Gender is required' : '';
+  const reasonError = !visitData.reasonForVisit.trim() ? 'Reason for visit is required' : '';
   const isValid = (isNewPatient ? 
-    (patientData.firstName.trim() && patientData.lastName.trim() && !phoneError && visitData.reasonForVisit.trim()) :
-    (selectedExistingPatient && !phoneError && visitData.reasonForVisit.trim())
+    (patientData.firstName.trim() && patientData.lastName.trim() && !phoneError && !genderError && !reasonError) :
+    (!!selectedExistingPatient?.id && !phoneError && !reasonError)
   );
 
   const handlePhoneChange = (e) => {
@@ -378,18 +380,24 @@ const Step4PatientInfo = ({
           </div>
 
           {/* Gender */}
-          <div className="form-group">
-            <label>Gender</label>
-            <select
-              value={patientData.gender}
-              onChange={e => setPatientData(p => ({ ...p, gender: e.target.value }))}
-            >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
+            <div className="form-group">
+              <label>Gender *</label>
+              <select
+                value={patientData.gender}
+                onChange={e => setPatientData(p => ({ ...p, gender: e.target.value }))}
+                style={{ borderColor: genderError ? '#c0220a' : undefined }}
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+              {genderError && (
+                <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
+                  ⚠ {genderError}
+                </span>
+              )}
+            </div>
 
           {/* Date of Birth */}
           <div className="form-group">
@@ -600,19 +608,12 @@ const BookAppointment = ({ prefillPatient }) => {
       if (!isNewPatient && selectedExistingPatient?.id) {
         patientId = selectedExistingPatient.id;
       } else {
-        // Fallback to current logic for new patient
-        const normalizedPhone = normalisePhone(patientData.phone);
-        const existingPatients = await api.get(`/patients/hospital/search?phone=${normalizedPhone}`);
-        
-        if (existingPatients.length > 0) {
-          patientId = existingPatients[0].id;
-        } else {
-          const newPatient = await api.post('/patients', {
-            ...patientData,
-            dateOfBirth: patientData.dateOfBirth || null,
-          });
-          patientId = newPatient.id;
-        }
+        // Always create new patient if no existing selected (user feedback: create from DB)
+        const newPatient = await api.post('/patients', {
+          ...patientData,
+          dateOfBirth: patientData.dateOfBirth || null,
+        });
+        patientId = newPatient?.data?.id;
       }
 
       const appt = await api.post('/appointments', {
@@ -622,7 +623,7 @@ const BookAppointment = ({ prefillPatient }) => {
         appointmentTime: selectedSlot.time,
         ...visitData,
       });
-      setSuccess(appt);
+      setSuccess(appt?.data);
     } catch (e) {
       setError(e.response?.data?.message || e.message);
     } finally {
