@@ -284,8 +284,8 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
         labTests:   labTests.filter(t => t.testName.trim()).map((t, i) => ({ ...t, sortOrder: i })),
       };
       const saved = await api.post('/prescriptions', payload);
-      setSuccess(saved);
-      if (onSaved) onSaved(saved);
+      setSuccess(saved?.data);
+      if (onSaved) onSaved(saved?.data);
     } catch (e) {
       setError(e.message);
     } finally {

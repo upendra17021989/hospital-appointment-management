@@ -10,7 +10,11 @@ export const AuthProvider = ({ children }) => {
   const [user,    setUser]    = useState(() => {
     try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
   });
-  const [loading, setLoading] = useState(false);
+const [loading, setLoading] = useState(false);
+  const [lastActivity, setLastActivity] = useState(Date.now());
+
+  const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes inactivity
+  const CHECK_INTERVAL_MS = 30 * 1000; // 30 seconds check
 
   const isAuthenticated = !!token && !!user;
 
@@ -48,6 +52,36 @@ export const AuthProvider = ({ children }) => {
       .catch(() => logout())
       .finally(() => setLoading(false));
   }, []); // run once on mount
+
+  // Reset activity on login
+  useEffect(() => {
+    if (token) {
+      setLastActivity(Date.now());
+    }
+  }, [token]);
+
+  // Idle timeout detection
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const resetActivity = () => setLastActivity(Date.now());
+    
+    const handleActivity = () => resetActivity();
+    document.addEventListener('mousemove', handleActivity);
+    document.addEventListener('keydown', handleActivity);
+
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {
+        logout();
+      }
+    }, CHECK_INTERVAL_MS);
+
+    return () => {
+      document.removeEventListener('mousemove', handleActivity);
+      document.removeEventListener('keydown', handleActivity);
+      clearInterval(interval);
+    };
+  }, [isAuthenticated, lastActivity, logout]);
 
   return (
     <AuthContext.Provider value={{ token, user, isAuthenticated, loading, saveAuth, logout }}>
