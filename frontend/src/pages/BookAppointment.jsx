@@ -172,15 +172,35 @@ const Step4PatientInfo = ({
   searchLoading,
   onNext, onBack
 }) => {
-  const [phoneTouched, setPhoneTouched] = useState(false);
-  const phoneError = phoneTouched ? validatePhone(patientData.phone) : '';
+  const [touchedFields, setTouchedFields] = useState({
+    firstName: false,
+    lastName: false,
+    phone: false,
+    gender: false,
+    reasonForVisit: false
+  });
 
-  const genderError = !patientData.gender ? 'Gender is required' : '';
-  const reasonError = !visitData.reasonForVisit.trim() ? 'Reason for visit is required' : '';
+  const phoneError = touchedFields.phone ? validatePhone(patientData.phone) : '';
+
+  const firstNameError = touchedFields.firstName && !patientData.firstName.trim();
+  const lastNameError = touchedFields.lastName && !patientData.lastName.trim();
+  const genderError = touchedFields.gender && !patientData.gender;
+  const reasonError = touchedFields.reasonForVisit && !visitData.reasonForVisit.trim();
+
   const isValid = (isNewPatient ? 
-    (patientData.firstName.trim() && patientData.lastName.trim() && !phoneError && !genderError && !reasonError) :
+    (patientData.firstName.trim() && patientData.lastName.trim() && !phoneError && !!patientData.gender && !reasonError) :
     (!!selectedExistingPatient?.id && !phoneError && !reasonError)
   );
+
+  const touchField = (field) => () => setTouchedFields(t => ({ ...t, [field]: true }));
+
+  const setAllTouched = () => setTouchedFields({
+    firstName: true,
+    lastName: true,
+    phone: true,
+    gender: true,
+    reasonForVisit: true
+  });
 
   const handlePhoneChange = (e) => {
     const raw = e.target.value.replace(/[^\d\s\-+]/g, '');
@@ -211,6 +231,8 @@ const Step4PatientInfo = ({
   };
 
   const handleNext = () => {
+    setAllTouched();
+    if (!isValid) return;
     setPatientData(p => ({ ...p, phone: normalisePhone(p.phone) }));
     onNext();
   };
@@ -314,8 +336,15 @@ const Step4PatientInfo = ({
             <input
               value={patientData.firstName}
               onChange={e => setPatientData(p => ({ ...p, firstName: e.target.value }))}
+              onBlur={touchField('firstName')}
+              style={{ borderColor: firstNameError ? '#c0220a' : undefined }}
               placeholder="First name"
             />
+            {firstNameError && (
+              <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
+                ⚠ First name is required
+              </span>
+            )}
           </div>
 
           {/* Last Name */}
@@ -324,49 +353,56 @@ const Step4PatientInfo = ({
             <input
               value={patientData.lastName}
               onChange={e => setPatientData(p => ({ ...p, lastName: e.target.value }))}
+              onBlur={touchField('lastName')}
+              style={{ borderColor: lastNameError ? '#c0220a' : undefined }}
               placeholder="Last name"
             />
+            {lastNameError && (
+              <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
+                ⚠ Last name is required
+              </span>
+            )}
           </div>
 
           {/* Phone with validation */}
-          <div className="form-group">
-            <label>Phone *</label>
-            <div style={{ position: 'relative' }}>
-              <span style={{
-                position: 'absolute', left: 12, top: '50%',
-                transform: 'translateY(-50%)',
-                fontSize: 13, fontWeight: 700,
-                color: 'var(--text-muted)',
-                pointerEvents: 'none',
-                userSelect: 'none',
-              }}>🇮🇳</span>
-              <input
-                value={patientData.phone}
-                onChange={handlePhoneChange}
-                onBlur={() => setPhoneTouched(true)}
-                placeholder="98765 43210"
-                maxLength={15}
-                style={{
-                  paddingLeft: 36,
-                  borderColor: phoneError ? '#c0220a' : undefined,
-                  boxShadow: phoneError ? '0 0 0 3px rgba(192,34,10,0.1)' : undefined,
-                }}
-              />
+            <div className="form-group">
+              <label>Phone *</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{
+                  position: 'absolute', left: 12, top: '50%',
+                  transform: 'translateY(-50%)',
+                  fontSize: 13, fontWeight: 700,
+                  color: 'var(--text-muted)',
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                }}>🇮🇳</span>
+                <input
+                  value={patientData.phone}
+                  onChange={handlePhoneChange}
+                  onBlur={touchField('phone')}
+                  placeholder="98765 43210"
+                  maxLength={15}
+                  style={{
+                    paddingLeft: 36,
+                    borderColor: phoneError ? '#c0220a' : undefined,
+                    boxShadow: phoneError ? '0 0 0 3px rgba(192,34,10,0.1)' : undefined,
+                  }}
+                />
+              </div>
+              {phoneError && (
+                <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
+                  ⚠ {phoneError}
+                </span>
+              )}
+              {!phoneError && touchedFields.phone && patientData.phone && (
+                <span style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>
+                  ✓ Valid Indian mobile number
+                </span>
+              )}
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                Accepted: 9876543210 · +91 98765 43210 · 091 98765 43210
+              </span>
             </div>
-            {phoneError && (
-              <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
-                ⚠ {phoneError}
-              </span>
-            )}
-            {!phoneError && phoneTouched && patientData.phone && (
-              <span style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>
-                ✓ Valid Indian mobile number
-              </span>
-            )}
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-              Accepted: 9876543210 · +91 98765 43210 · 091 98765 43210
-            </span>
-          </div>
 
           {/* Email */}
           <div className="form-group">
@@ -385,6 +421,7 @@ const Step4PatientInfo = ({
               <select
                 value={patientData.gender}
                 onChange={e => setPatientData(p => ({ ...p, gender: e.target.value }))}
+                onBlur={touchField('gender')}
                 style={{ borderColor: genderError ? '#c0220a' : undefined }}
               >
                 <option value="">Select gender</option>
@@ -394,7 +431,7 @@ const Step4PatientInfo = ({
               </select>
               {genderError && (
                 <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
-                  ⚠ {genderError}
+                  ⚠ Gender is required
                 </span>
               )}
             </div>
@@ -419,8 +456,15 @@ const Step4PatientInfo = ({
           <textarea
             value={visitData.reasonForVisit}
             onChange={e => setVisitData(v => ({ ...v, reasonForVisit: e.target.value }))}
+            onBlur={touchField('reasonForVisit')}
+            style={{ borderColor: reasonError ? '#c0220a' : undefined }}
             placeholder="Describe the reason for this appointment..."
           />
+          {reasonError && (
+            <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
+              ⚠ Reason for visit is required
+            </span>
+          )}
         </div>
 
         {/* Symptoms */}
