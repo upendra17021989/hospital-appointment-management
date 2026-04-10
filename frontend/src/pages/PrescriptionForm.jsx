@@ -326,13 +326,23 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
           ))}
         </div>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+
           <button className="btn btn-primary" onClick={handlePrint}>🖨️ Print Prescription</button>
+          <button className="btn btn-success" onClick={async () => {
+            try {
+              await api.post(`/prescriptions/${success.id}/send?mode=email`);
+              alert('✅ Prescription sent via email successfully!');
+            } catch (e) {
+              alert('❌ Email send failed: ' + (e.response?.data?.message || e.message));
+            }
+          }}>📧 Send Email</button>
           <button className="btn btn-secondary" onClick={() => { setSuccess(null); setForm({ patientId: '', doctorId: '', appointmentId: '', diagnosis: '', chiefComplaint: '', examinationNotes: '', followUpDate: '', followUpInstructions: '', dietInstructions: '', activityRestrictions: '', additionalNotes: '' }); setMedicines([{ medicineName: '', dosage: '', frequency: '', duration: '', route: 'Oral', beforeFood: false, instructions: '' }]); setLabTests([]); setSelectedPatient(null); setSelectedDoctor(null); }}>New Prescription</button>
           <button className="btn btn-secondary" onClick={() => onNavigate && onNavigate('appointments')}>View Appointments</button>
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="pf-container">

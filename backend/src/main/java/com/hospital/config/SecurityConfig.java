@@ -51,6 +51,7 @@ public class SecurityConfig {
         "/dashboard/**",
         "/common-medicines/**",
         "/common-tests/**",
+        "/prescriptions/**",
     };
 
     private static final String[] STAFF_ENDPOINTS = {

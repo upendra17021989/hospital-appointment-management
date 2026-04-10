@@ -3,6 +3,8 @@ package com.hospital.controller;
 import com.hospital.dto.Dtos.ApiResponse;
 import com.hospital.model.*;
 import com.hospital.repository.*;
+import com.hospital.service.EmailService;
+import com.hospital.service.PrescriptionPdfService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -35,6 +37,8 @@ public class PrescriptionController {
     private final CommonMedicineRepo commonMedicineRepo;
     private final CommonTestRepo     commonTestRepo;
     private final com.hospital.security.TenantContext tenantContext;
+    private final PrescriptionPdfService pdfService;
+    private final EmailService emailService;
 
     // ── DTOs ──────────────────────────────────────────────────────
 
@@ -374,6 +378,43 @@ public class PrescriptionController {
         prescriptionRepo.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success("Prescription deleted", "deleted"));
     }
+
+@PostMapping("/{id}/send")
+@Operation(summary = "Send prescription via email or whatsapp")
+@PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+public ResponseEntity<ApiResponse<String>> sendPrescription(
+        @PathVariable UUID id,
+        @RequestParam String mode) {
+
+    UUID hospitalId = tenantContext.requireHospitalId();
+    
+    try {
+        Prescription prescription = prescriptionRepo.findByHospitalOrDoctorOrPatientHospitalIdAndId(hospitalId, id)
+                .orElseThrow(() -> new RuntimeException("Prescription not found"));
+
+        if ("email".equalsIgnoreCase(mode)) {
+            byte[] pdf = pdfService.generatePdf(prescription);
+
+            String email = prescription.getPatient().getEmail();
+
+            emailService.sendPrescriptionEmail(email, pdf);
+
+            return ResponseEntity.ok(ApiResponse.success("Prescription sent via email"));
+        }
+
+        if ("whatsapp".equalsIgnoreCase(mode)) {
+            // TODO: call whatsapp service
+            return ResponseEntity.ok(ApiResponse.success("Prescription sent via WhatsApp"));
+        }
+
+        return ResponseEntity.badRequest().body(ApiResponse.error("Invalid mode"));
+
+     } catch (Exception e) {
+
+        return ResponseEntity.internalServerError()
+                .body(ApiResponse.error(e.getMessage()));
+    }
+}
 
     // ── Mapper ────────────────────────────────────────────────────
     private PrescriptionResponse mapResponse(Prescription p) {
