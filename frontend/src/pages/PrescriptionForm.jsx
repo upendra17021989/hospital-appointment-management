@@ -238,10 +238,16 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
 
   const [selectedPatient, setSelectedPatient] = useState(prefillPatient || null);
   const [selectedDoctor,  setSelectedDoctor]  = useState(prefillDoctor  || null);
+  const [commonMedicines, setCommonMedicines] = useState([]);
+  const [commonTests,     setCommonTests]     = useState([]);
 
   useEffect(() => {
     api.get('/doctors/hospital/list').then(setDoctors).catch(() => {});
     api.get('/appointments/hospital').then(setAppointments).catch(() => {});
+    
+    // Fetch common lists
+    api.get('/prescriptions/common-medicines/hospital').then(setCommonMedicines).catch(() => {});
+    api.get('/prescriptions/common-tests/hospital').then(setCommonTests).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -261,8 +267,7 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
   const removeLabTest = (i) => setLabTests(t => t.filter((_, idx) => idx !== i));
   const updateLabTest = (i, k, v) => setLabTests(t => t.map((test, idx) => idx === i ? { ...test, [k]: v } : test));
 
-  const COMMON_MEDICINES = ['Paracetamol', 'Amoxicillin', 'Metformin', 'Amlodipine', 'Atorvastatin', 'Omeprazole', 'Pantoprazole', 'Cetirizine', 'Azithromycin', 'Ciprofloxacin', 'Ibuprofen', 'Dolo 650'];
-  const COMMON_TESTS = ['Complete Blood Count (CBC)', 'Blood Sugar (Fasting)', 'Blood Sugar (PP)', 'HbA1c', 'Lipid Profile', 'Liver Function Test (LFT)', 'Kidney Function Test (KFT)', 'Thyroid (TSH)', 'Urine Routine', 'X-Ray Chest', 'ECG', 'Echocardiogram', '2D Echo', 'Ultrasound Abdomen'];
+  // COMMON lists now dynamic from API
 
   const handleSubmit = async () => {
     if (!form.patientId || !form.doctorId || !form.diagnosis.trim()) {
@@ -464,12 +469,17 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
 
         {/* Quick add common medicines */}
         <div className="rx-quick-add">
-          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Quick add:</span>
-          {COMMON_MEDICINES.map(m => (
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Quick add ({commonMedicines?.length}):</span>
+          {commonMedicines?.slice(0, 12).map(m => (
             <button key={m} className="rx-quick-btn" onClick={() => setMedicines(ms => [...ms, { medicineName: m, dosage: '', frequency: '', duration: '', route: 'Oral', beforeFood: false, instructions: '', sortOrder: ms.length }])}>
               {m}
             </button>
           ))}
+          {commonMedicines?.length > 12 && (
+            <button className="rx-quick-btn" style={{ fontSize: 11 }} onClick={() => {}}>
+              +{commonMedicines?.length - 12} more...
+            </button>
+          )}
         </div>
 
         <div className="rx-med-header">
@@ -496,12 +506,17 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
         </div>
 
         <div className="rx-quick-add">
-          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Quick add:</span>
-          {COMMON_TESTS.map(t => (
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Quick add ({commonTests?.length}):</span>
+          {commonTests?.slice(0, 12).map(t => (
             <button key={t} className="rx-quick-btn" onClick={() => setLabTests(ts => [...ts, { testName: t, instructions: '', isUrgent: false, sortOrder: ts.length }])}>
               {t}
             </button>
           ))}
+          {commonTests?.length > 12 && (
+            <button className="rx-quick-btn" style={{ fontSize: 11 }} onClick={() => {}}>
+              +{commonTests?.length - 12} more...
+            </button>
+          )}
         </div>
 
         {labTests.map((test, i) => (

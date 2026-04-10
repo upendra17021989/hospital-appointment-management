@@ -5,6 +5,7 @@ com\hospital\model\AppointmentLog.class
 com\hospital\controller\UserController$HospitalInfo.class
 com\hospital\model\Hospital$HospitalBuilder.class
 com\hospital\controller\AuthController.class
+com\hospital\controller\PrescriptionController$CommonTestDto.class
 com\hospital\controller\PrescriptionController$PrescriptionRequest.class
 com\hospital\dto\Dtos$TimeSlot.class
 com\hospital\service\DepartmentService.class
@@ -12,6 +13,7 @@ com\hospital\security\TenantContext.class
 com\hospital\model\Enquiry$Status.class
 com\hospital\model\Enquiry$Priority.class
 com\hospital\config\OpenApiConfig.class
+com\hospital\model\CommonMedicine.class
 com\hospital\dto\Dtos$PatientResponse.class
 com\hospital\dto\Dtos$DoctorResponse.class
 com\hospital\model\LabTest$LabTestBuilder.class
@@ -22,6 +24,7 @@ com\hospital\dto\Dtos$DashboardStats$DashboardStatsBuilder.class
 com\hospital\controller\AuthController$AuthResponse$AuthResponseBuilder.class
 com\hospital\controller\PrescriptionController$PrescriptionResponse$PrescriptionResponseBuilder.class
 com\hospital\model\User$UserBuilder.class
+com\hospital\repository\CommonTestRepo.class
 com\hospital\dto\Dtos$AppointmentStatusUpdateRequest$AppointmentStatusUpdateRequestBuilder.class
 com\hospital\controller\PrescriptionController$MedicineRequest.class
 com\hospital\dto\Dtos$AppointmentStatusUpdateRequest.class
@@ -40,6 +43,7 @@ com\hospital\controller\DashboardController.class
 com\hospital\dto\Dtos.class
 com\hospital\controller\PrescriptionController.class
 com\hospital\model\AppointmentLog$AppointmentLogBuilder.class
+com\hospital\model\CommonMedicine$CommonMedicineBuilder.class
 com\hospital\controller\PrescriptionController$MedicineResponse$MedicineResponseBuilder.class
 com\hospital\dto\Dtos$AppointmentRequest.class
 com\hospital\model\Patient$PatientBuilder.class
@@ -47,13 +51,16 @@ com\hospital\model\LabTest.class
 com\hospital\HospitalManagementApplication.class
 com\hospital\config\SecurityConfig.class
 com\hospital\dto\Dtos$DepartmentResponse.class
+com\hospital\controller\PrescriptionController$CommonMedicineDto.class
 com\hospital\controller\PrescriptionController$LabTestResponse$LabTestResponseBuilder.class
 com\hospital\controller\DoctorManagementController$ScheduleSaveRequest.class
 com\hospital\controller\PrescriptionController$DoctorInfo.class
 com\hospital\dto\Dtos$DashboardStats.class
 com\hospital\controller\PatientController.class
+com\hospital\controller\PrescriptionController$CommonTestDto$CommonTestDtoBuilder.class
 com\hospital\model\PrescriptionMedicine$PrescriptionMedicineBuilder.class
 com\hospital\controller\DoctorManagementController$ScheduleResponse$ScheduleResponseBuilder.class
+com\hospital\controller\PrescriptionController$CommonMedicineDto$CommonMedicineDtoBuilder.class
 com\hospital\security\RequireHospitalContext.class
 com\hospital\repository\UserRepo.class
 com\hospital\model\Department$DepartmentBuilder.class
@@ -68,6 +75,7 @@ com\hospital\controller\PrescriptionController$PatientInfo.class
 com\hospital\repository\EnquiryRepo.class
 com\hospital\controller\DoctorManagementController.class
 com\hospital\dto\Dtos$PatientRequest$PatientRequestBuilder.class
+com\hospital\model\CommonTest.class
 com\hospital\dto\Dtos$PatientResponse$PatientResponseBuilder.class
 com\hospital\controller\UserController$CreateUserRequest.class
 com\hospital\dto\Dtos$ApiResponse$ApiResponseBuilder.class
@@ -106,6 +114,7 @@ com\hospital\controller\AuthController$RegisterRequest.class
 com\hospital\model\Doctor.class
 com\hospital\controller\PrescriptionController$LabTestRequest.class
 com\hospital\controller\DoctorManagementController$ScheduleResponse.class
+com\hospital\model\CommonTest$CommonTestBuilder.class
 com\hospital\controller\DoctorController.class
 com\hospital\service\AppointmentService.class
 com\hospital\controller\PrescriptionController$PrescriptionResponse.class
@@ -117,4 +126,5 @@ com\hospital\controller\UserController$UserDto$UserDtoBuilder.class
 com\hospital\model\PrescriptionMedicine.class
 com\hospital\controller\AuthController$LoginRequest.class
 com\hospital\model\Appointment$Status.class
+com\hospital\repository\CommonMedicineRepo.class
 com\hospital\controller\EnquiryController.class

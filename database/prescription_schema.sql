@@ -97,9 +97,33 @@ CREATE TABLE lab_tests (
 );
 
 -- ============================================================
+-- COMMON MEDICINES (hospital catalog)
+-- ============================================================
+CREATE TABLE common_medicines (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hospital_id UUID NOT NULL REFERENCES hospitals(id) ON DELETE CASCADE,
+    name VARCHAR(200) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(hospital_id, name)
+);
+
+-- ============================================================
+-- COMMON TESTS (hospital catalog)
+-- ============================================================
+CREATE TABLE common_tests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hospital_id UUID NOT NULL REFERENCES hospitals(id) ON DELETE CASCADE,
+    name VARCHAR(200) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(hospital_id, name)
+);
+
+-- ============================================================
 -- INDEXES
 -- ============================================================
 CREATE INDEX idx_prescriptions_patient    ON prescriptions(patient_id);
+CREATE INDEX idx_common_medicines_hospital ON common_medicines(hospital_id);
+CREATE INDEX idx_common_tests_hospital    ON common_tests(hospital_id);
 CREATE INDEX idx_prescriptions_doctor     ON prescriptions(doctor_id);
 CREATE INDEX idx_prescriptions_appointment ON prescriptions(appointment_id);
 CREATE INDEX idx_prescriptions_hospital   ON prescriptions(hospital_id);
@@ -125,8 +149,12 @@ ALTER TABLE prescriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prescription_medicines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lab_tests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE patient_medical_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE common_medicines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE common_tests ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow prescriptions"        ON prescriptions FOR ALL USING (TRUE);
 CREATE POLICY "Allow prescription_meds"    ON prescription_medicines FOR ALL USING (TRUE);
 CREATE POLICY "Allow lab_tests"            ON lab_tests FOR ALL USING (TRUE);
 CREATE POLICY "Allow patient_profiles"     ON patient_medical_profiles FOR ALL USING (TRUE);
+CREATE POLICY "Allow common_medicines"     ON common_medicines FOR ALL USING (TRUE);
+CREATE POLICY "Allow common_tests"         ON common_tests FOR ALL USING (TRUE);

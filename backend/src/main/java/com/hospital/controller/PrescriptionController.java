@@ -32,6 +32,8 @@ public class PrescriptionController {
     private final DoctorRepo       doctorRepo;
     private final AppointmentRepo  appointmentRepo;
     private final HospitalRepo     hospitalRepo;
+    private final CommonMedicineRepo commonMedicineRepo;
+    private final CommonTestRepo     commonTestRepo;
     private final com.hospital.security.TenantContext tenantContext;
 
     // ── DTOs ──────────────────────────────────────────────────────
@@ -134,6 +136,65 @@ public class PrescriptionController {
         private String departmentName;
     }
 
+    // ── Common Medicines/Tests DTOs & Endpoints ────────────────────
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class CommonMedicineDto {
+        private String name;
+    }
+
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class CommonTestDto {
+        private String name;
+    }
+
+    @GetMapping("/common-medicines/hospital")
+    @Operation(summary = "Get hospital common medicines list")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<List<String>>> getCommonMedicines() {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        List<String> names = commonMedicineRepo.findByHospitalIdOrderByNameAsc(hospitalId)
+                .stream().map(CommonMedicine::getName).toList();
+        return ResponseEntity.ok(ApiResponse.success(names));
+    }
+
+    @PostMapping("/common-medicines")
+    @Operation(summary = "Add/update hospital common medicine")
+    @PreAuthorize("hasAnyRole('HOSPITAL_ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<String>> addCommonMedicine(@Valid @RequestBody CommonMedicineDto req) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        commonMedicineRepo.findByHospitalIdAndNameIgnoreCase(hospitalId, req.getName())
+                .orElseGet(() -> commonMedicineRepo.save(CommonMedicine.builder()
+                        .hospitalId(hospitalId)
+                        .name(req.getName().trim())
+                        .createdAt(LocalDateTime.now())
+                        .build()));
+        return ResponseEntity.ok(ApiResponse.success("Common medicine added/updated"));
+    }
+
+    @GetMapping("/common-tests/hospital")
+    @Operation(summary = "Get hospital common tests list")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<List<String>>> getCommonTests() {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        List<String> names = commonTestRepo.findByHospitalIdOrderByNameAsc(hospitalId)
+                .stream().map(CommonTest::getName).toList();
+        return ResponseEntity.ok(ApiResponse.success(names));
+    }
+
+    @PostMapping("/common-tests")
+    @Operation(summary = "Add/update hospital common test")
+    @PreAuthorize("hasAnyRole('HOSPITAL_ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<String>> addCommonTest(@Valid @RequestBody CommonTestDto req) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        commonTestRepo.findByHospitalIdAndNameIgnoreCase(hospitalId, req.getName())
+                .orElseGet(() -> commonTestRepo.save(CommonTest.builder()
+                        .hospitalId(hospitalId)
+                        .name(req.getName().trim())
+                        .createdAt(LocalDateTime.now())
+                        .build()));
+        return ResponseEntity.ok(ApiResponse.success("Common test added/updated"));
+    }
+
     // ── Endpoints ─────────────────────────────────────────────────
 
     @PostMapping
@@ -190,9 +251,17 @@ public class PrescriptionController {
                 prescription.setAppointment(appt);
             }
 
-            // Link hospital
-            // Medicines
+// Upsert common medicines
             if (req.getMedicines() != null) {
+                req.getMedicines().forEach(m -> {
+                    commonMedicineRepo.findByHospitalIdAndNameIgnoreCase(hospitalId, m.getMedicineName())
+                            .orElseGet(() -> commonMedicineRepo.save(CommonMedicine.builder()
+                                    .hospitalId(hospitalId)
+                                    .name(m.getMedicineName().trim())
+                                    .createdAt(LocalDateTime.now())
+                                    .build()));
+                });
+
                 List<PrescriptionMedicine> meds = req.getMedicines().stream()
                         .map(m -> PrescriptionMedicine.builder()
                                 .prescription(prescription)
@@ -209,8 +278,17 @@ public class PrescriptionController {
                 prescription.setMedicines(meds);
             }
 
-            // Lab Tests
+// Upsert common tests
             if (req.getLabTests() != null) {
+                req.getLabTests().forEach(t -> {
+                    commonTestRepo.findByHospitalIdAndNameIgnoreCase(hospitalId, t.getTestName())
+                            .orElseGet(() -> commonTestRepo.save(CommonTest.builder()
+                                    .hospitalId(hospitalId)
+                                    .name(t.getTestName().trim())
+                                    .createdAt(LocalDateTime.now())
+                                    .build()));
+                });
+
                 List<LabTest> tests = req.getLabTests().stream()
                         .map(t -> LabTest.builder()
                                 .prescription(prescription)
