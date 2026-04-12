@@ -336,6 +336,14 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
               alert('❌ Email send failed: ' + (e.response?.data?.message || e.message));
             }
           }}>📧 Send Email</button>
+          <button className="btn btn-success" style={{ backgroundColor: '#25D366' }} onClick={async () => {
+            try {
+              await api.post(`/prescriptions/${success.id}/send?mode=whatsapp`);
+              alert('✅ Prescription sent via WhatsApp successfully!');
+            } catch (e) {
+              alert('❌ WhatsApp send failed: ' + (e.response?.data?.message || e.message));
+            }
+          }}>📱 Send WhatsApp</button>
           <button className="btn btn-secondary" onClick={() => { setSuccess(null); setForm({ patientId: '', doctorId: '', appointmentId: '', diagnosis: '', chiefComplaint: '', examinationNotes: '', followUpDate: '', followUpInstructions: '', dietInstructions: '', activityRestrictions: '', additionalNotes: '' }); setMedicines([{ medicineName: '', dosage: '', frequency: '', duration: '', route: 'Oral', beforeFood: false, instructions: '' }]); setLabTests([]); setSelectedPatient(null); setSelectedDoctor(null); }}>New Prescription</button>
           <button className="btn btn-secondary" onClick={() => onNavigate && onNavigate('appointments')}>View Appointments</button>
         </div>

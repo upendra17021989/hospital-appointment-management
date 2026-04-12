@@ -49,6 +49,7 @@ com\hospital\dto\Dtos$AppointmentRequest.class
 com\hospital\model\Patient$PatientBuilder.class
 com\hospital\model\LabTest.class
 com\hospital\HospitalManagementApplication.class
+com\hospital\service\WhatsAppService.class
 com\hospital\config\SecurityConfig.class
 com\hospital\dto\Dtos$DepartmentResponse.class
 com\hospital\controller\PrescriptionController$CommonMedicineDto.class
@@ -102,6 +103,7 @@ com\hospital\model\Prescription.class
 com\hospital\dto\Dtos$DepartmentResponse$DepartmentResponseBuilder.class
 com\hospital\model\User.class
 com\hospital\model\Patient.class
+com\hospital\service\EmailService.class
 com\hospital\dto\Dtos$AppointmentResponse.class
 com\hospital\controller\PrescriptionController$PatientInfo$PatientInfoBuilder.class
 com\hospital\controller\AuthController$HospitalInfo.class
@@ -110,6 +112,7 @@ com\hospital\controller\UserController.class
 com\hospital\model\Appointment$AppointmentBuilder.class
 com\hospital\dto\Dtos$EnquiryRequest$EnquiryRequestBuilder.class
 com\hospital\model\DoctorSchedule$DoctorScheduleBuilder.class
+com\hospital\service\PrescriptionPdfService.class
 com\hospital\controller\AuthController$RegisterRequest.class
 com\hospital\model\Doctor.class
 com\hospital\controller\PrescriptionController$LabTestRequest.class

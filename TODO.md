@@ -1,26 +1,25 @@
-# Common Medicines & Tests (Hospital-specific)
+# WhatsApp Prescription Send - Implementation Plan
 
-## Confirmed: Hospital-scoped (doctors see only their hospital's catalog)
+Status: ✅ In Progress
 
-## Steps
-1. ✅ Create TODO.md
-2. ✅ Update database/prescription_schema.sql → add `common_medicines`, `common_tests` tables
-3. ✅ Create models: CommonMedicine.java, CommonTest.java
-4. ✅ Create repos: CommonMedicineRepo.java, CommonTestRepo.java
-5. ✅ Edit PrescriptionController.java (endpoints + upsert)
-   * Repos injected
-   * GET/POST /common-medicines/hospital, /common-tests/hospital
-   * Upsert before prescription save
-6. ✅ Edit PrescriptionForm.jsx 
-   * useState commonMedicines/commonTests
-   * useEffect fetch from /prescriptions/common-*/hospital
-   * Dynamic quick-add buttons (slice 12 + more indicator)
-   * Removed hardcoded arrays
-7. ☐ Update TODO.md
-8. ☐ Test/DB migrate/backend restart
+## Steps:
 
-## Details
-- Tables: hospital_id, name (UNIQUE per hospital)
-- POST /prescriptions: upsert new med/test names to common tables
-- GET /common-medicines/hospital, /common-tests/hospital → list for quick-add
-- Frontend: replace hardcoded arrays
+1. **[✅ DONE]** Create TODO.md with steps
+2. **[✅ DONE]** Get WhatsApp API credentials
+3. **[PENDING]** Add config to backend/src/main/resources/application.properties
+4. **[PENDING]** Create backend/src/main/java/com/hospital/service/WhatsAppService.java
+5. **[PENDING]** Edit PrescriptionController.java 
+6. **[PENDING]** Edit PrescriptionForm.jsx 
+7. **[PENDING]** Test end-to-end
+8. **[PENDING]** Mark complete
+
+**Next:** Step 2 - Provide Twilio credentials 👇
+
+```
+whatsapp.account.sid = AC...
+whatsapp.auth.token = ...
+whatsapp.from.number = whatsapp:+14155...
+```
+
+**Free sandbox:** https://www.twilio.com/try-whatsapp
+**Phone format:** whatsapp:+91XXXXXXXXXX (India)
