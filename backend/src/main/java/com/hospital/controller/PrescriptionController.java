@@ -5,6 +5,7 @@ import com.hospital.model.*;
 import com.hospital.repository.*;
 import com.hospital.service.EmailService;
 import com.hospital.service.PrescriptionPdfService;
+import com.hospital.service.SmsService;
 import com.hospital.service.WhatsAppService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +41,7 @@ public class PrescriptionController {
     private final com.hospital.security.TenantContext tenantContext;
     private final PrescriptionPdfService pdfService;
     private final EmailService emailService;
+    private final SmsService smsService;
     private final WhatsAppService whatsappService;
 
     // ── DTOs ──────────────────────────────────────────────────────
@@ -414,6 +416,19 @@ public ResponseEntity<ApiResponse<String>> sendPrescription(
                 return ResponseEntity.ok(ApiResponse.success("Prescription sent via WhatsApp"));
             } catch (Exception e) {
                 return ResponseEntity.internalServerError().body(ApiResponse.error("WhatsApp send failed: " + e.getMessage()));
+            }
+        }
+
+        if ("sms".equalsIgnoreCase(mode)) {
+            String phone = prescription.getPatient().getPhone();
+            if (phone == null || phone.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Patient phone not available for SMS"));
+            }
+            try {
+                smsService.sendPrescriptionSms(phone.trim(), prescription);
+                return ResponseEntity.ok(ApiResponse.success("Prescription sent via SMS"));
+            } catch (Exception e) {
+                return ResponseEntity.internalServerError().body(ApiResponse.error("SMS send failed: " + e.getMessage()));
             }
         }
 
