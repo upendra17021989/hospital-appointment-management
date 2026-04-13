@@ -397,12 +397,12 @@ public ResponseEntity<ApiResponse<String>> sendPrescription(
                 .orElseThrow(() -> new RuntimeException("Prescription not found"));
 
         if ("email".equalsIgnoreCase(mode)) {
-            byte[] pdf = pdfService.generatePdf(prescription);
-
             String email = prescription.getPatient().getEmail();
-
-            emailService.sendPrescriptionEmail(email, pdf);
-
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Patient email not available for Email"));
+            }
+            byte[] pdf = pdfService.generatePdf(prescription);
+            emailService.sendPrescriptionEmail(email.trim(), pdf);
             return ResponseEntity.ok(ApiResponse.success("Prescription sent via email"));
         }
 
