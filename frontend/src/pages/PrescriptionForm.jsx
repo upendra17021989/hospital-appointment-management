@@ -233,7 +233,7 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
   });
 
   const [vitals, setVitals] = useState({ bp: '', pulse: '', temp: '', weight: '', height: '', spo2: '', rr: '' });
-  const [medicines, setMedicines] = useState([{ medicineName: '', dosage: '', frequency: '', duration: '', route: 'Oral', beforeFood: false, instructions: '', sortOrder: 0 }]);
+  const [medicines, setMedicines] = useState([]);
   const [labTests,  setLabTests]  = useState([]);
 
   const [selectedPatient, setSelectedPatient] = useState(prefillPatient || null);
