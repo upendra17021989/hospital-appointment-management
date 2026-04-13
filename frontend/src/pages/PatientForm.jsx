@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+
 
 // ── Indian Phone Validation ───────────────────────────────────
 const PHONE_REGEX = /^(?:\+91|91|0)?[6-9]\d{9}$/;
@@ -81,8 +83,10 @@ const StepBar = ({ current }) => (
 );
 
 // ── Main Component ────────────────────────────────────────────
-const PatientForm = ({ onNavigate, prefillData, onSaved }) => {
+const PatientForm = ({ prefillData, onSaved }) => {
+  const navigate = useNavigate();
   const [step, setStep]       = useState(1);
+
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const [success, setSuccess] = useState(null);
@@ -186,7 +190,8 @@ const PatientForm = ({ onNavigate, prefillData, onSaved }) => {
       <SuccessScreen
         patient={success}
         onNew={() => { setSuccess(null); setStep(1); setPersonal({ firstName: '', lastName: '', dateOfBirth: '', gender: '', phone: '', email: '', address: '', pincode: '', city: '', aadharNumber: '', abhaId: '' }); setMedical({ bloodGroup: '', height: '', weight: '', knownAllergies: '', chronicConditions: '', currentMedications: '', pastSurgeries: '', familyHistory: '', vaccinationHistory: '' }); }}
-        onView={() => onNavigate && onNavigate('patients')}
+        onView={() => navigate('/patients')}
+
       />
     );
   }

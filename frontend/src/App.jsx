@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import RoleGuard from './components/RoleGuard';
@@ -14,58 +16,63 @@ import PatientDetails   from './pages/PatientDetails';
 import PrescriptionForm from './pages/PrescriptionForm';
 import UserManagement   from './pages/UserManagement';
 
-const PAGES = {
-  dashboard:           Dashboard,
-  book:                BookAppointment,
-  appointments:        Appointments,
-  enquiries:           Enquiries,
-  doctors:             Doctors,
-  'doctor-management': DoctorManagement,
-  'user-management':   UserManagement,
-  departments:         Departments,
-  'patient-form':      PatientForm,
-  patients:            PatientDetails,
-  'prescription-form': PrescriptionForm,
+const Login  = React.lazy(() => import('./pages/Login'));
+const Signup = React.lazy(() => import('./pages/Signup'));
+
+const RequireAuth = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  return isAuthenticated ? children : <Navigate to="/login" state={{ from: location }} replace />;
 };
 
-const getPageRoles = (pageId) => {
-  const roleMap = {
-    'doctor-management': ['HOSPITAL_ADMIN', 'SUPER_ADMIN'],
-    'user-management':   ['HOSPITAL_ADMIN', 'SUPER_ADMIN'],
-    'patient-form':      ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'],
-    'patients':          ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'],
-    'prescription-form': ['HOSPITAL_ADMIN', 'SUPER_ADMIN'],
-  };
-  return roleMap[pageId] || []; // Empty array means no role restrictions
+const ProtectedRoute = ({ component: Component, roles, children }) => {
+  if (Component) {
+    return (
+      <RequireAuth>
+        <RoleGuard roles={roles}>
+          <Component />
+        </RoleGuard>
+      </RequireAuth>
+    );
+  }
+  return null;
 };
 
-const AppShell = () => {
-  const [page,      setPage]      = useState('dashboard');
-  const [pageProps, setPageProps] = useState({});
+const ROUTE_CONFIG = [
 
-  const handleNavigate = (newPage, props = {}) => {
-    setPage(newPage);
-    setPageProps(props);
-  };
+  { path: '/login', component: Login, roles: [], authRequired: false },
+  { path: '/signup', component: Signup, roles: [], authRequired: false },
+  { path: '/', redirectTo: '/dashboard' },
+  { path: '/dashboard', component: Dashboard, roles: [], authRequired: true },
+  { path: '/book-appointment', component: BookAppointment, roles: [], authRequired: true },
+  { path: '/appointments', component: Appointments, roles: [], authRequired: true },
+  { path: '/enquiries', component: Enquiries, roles: [], authRequired: true },
+  { path: '/doctors', component: Doctors, roles: [], authRequired: true },
+  { path: '/doctor-management', component: DoctorManagement, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/user-management', component: UserManagement, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/departments', component: Departments, roles: [], authRequired: true },
+  { path: '/patient-form', component: PatientForm, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/patients', component: PatientDetails, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/prescription-form', component: PrescriptionForm, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+];
 
-  const ActivePage = PAGES[page] || Dashboard;
-  const requiredRoles = getPageRoles(page);
 
+const Layout = () => {
   return (
     <div className="layout">
-      <Sidebar currentPage={page} onNavigate={handleNavigate} />
+      <Sidebar />
       <main className="main-content">
-        <RoleGuard roles={requiredRoles}>
-          <ActivePage onNavigate={handleNavigate} {...pageProps} />
-        </RoleGuard>
+        <React.Suspense fallback={<div style={{padding: '2rem', textAlign: 'center'}}><div className="spinner" style={{margin: '0 auto 1rem', width: 40, height: 40}} />Loading page...</div>}>
+          <Outlet />
+        </React.Suspense>
       </main>
     </div>
   );
 };
 
-const AuthGate = () => {
-  const { isAuthenticated, loading } = useAuth();
-  const [authScreen, setAuthScreen] = useState('login');
+
+const AppRoutes = () => {
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -78,25 +85,43 @@ const AuthGate = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    const Login  = React.lazy(() => import('./pages/Login'));
-    const Signup = React.lazy(() => import('./pages/Signup'));
-    return (
-      <React.Suspense fallback={null}>
-        {authScreen === 'signup'
-          ? <Signup onSwitchToLogin={() => setAuthScreen('login')} />
-          : <Login  onSwitchToSignup={() => setAuthScreen('signup')} />}
-      </React.Suspense>
-    );
-  }
-
-  return <AppShell />;
+  return (
+    <Routes>
+      <Route path="/login" element={
+        <React.Suspense fallback={null}>
+          <Login />
+        </React.Suspense>
+      } />
+      <Route path="/signup" element={
+        <React.Suspense fallback={null}>
+          <Signup />
+        </React.Suspense>
+      } />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Layout />}>
+        {ROUTE_CONFIG.filter(r => r.authRequired).map(({ path, component, roles }) => (
+          path !== '/' && (
+            <Route
+              key={path}
+              path={path}
+              element={<ProtectedRoute component={component} roles={roles} />}
+            />
+          )
+        ))}
+      </Route>
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
 };
+
 
 export default function App() {
   return (
     <AuthProvider>
-      <AuthGate />
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </AuthProvider>
   );
 }
+

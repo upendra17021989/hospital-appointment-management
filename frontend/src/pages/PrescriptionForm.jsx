@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+
 
 // ── Common field wrapper ──────────────────────────────────────
 const Field = ({ label, required, children, hint, col }) => (
@@ -208,8 +210,10 @@ const printPrescription = (data) => {
 };
 
 // ── Main Component ────────────────────────────────────────────
-const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSaved, onNavigate }) => {
+const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSaved }) => {
+  const navigate = useNavigate();
   const [patients,    setPatients]    = useState([]);
+
   const [doctors,     setDoctors]     = useState([]);
   const [appointments,setAppointments]= useState([]);
   const [loading,     setLoading]     = useState(false);
@@ -365,7 +369,8 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
             </>
           )}
           <button className="btn btn-secondary" onClick={() => { setSuccess(null); setForm({ patientId: '', doctorId: '', appointmentId: '', diagnosis: '', chiefComplaint: '', examinationNotes: '', followUpDate: '', followUpInstructions: '', dietInstructions: '', activityRestrictions: '', additionalNotes: '' }); setMedicines([{ medicineName: '', dosage: '', frequency: '', duration: '', route: 'Oral', beforeFood: false, instructions: '' }]); setLabTests([]); setSelectedPatient(null); setSelectedDoctor(null); }}>New Prescription</button>
-          <button className="btn btn-secondary" onClick={() => onNavigate && onNavigate('appointments')}>View Appointments</button>
+          <button className="btn btn-secondary" onClick={() => navigate('/appointments')}>View Appointments</button>
+
         </div>
       </div>
     );
@@ -380,9 +385,10 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
           <p className="page-subtitle">Create a new prescription for a patient</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => onNavigate && onNavigate('patients')}>
+          <button className="btn btn-secondary btn-sm" onClick={() => navigate('/patients')}>
             + Register Patient
           </button>
+
         </div>
       </div>
 
@@ -606,8 +612,9 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
 
       {/* ── Actions ── */}
       <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-        <button className="btn btn-secondary" onClick={() => onNavigate && onNavigate('appointments')}>Cancel</button>
+        <button className="btn btn-secondary" onClick={() => navigate('/appointments')}>Cancel</button>
         <button className="btn btn-primary" disabled={loading} onClick={handleSubmit}>
+
           {loading ? 'Saving...' : '✓ Save Prescription'}
         </button>
       </div>

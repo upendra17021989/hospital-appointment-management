@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { LoadingSpinner, Badge } from '../components/Common';
 
-const Dashboard = ({ onNavigate }) => {
+
+const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
+
   const [todayAppts, setTodayAppts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,9 +45,10 @@ const Dashboard = ({ onNavigate }) => {
             })}
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => onNavigate('book')}>
+        <button className="btn btn-primary" onClick={() => navigate('/book-appointment')}>
           + Book Appointment
         </button>
+
       </div>
 
       {/* Stats */}

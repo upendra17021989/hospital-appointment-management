@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
-const Login = ({ onSwitchToSignup }) => {
+const Login = () => {
   const { saveAuth } = useAuth();
+  const navigate = useNavigate();
+
   const [form, setForm]         = useState({ email: '', password: '' });
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
@@ -122,10 +126,11 @@ const Login = ({ onSwitchToSignup }) => {
 
           <button
             className="btn btn-secondary auth-switch-btn"
-            onClick={onSwitchToSignup}
+            onClick={() => navigate('/signup')}
           >
             Register your hospital
           </button>
+
         </div>
       </div>
     </div>

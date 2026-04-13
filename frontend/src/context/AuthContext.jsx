@@ -25,12 +25,14 @@ const [loading, setLoading] = useState(false);
     setUser(userData);
   };
 
-  const logout = useCallback(() => {
+const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     setToken(null);
     setUser(null);
+    window.location.href = '/login';
   }, []);
+
 
   // Verify token on mount
   useEffect(() => {

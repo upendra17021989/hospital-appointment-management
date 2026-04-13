@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { LoadingSpinner } from '../components/Common';
+
 
 const STEPS = [
   { num: 1, label: 'Department' },
@@ -580,8 +583,10 @@ const SuccessScreen = ({ appointment, onReset }) => {
 };
 
 // ── Main BookAppointment Page ─────────────────────────────────
-const BookAppointment = ({ prefillPatient }) => {
+const BookAppointment = () => {
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+
   const [step, setStep] = useState(1);
   const [departments, setDepartments] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -675,6 +680,8 @@ const BookAppointment = ({ prefillPatient }) => {
     }
   };
 
+  const location = useLocation();
+  const prefillPatient = location.state?.prefillPatient;
   useEffect(() => {
     if (prefillPatient) {
       setPatientData({
@@ -687,6 +694,7 @@ const BookAppointment = ({ prefillPatient }) => {
       });
     }
   }, [prefillPatient]);
+
 
   const handleReset = () => {
     setSuccess(null); setStep(1); setSelectedDept(null);

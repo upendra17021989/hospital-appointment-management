@@ -1,7 +1,9 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Icon } from './Common';
 import { useAuth } from '../context/AuthContext';
 import { useRole } from '../hooks/useRole';
+
 
 const getNavGroups = (role) => {
   const baseGroups = [
@@ -78,11 +80,21 @@ const getNavGroups = (role) => {
   return [...baseGroups, ...roleBasedGroups];
 };
 
-const Sidebar = ({ currentPage, onNavigate }) => {
+const Sidebar = () => {
+  const location = useLocation();
   const { user, logout } = useAuth();
   const { role } = useRole();
 
   const navGroups = getNavGroups(role);
+
+  const getPath = (id) => {
+    return id === 'book' ? '/book-appointment' : `/${id}`;
+  };
+
+  const isActive = (id) => {
+    return location.pathname === getPath(id);
+  };
+
 
   return (
     <aside className="sidebar">
@@ -109,16 +121,17 @@ const Sidebar = ({ currentPage, onNavigate }) => {
         {navGroups.map(group => (
           <div key={group.key} style={{ marginBottom: '12px' }}>
             <div className="nav-section-label">{group.label}</div>
-            {group.items.map(item => (
-              <button
+{group.items.map(item => (
+              <Link
                 key={item.id}
-                className={`nav-item ${currentPage === item.id ? 'active' : ''}`}
-                onClick={() => onNavigate(item.id)}
+                to={getPath(item.id)}
+                className={`nav-item ${isActive(item.id) ? 'active' : ''}`}
               >
                 <span className="nav-icon"><Icon name={item.icon} /></span>
                 {item.label}
-              </button>
+              </Link>
             ))}
+
           </div>
         ))}
       </nav>

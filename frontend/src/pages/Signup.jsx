@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -25,8 +27,10 @@ const StepDots = ({ current }) => (
   </div>
 );
 
-const Signup = ({ onSwitchToLogin }) => {
+const Signup = () => {
   const { saveAuth } = useAuth();
+  const navigate = useNavigate();
+
   const [step,    setStep]    = useState(1);
   const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
@@ -319,9 +323,10 @@ const Signup = ({ onSwitchToLogin }) => {
           )}
 
           <div className="auth-divider"><span>Already registered?</span></div>
-          <button className="btn btn-secondary auth-switch-btn" onClick={onSwitchToLogin}>
+          <button className="btn btn-secondary auth-switch-btn" onClick={() => navigate('/login')}>
             Sign in to your hospital
           </button>
+
         </div>
       </div>
     </div>

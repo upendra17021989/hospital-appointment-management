@@ -1,7 +1,9 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useRole } from '../hooks/useRole';
 import { LoadingSpinner, Badge, EmptyState } from '../components/Common';
+
 
 // ── Helpers ───────────────────────────────────────────────────
 const formatDate = (d) => {
@@ -356,8 +358,9 @@ const PatientList = ({ onSelect, onRegister }) => {
 };
 
 // ── Patient Detail View ───────────────────────────────────────
-const PatientDetailView = ({ patient, onBack, onNavigate }) => {
+const PatientDetailView = ({ patient, onBack, navigate }) => {
   const [activeTab,     setActiveTab]     = useState('overview');
+
   const [appointments,  setAppointments]  = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading,       setLoading]       = useState(true);
@@ -455,16 +458,18 @@ const PatientDetailView = ({ patient, onBack, onNavigate }) => {
           </button>
           <button
             className="btn btn-primary btn-sm"
-            onClick={() => onNavigate('prescription-form', { prefillPatient: patient })}
+            onClick={() => navigate('/prescription-form', { state: { prefillPatient: patient } })}
           >
             💊 New Prescription
           </button>
+
           <button
             className="btn btn-accent btn-sm"
-            onClick={() => onNavigate('book', { prefillPatient: patient })}
+            onClick={() => navigate('/book-appointment', { state: { prefillPatient: patient } })}
           >
             📅 Book Appointment
           </button>
+
         </div>
       </div>
 
@@ -563,10 +568,11 @@ const PatientDetailView = ({ patient, onBack, onNavigate }) => {
                 </h3>
                 <button
                   className="btn btn-primary btn-sm"
-                  onClick={() => onNavigate('book', { prefillPatient: patient })}
+                  onClick={() => navigate('/book-appointment', { state: { prefillPatient: patient } })}
                 >
                   + Book Appointment
                 </button>
+
               </div>
               {appointments.length === 0 ? (
                 <EmptyState icon="📅" title="No appointments" subtitle="Book the first appointment for this patient" />
@@ -577,12 +583,15 @@ const PatientDetailView = ({ patient, onBack, onNavigate }) => {
                       key={a.id}
                       appt={a}
                       onPrescription={appt => {
-                        onNavigate('prescription-form', {
-                          appointmentId: appt.id,
-                          prefillPatient: patient,
+                        navigate('/prescription-form', {
+                          state: {
+                            appointmentId: appt.id,
+                            prefillPatient: patient,
+                          }
                         });
                       }}
                     />
+
                   ))}
                 </div>
               )}
@@ -598,10 +607,11 @@ const PatientDetailView = ({ patient, onBack, onNavigate }) => {
                 </h3>
                 <button
                   className="btn btn-primary btn-sm"
-                  onClick={() => onNavigate('prescription-form', { prefillPatient: patient })}
+                  onClick={() => navigate('/prescription-form', { state: { prefillPatient: patient } })}
                 >
                   + New Prescription
                 </button>
+
               </div>
               {prescriptions.length === 0 ? (
                 <EmptyState icon="💊" title="No prescriptions" subtitle="Create the first prescription for this patient" />
@@ -696,15 +706,17 @@ const PatientDetailView = ({ patient, onBack, onNavigate }) => {
 };
 
 // ── Main export — handles list + detail view ──────────────────
-const PatientDetails = ({ onNavigate }) => {
+const PatientDetails = () => {
+  const navigate = useNavigate();
   const [selectedPatient, setSelectedPatient] = useState(null);
+
 
   if (selectedPatient) {
     return (
       <PatientDetailView
         patient={selectedPatient}
         onBack={() => setSelectedPatient(null)}
-        onNavigate={onNavigate}
+        navigate={navigate}
       />
     );
   }
@@ -712,9 +724,10 @@ const PatientDetails = ({ onNavigate }) => {
   return (
     <PatientList
       onSelect={setSelectedPatient}
-      onRegister={() => onNavigate && onNavigate('patient-form')}
+      onRegister={() => navigate('/patient-form')}
     />
   );
 };
+
 
 export default PatientDetails;
