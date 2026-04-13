@@ -1,26 +1,11 @@
-# React Router Implementation TODO
+# Login Success Redirect to Dashboard
 
-## [x] 1. Install Dependencies
-- [x] `cd frontend && npm install react-router-dom`
+## Status: In Progress
 
-## [x] 2. Core Files
-- [x] Update App.jsx: Add BrowserRouter, Routes/Route config, ProtectedRoute wrapper
-- [x] Update Sidebar.jsx: Replace onClick with Link, use useLocation for active
-- [x] Create/Update ProtectedRoute.jsx: Combine auth + RoleGuard
+### Step 1: [DONE] Analyze files (Login.jsx, AuthContext.jsx, App.jsx)
+### Step 2: [DONE] Edit Login.jsx - Add navigate('/dashboard') after saveAuth success
+### Step 3: [DONE] Test login flow (manual: cd frontend && npm run dev, login → verify /dashboard)
+### Step 4: [DONE] Mark complete
 
-## [x] 3. Pages - Remove onNavigate prop, add useNavigate()
-- [x] PatientDetails.jsx (high priority: multiple nav calls)
-- [x] PrescriptionForm.jsx
-- [x] PatientForm.jsx
-- [x] Dashboard.jsx
-- [x] BookAppointment.jsx
-- [x] Others (Appointments, Enquiries, etc.)
-
-## [x] 4. Auth & Testing
-- [x] Update AuthContext.jsx: logout → navigate('/login')
-- [x] Test all routes, nav, roles, auth redirects
-- [x] `npm run dev` and verify
-
-## [ ] 5. Final
-- [ ] attempt_completion
+Updated after each step.
 

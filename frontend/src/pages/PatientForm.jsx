@@ -6,7 +6,7 @@ import api from '../services/api';
 // ── Indian Phone Validation ───────────────────────────────────
 const PHONE_REGEX = /^(?:\+91|91|0)?[6-9]\d{9}$/;
 const validatePhone = (v) => {
-  if (!v) return 'Phone is required';
+  if (!v) return '';
   if (!PHONE_REGEX.test(v.replace(/[\s-]/g, ''))) return 'Enter valid Indian mobile number';
   return '';
 };
@@ -137,7 +137,7 @@ const PatientForm = ({ prefillData, onSaved }) => {
     if (s === 1) {
       if (!personal.firstName.trim()) return 'First name is required';
       if (!personal.lastName.trim())  return 'Last name is required';
-      if (validatePhone(personal.phone)) return validatePhone(personal.phone);
+      // Phone now optional; validatePhone returns '' if empty
       if (!personal.gender)            return 'Gender is required';
     }
     return '';
@@ -231,7 +231,7 @@ const PatientForm = ({ prefillData, onSaved }) => {
                   <option value="other">Other</option>
                 </select>
               </Field>
-              <Field label="Mobile Number" required hint="10-digit Indian mobile number" error={phoneErr}>
+              <Field label="Mobile Number" hint="10-digit Indian mobile number (optional)" error={phoneErr}>
                 <div className="pf-phone-wrap">
                   <span className="pf-phone-prefix">🇮🇳 +91</span>
                   <input

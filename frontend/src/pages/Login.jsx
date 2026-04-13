@@ -30,6 +30,7 @@ const Login = () => {
       if (!data.success) { setError(data.message || 'Login failed.'); return; }
       // saveAuth triggers re-render in AuthGate → shows AppShell automatically
       saveAuth(data.data.token, data.data);
+      navigate('/dashboard', { replace: true });
     } catch {
       setError('Unable to connect to server. Please try again.');
     } finally {

@@ -41,7 +41,7 @@ public class Patient {
     @Column(length = 10)
     private String gender;
 
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String phone;
 
     @Column(length = 100)

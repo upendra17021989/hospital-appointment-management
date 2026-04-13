@@ -640,7 +640,7 @@ const PatientDetailView = ({ patient, onBack, navigate }) => {
                     <input value={editForm.lastName} onChange={setEF('lastName')} />
                   </div>
                   <div className="form-group">
-                    <label>Phone *</label>
+                    <label>Phone </label>
                     <input value={editForm.phone} onChange={setEF('phone')} />
                   </div>
                   <div className="form-group">

@@ -64,8 +64,7 @@ public class Dtos {
         @Pattern(regexp = "male|female|other", message = "Gender must be male, female, or other")
         private String gender;
 
-        @NotBlank(message = "Phone is required")
-        @Pattern(regexp = "^[+]?[0-9]{10,15}$", message = "Invalid phone number")
+        @Pattern(regexp = "^$|^[+]?[0-9]{10,15}$", message = "Invalid phone number (if provided)")
         private String phone;
 
         @Email(message = "Invalid email address")
