@@ -96,6 +96,17 @@ public class PatientService {
                 .map(this::mapToResponse).toList();
     }
 
+    public List<PatientResponse> searchHospitalPatients(UUID hospitalId, String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return List.of();
+        }
+        return patientRepo.searchByHospitalId(hospitalId, query.trim())
+                .stream()
+                .map(this::mapToResponse)
+                .limit(20)  // Limit results for performance
+                .toList();
+    }
+
     @Transactional
     public PatientResponse updatePatientForHospital(UUID id, PatientRequest request) {
         UUID hospitalId = tenantContext.requireHospitalId();

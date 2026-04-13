@@ -250,10 +250,16 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
     api.get('/prescriptions/common-tests/hospital').then(setCommonTests).catch(() => {});
   }, []);
 
+  // Debounced patient search - now supports name, phone, address
   useEffect(() => {
-    if (patientSearch.length >= 2) {
-      api.get(`/patients/hospital/search?phone=${patientSearch}`).then(setPatients).catch(() => {});
-    }
+    const timer = setTimeout(() => {
+      if (patientSearch.length >= 2) {
+        api.get(`/patients/hospital/search?query=${encodeURIComponent(patientSearch)}`).then(setPatients).catch(() => {});
+      } else {
+        setPatients([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
   }, [patientSearch]);
 
   const setF = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
@@ -401,20 +407,29 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
                 <input
                   value={patientSearch}
                   onChange={e => { setPatientSearch(e.target.value); setShowPatientDrop(true); }}
-                  placeholder="Search by phone number..."
+                  placeholder="Search patients by name, phone, or address..."
                 />
                 {showPatientDrop && patients.length > 0 && (
                   <div className="rx-dropdown">
                     {patients.map(p => (
                       <div key={p.id} className="rx-dropdown-item" onClick={() => { setSelectedPatient(p); setForm(f => ({ ...f, patientId: p.id })); setPatientSearch(''); setShowPatientDrop(false); }}>
                         <div style={{ fontWeight: 600 }}>{p.fullName}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.phone}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                          📱 {p.phone} {p.address ? `· ${p.address.split(',')[0]}` : ''}
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
                 {patientSearch.length < 2 && (
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Enter phone number to search patient</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Enter 2+ characters (name, phone, or address) to search patients
+                  </div>
+                )}
+                {patientSearch.length >= 2 && patients.length === 0 && (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                    No patients found. Try registering a new patient.
+                  </div>
                 )}
               </div>
             )}

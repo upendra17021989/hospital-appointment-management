@@ -75,16 +75,19 @@ public class PatientController {
         return ResponseEntity.ok(ApiResponse.success(patientService.getHospitalPatients(hospitalId)));
     }
 
-    @GetMapping("/hospital/search")
+@GetMapping("/hospital/search")
     @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
-    @Operation(summary = "Search hospital patients by phone or email")
+    @Operation(summary = "Search hospital patients by name, phone, address, or email")
     public ResponseEntity<ApiResponse<List<PatientResponse>>> searchHospital(
             @RequestParam(required = false) String phone,
-            @RequestParam(required = false) String email) {
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String query) {
         UUID hospitalId = tenantContext.requireHospitalId();
 
         List<PatientResponse> results;
-        if (phone != null && !phone.isBlank()) {
+        if (query != null && !query.isBlank()) {
+            results = patientService.searchHospitalPatients(hospitalId, query);
+        } else if (phone != null && !phone.isBlank()) {
             results = patientService.searchByHospitalPhone(hospitalId, phone);
         } else if (email != null && !email.isBlank()) {
             results = patientService.searchByHospitalEmail(hospitalId, email);
