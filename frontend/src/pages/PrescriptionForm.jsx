@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
 
 
@@ -211,7 +211,9 @@ const printPrescription = (data) => {
 
 // ── Main Component ────────────────────────────────────────────
 const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSaved }) => {
-  const navigate = useNavigate();
+const navigate = useNavigate();
+  const location = useLocation();
+  const routePrefillPatient = location.state?.prefillPatient;
   const [patients,    setPatients]    = useState([]);
 
   const [doctors,     setDoctors]     = useState([]);
@@ -223,7 +225,7 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
   const [showPatientDrop, setShowPatientDrop] = useState(false);
 
   const [form, setForm] = useState({
-    patientId:      prefillPatient?.id     || '',
+patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
     doctorId:       prefillDoctor?.id      || '',
     appointmentId:  appointmentId          || '',
     diagnosis:      '',
@@ -240,7 +242,7 @@ const PrescriptionForm = ({ appointmentId, prefillPatient, prefillDoctor, onSave
   const [medicines, setMedicines] = useState([]);
   const [labTests,  setLabTests]  = useState([]);
 
-  const [selectedPatient, setSelectedPatient] = useState(prefillPatient || null);
+const [selectedPatient, setSelectedPatient] = useState(routePrefillPatient || prefillPatient || null);
   const [selectedDoctor,  setSelectedDoctor]  = useState(prefillDoctor  || null);
   const [commonMedicines, setCommonMedicines] = useState([]);
   const [commonTests,     setCommonTests]     = useState([]);
