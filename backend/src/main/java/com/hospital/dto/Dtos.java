@@ -60,6 +60,7 @@ public class Dtos {
         private String lastName;
 
         private LocalDate dateOfBirth;
+        private Integer age;
 
         @Pattern(regexp = "male|female|other", message = "Gender must be male, female, or other")
         private String gender;
@@ -85,6 +86,7 @@ public class Dtos {
         private String lastName;
         private String fullName;
         private LocalDate dateOfBirth;
+        private Integer age;
         private String gender;
         private String phone;
         private String email;

@@ -213,14 +213,15 @@ const Step4PatientInfo = ({
 
   const handlePatientSelect = (patient) => {
     setSelectedExistingPatient(patient);
-    setPatientData({
-      firstName: patient.firstName || '',
-      lastName: patient.lastName || '',
-      phone: patient.phone || '',
-      email: patient.email || '',
-      gender: patient.gender || '',
-      dateOfBirth: patient.dateOfBirth || ''
-    });
+      setPatientData({
+        firstName: patient.firstName || '',
+        lastName: patient.lastName || '',
+        phone: patient.phone || '',
+        email: patient.email || '',
+        gender: patient.gender || '',
+        dateOfBirth: patient.dateOfBirth || '',
+        age: patient.age || ''
+      });
   };
 
   const handleToggleMode = () => {
@@ -596,7 +597,7 @@ const BookAppointment = () => {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
-  const [patientData, setPatientData] = useState({ firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '' });
+  const [patientData, setPatientData] = useState({ firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '', age: '' });
   const [visitData, setVisitData] = useState({ reasonForVisit: '', symptoms: '', appointmentType: 'in_person' });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
@@ -661,6 +662,7 @@ const BookAppointment = () => {
         const newPatient = await api.post('/patients', {
           ...patientData,
           dateOfBirth: patientData.dateOfBirth || null,
+          age: parseInt(patientData.age) || null,
         });
         patientId = newPatient?.data?.id;
       }

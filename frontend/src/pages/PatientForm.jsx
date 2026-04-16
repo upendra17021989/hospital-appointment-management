@@ -96,7 +96,7 @@ const PatientForm = ({ prefillData, onSaved }) => {
   const [personal, setPersonal] = useState({
     firstName: prefillData?.firstName || '',
     lastName:  prefillData?.lastName  || '',
-    dateOfBirth: '', gender: '', phone: prefillData?.phone || '',
+    dateOfBirth: '', age: '', gender: '', phone: prefillData?.phone || '',
     email: prefillData?.email || '', address: '', pincode: '', city: '',
     aadharNumber: '', abhaId: '',
   });
@@ -159,6 +159,7 @@ const PatientForm = ({ prefillData, onSaved }) => {
         firstName: personal.firstName,
         lastName:  personal.lastName,
         dateOfBirth: personal.dateOfBirth || null,
+        age: parseInt(personal.age) || null,
         gender:    personal.gender,
         phone:     personal.phone,
         email:     personal.email || null,
@@ -189,7 +190,7 @@ const PatientForm = ({ prefillData, onSaved }) => {
     return (
       <SuccessScreen
         patient={success}
-        onNew={() => { setSuccess(null); setStep(1); setPersonal({ firstName: '', lastName: '', dateOfBirth: '', gender: '', phone: '', email: '', address: '', pincode: '', city: '', aadharNumber: '', abhaId: '' }); setMedical({ bloodGroup: '', height: '', weight: '', knownAllergies: '', chronicConditions: '', currentMedications: '', pastSurgeries: '', familyHistory: '', vaccinationHistory: '' }); }}
+        onNew={() => { setSuccess(null); setStep(1); setPersonal({ firstName: '', lastName: '', dateOfBirth: '', age: '', gender: '', phone: '', email: '', address: '', pincode: '', city: '', aadharNumber: '', abhaId: '' }); setMedical({ bloodGroup: '', height: '', weight: '', knownAllergies: '', chronicConditions: '', currentMedications: '', pastSurgeries: '', familyHistory: '', vaccinationHistory: '' }); }}
         onView={() => navigate('/patients')}
 
       />
@@ -222,6 +223,9 @@ const PatientForm = ({ prefillData, onSaved }) => {
               </Field>
               <Field label="Date of Birth" half>
                 <input type="date" value={personal.dateOfBirth} onChange={setP('dateOfBirth')} max={new Date().toISOString().split('T')[0]} />
+              </Field>
+              <Field label="Age" half>
+                <input type="number" value={personal.age} onChange={setP('age')} min="0" max="150" placeholder="e.g. 30" />
               </Field>
               <Field label="Gender" required half error={touched.gender && !personal.gender ? 'Required' : ''}>
                 <select value={personal.gender} onChange={setP('gender')} onBlur={touch('gender')}>
@@ -414,6 +418,7 @@ const PatientForm = ({ prefillData, onSaved }) => {
                 <div className="pf-review-block-title">Personal</div>
                 {[
                   ['Name',   `${personal.firstName} ${personal.lastName}`],
+                  ['Age',    personal.age || '—'],
                   ['Phone',  personal.phone],
                   ['Gender', personal.gender || '—'],
                   ['DOB',    personal.dateOfBirth || '—'],

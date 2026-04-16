@@ -33,6 +33,7 @@ public class PatientService {
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .dateOfBirth(request.getDateOfBirth())
+                .age(request.getAge())
                 .gender(request.getGender())
                 .phone(request.getPhone())
                 .email(request.getEmail())
@@ -69,6 +70,7 @@ public class PatientService {
         patient.setFirstName(request.getFirstName());
         patient.setLastName(request.getLastName());
         patient.setDateOfBirth(request.getDateOfBirth());
+        patient.setAge(request.getAge());
         patient.setGender(request.getGender());
         patient.setPhone(request.getPhone());
         patient.setEmail(request.getEmail());
@@ -120,6 +122,7 @@ public class PatientService {
         patient.setFirstName(request.getFirstName());
         patient.setLastName(request.getLastName());
         patient.setDateOfBirth(request.getDateOfBirth());
+        patient.setAge(request.getAge());
         patient.setGender(request.getGender());
         patient.setPhone(request.getPhone());
         patient.setEmail(request.getEmail());
@@ -146,6 +149,7 @@ public class PatientService {
                 .lastName(p.getLastName())
                 .fullName(p.getFullName())
                 .dateOfBirth(p.getDateOfBirth())
+                .age(p.getAge())
                 .gender(p.getGender())
                 .phone(p.getPhone())
                 .email(p.getEmail())

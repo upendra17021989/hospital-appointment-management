@@ -300,6 +300,7 @@ const PatientList = ({ onSelect, onRegister }) => {
                 <th>Patient</th>
                 <th>Phone</th>
                 <th>Gender</th>
+                <th>Age</th>
                 <th>Blood Group</th>
                 <th>DOB</th>
                 <th>Registered</th>
@@ -321,7 +322,7 @@ const PatientList = ({ onSelect, onRegister }) => {
                     </div>
                   </td>
                   <td>{p.phone}</td>
-                  <td style={{ textTransform: 'capitalize' }}>{p.gender || '—'}</td>
+                  <td style={{ textTransform: 'capitalize' }}>{p.age || calcAge(p.dateOfBirth) || '—'} yrs</td>
                   <td>
                     {p.bloodGroup
                       ? <span className="pd-blood-badge">{p.bloodGroup}</span>
@@ -369,7 +370,7 @@ const PatientDetailView = ({ patient, onBack, navigate }) => {
   const [saving,        setSaving]        = useState(false);
   const [saveMsg,       setSaveMsg]       = useState('');
 
-  const age = calcAge(patient.dateOfBirth);
+  const age = patient.age || calcAge(patient.dateOfBirth);
 
   useEffect(() => {
     Promise.all([
@@ -385,10 +386,11 @@ const PatientDetailView = ({ patient, onBack, navigate }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.put(`/patients/hospital/${patient.id}`, {
+        await api.put(`/patients/hospital/${patient.id}`, {
         firstName:            editForm.firstName,
         lastName:             editForm.lastName,
         dateOfBirth:          editForm.dateOfBirth || null,
+        age:                  parseInt(editForm.age) || null,
         gender:               editForm.gender,
         phone:                editForm.phone,
         email:                editForm.email || null,
@@ -650,6 +652,10 @@ const PatientDetailView = ({ patient, onBack, navigate }) => {
                   <div className="form-group">
                     <label>Date of Birth</label>
                     <input type="date" value={editForm.dateOfBirth || ''} onChange={setEF('dateOfBirth')} />
+                  </div>
+                  <div className="form-group">
+                    <label>Age</label>
+                    <input type="number" value={editForm.age || ''} onChange={setEF('age')} min="0" max="150" placeholder="e.g. 30" />
                   </div>
                   <div className="form-group">
                     <label>Gender</label>

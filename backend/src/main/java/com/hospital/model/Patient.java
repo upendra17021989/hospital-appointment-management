@@ -38,6 +38,9 @@ public class Patient {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
+    @Column(name = "age")
+    private Integer age;
+
     @Column(length = 10)
     private String gender;
 
