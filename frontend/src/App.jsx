@@ -12,7 +12,8 @@ import Doctors          from './pages/Doctors';
 import DoctorManagement from './pages/DoctorManagement';
 import Departments      from './pages/Departments';
 import PatientForm      from './pages/PatientForm';
-import PatientDetails   from './pages/PatientDetails';
+import Patients         from './pages/Patients';
+import PatientDetail    from './pages/PatientDetail';
 import PrescriptionForm from './pages/PrescriptionForm';
 import UserManagement   from './pages/UserManagement';
 
@@ -52,10 +53,10 @@ const ROUTE_CONFIG = [
   { path: '/user-management', component: UserManagement, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/departments', component: Departments, roles: [], authRequired: true },
   { path: '/patient-form', component: PatientForm, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/patients', component: PatientDetails, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/patients', component: Patients, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/patients/:id', component: PatientDetail, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/prescription-form', component: PrescriptionForm, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
 ];
-
 
 const Layout = () => {
   return (
@@ -69,7 +70,6 @@ const Layout = () => {
     </div>
   );
 };
-
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -113,7 +113,6 @@ const AppRoutes = () => {
     </Routes>
   );
 };
-
 
 export default function App() {
   return (

@@ -109,7 +109,6 @@ public class Dtos {
         private UUID doctorId;
 
         @NotNull(message = "Appointment date is required")
-        @Future(message = "Appointment date must be in the future")
         private LocalDate appointmentDate;
 
         @NotNull(message = "Appointment time is required")
