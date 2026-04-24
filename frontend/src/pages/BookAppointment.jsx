@@ -228,7 +228,7 @@ const Step4PatientInfo = ({
     setIsNewPatient(!isNewPatient);
     if (!isNewPatient) {
       setSelectedExistingPatient(null);
-      setPatientData({ firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '' });
+      setPatientData({ firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '', age: '' });
     }
     setSearchQuery('');
     setSearchedPatients([]);
@@ -271,7 +271,7 @@ const Step4PatientInfo = ({
             <input
               value={searchQuery}
               onChange={handlePhoneChange}
-              onBlur={() => setPhoneTouched(true)}
+              onBlur={touchField('phone')}
               placeholder="Enter phone number (10 digits)"
               style={{
                 borderColor: phoneError ? '#c0220a' : undefined,
@@ -447,6 +447,19 @@ const Step4PatientInfo = ({
               type="date"
               value={patientData.dateOfBirth}
               onChange={e => setPatientData(p => ({ ...p, dateOfBirth: e.target.value }))}
+            />
+          </div>
+
+          {/* Age */}
+          <div className="form-group">
+            <label>Age</label>
+            <input
+              type="number"
+              min="0"
+              max="150"
+              value={patientData.age}
+              onChange={e => setPatientData(p => ({ ...p, age: e.target.value }))}
+              placeholder="e.g. 30"
             />
           </div>
         </div>
@@ -640,7 +653,8 @@ const BookAppointment = () => {
     const timer = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        const patients = await api.get(`/patients/hospital/search?phone=${searchQuery}`);
+        const digitsOnly = searchQuery.replace(/\D/g, '');
+        const patients = await api.get(`/patients/hospital/search?query=${digitsOnly}`);
         setSearchedPatients(patients);
       } catch {
         setSearchedPatients([]);
@@ -693,6 +707,7 @@ const BookAppointment = () => {
         email: prefillPatient.email || '',
         gender: prefillPatient.gender || '',
         dateOfBirth: prefillPatient.dateOfBirth || '',
+        age: prefillPatient.age || '',
       });
     }
   }, [prefillPatient]);
@@ -701,7 +716,7 @@ const BookAppointment = () => {
   const handleReset = () => {
     setSuccess(null); setStep(1); setSelectedDept(null);
     setSelectedDoctor(null); setSelectedSlot(null); setSelectedDate('');
-    setPatientData(prefillPatient || { firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '' });
+    setPatientData(prefillPatient || { firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '', age: '' });
     setVisitData({ reasonForVisit: '', symptoms: '', appointmentType: 'in_person' });
     setIsNewPatient(true);
     setSelectedExistingPatient(null);

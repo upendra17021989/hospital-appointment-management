@@ -109,8 +109,9 @@ const Patients = () => {
                   </td>
                   <td>{p.phone}</td>
                   <td style={{ textTransform: 'capitalize' }}>
-                    {p.gender} {p.age || calcAge(p.dateOfBirth) || '—'} yrs
+                    {p.gender}
                   </td>
+                  <td>{p.age || calcAge(p.dateOfBirth) || '—'} yrs</td>
                   <td>
                     {p.bloodGroup
                       ? <span className="pd-blood-badge">{p.bloodGroup}</span>

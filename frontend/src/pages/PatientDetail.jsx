@@ -397,7 +397,8 @@ const PatientDetail = () => {
             {/* Personal Info */}
             <InfoCard title="Personal Information" icon="👤">
               <InfoRow label="Full Name"    value={patient.fullName} />
-              <InfoRow label="Date of Birth" value={patient.dateOfBirth ? `${formatDate(patient.dateOfBirth)} (Age ${age})` : null} />
+              <InfoRow label="Date of Birth" value={patient.dateOfBirth ? formatDate(patient.dateOfBirth) : null} />
+              <InfoRow label="Age" value={age ? `${age} years` : null} />
               <InfoRow label="Gender"       value={patient.gender} />
               <InfoRow label="Blood Group"  value={patient.bloodGroup} highlight />
               <InfoRow label="Phone"        value={patient.phone} />
