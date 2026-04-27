@@ -80,7 +80,8 @@ const Patients = () => {
         <EmptyState icon="👥" title="No patients found" subtitle="Register a new patient to get started" />
       ) : (
         <div className="table-wrap">
-          <table>
+          {/* Desktop Table */}
+          <table className="patients-table-desktop">
             <thead>
               <tr>
                 <th>Patient</th>
@@ -141,6 +142,68 @@ const Patients = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Mobile Cards */}
+          <div className="patients-mobile">
+            {filtered.map(p => (
+              <div className="patient-card" key={p.id}>
+                <div className="patient-card-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="pd-avatar">
+                      {p.firstName?.[0]}{p.lastName?.[0]}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{p.fullName}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.email || '—'}</div>
+                    </div>
+                  </div>
+                  {p.bloodGroup && (
+                    <span className="pd-blood-badge">{p.bloodGroup}</span>
+                  )}
+                </div>
+                <div className="patient-card-body">
+                  <div className="patient-card-row">
+                    <span className="patient-card-label">Phone</span>
+                    <span className="patient-card-value">{p.phone}</span>
+                  </div>
+                  <div className="patient-card-row">
+                    <span className="patient-card-label">Gender</span>
+                    <span className="patient-card-value" style={{ textTransform: 'capitalize' }}>{p.gender}</span>
+                  </div>
+                  <div className="patient-card-row">
+                    <span className="patient-card-label">Age</span>
+                    <span className="patient-card-value">{p.age || calcAge(p.dateOfBirth) || '—'} yrs</span>
+                  </div>
+                  <div className="patient-card-row">
+                    <span className="patient-card-label">Date of Birth</span>
+                    <span className="patient-card-value">{p.dateOfBirth ? formatDate(p.dateOfBirth) : '—'}</span>
+                  </div>
+                  <div className="patient-card-row">
+                    <span className="patient-card-label">Registered</span>
+                    <span className="patient-card-value">{formatDate(p.createdAt)}</span>
+                  </div>
+                </div>
+                <div className="patient-card-actions">
+                  {isStaff() || isReceptionist() ? (
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      disabled
+                      title="View patient details available for Hospital Admin and Super Admin only"
+                    >
+                      🔒 Admin Only
+                    </button>
+                  ) : (
+                    <a
+                      href={`/patients/${p.id}`}
+                      className="btn btn-primary btn-sm"
+                    >
+                      👁 View
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
