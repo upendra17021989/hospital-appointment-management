@@ -216,6 +216,14 @@ const injectStyles = () => {
       .form-grid { grid-template-columns: 1fr; }
       .grid-2, .grid-3 { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+      /* Step Indicator — Mobile */
+      .steps { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding: 12px 16px; gap: 4px; }
+      .steps::-webkit-scrollbar { display: none; }
+      .step { flex: 0 0 auto; min-width: fit-content; gap: 6px; }
+      .step:not(:last-child)::after { margin: 0 6px; font-size: 14px; }
+      .step-num { width: 24px; height: 24px; font-size: 11px; }
+      .step-label { font-size: 11px; }
     }
   `;
 

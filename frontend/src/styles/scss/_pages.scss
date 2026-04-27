@@ -159,6 +159,18 @@
   border-radius: $radius-lg;
   padding: 16px 24px;
   border: 1px solid $border;
+
+  @include responsive-mobile {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    padding: 12px 16px;
+    gap: 4px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }
 
 .step {
@@ -174,6 +186,17 @@
     font-size: 18px;
   }
 
+  @include responsive-mobile {
+    flex: 0 0 auto;
+    min-width: fit-content;
+    gap: 6px;
+
+    &:not(:last-child)::after {
+      margin: 0 6px;
+      font-size: 14px;
+    }
+  }
+
   &-num {
     width: 28px;
     height: 28px;
@@ -185,6 +208,12 @@
     font-weight: 700;
     flex-shrink: 0;
     transition: all 0.2s;
+
+    @include responsive-mobile {
+      width: 24px;
+      height: 24px;
+      font-size: 11px;
+    }
   }
 
   &-label {
@@ -192,6 +221,10 @@
     font-weight: 600;
     color: $text-muted;
     transition: color 0.2s;
+
+    @include responsive-mobile {
+      font-size: 11px;
+    }
   }
 
   &.active {
