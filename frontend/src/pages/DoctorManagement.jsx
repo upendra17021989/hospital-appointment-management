@@ -427,7 +427,8 @@ const DoctorManagement = () => {
         <EmptyState icon="👨‍⚕️" title="No doctors found" subtitle="Try adjusting your search or add a new doctor." />
       ) : (
         <div className="table-wrap">
-          <table>
+          {/* Desktop Table */}
+          <table className="doctors-table-desktop">
             <thead>
               <tr>
                 <th>Doctor</th>
@@ -498,6 +499,71 @@ const DoctorManagement = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Mobile Cards */}
+          <div className="doctors-mobile">
+            {filtered.map(d => (
+              <div className="doctor-list-card" key={d.id}>
+                <div className="doctor-list-card-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="dm-avatar">{d.firstName?.[0]}{d.lastName?.[0]}</div>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>Dr. {d.firstName} {d.lastName}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.email || '—'}</div>
+                    </div>
+                  </div>
+                  <span className={`badge ${d.isAvailable ? 'badge-confirmed' : 'badge-cancelled'}`}>
+                    {d.isAvailable ? 'Available' : 'Unavailable'}
+                  </span>
+                </div>
+                <div className="doctor-list-card-body">
+                  <div className="doctor-list-card-row">
+                    <span className="doctor-list-card-label">Specialization</span>
+                    <span className="doctor-list-card-value">{d.specialization}</span>
+                  </div>
+                  <div className="doctor-list-card-row">
+                    <span className="doctor-list-card-label">Department</span>
+                    <span className="doctor-list-card-value">{d.department?.name || '—'}</span>
+                  </div>
+                  <div className="doctor-list-card-row">
+                    <span className="doctor-list-card-label">Experience</span>
+                    <span className="doctor-list-card-value">{d.experienceYears} yrs</span>
+                  </div>
+                  <div className="doctor-list-card-row">
+                    <span className="doctor-list-card-label">Fee</span>
+                    <span className="doctor-list-card-value" style={{ fontWeight: 700, color: 'var(--primary)' }}>₹{d.consultationFee?.toFixed(0)}</span>
+                  </div>
+                  <div className="doctor-list-card-row">
+                    <span className="doctor-list-card-label">Phone</span>
+                    <span className="doctor-list-card-value">{d.phone || '—'}</span>
+                  </div>
+                  <div className="doctor-list-card-row">
+                    <span className="doctor-list-card-label">Languages</span>
+                    <span className="doctor-list-card-value">
+                      {d.languagesSpoken?.length > 0 ? d.languagesSpoken.join(', ') : '—'}
+                    </span>
+                  </div>
+                </div>
+                <div className="doctor-list-card-actions">
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    title="Edit Doctor"
+                    onClick={() => { setEditDoctor(d); setShowAddEdit(true); }}
+                  >✏️ Edit</button>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    title="Manage Schedule"
+                    onClick={() => setScheduleDoctor(d)}
+                  >📅 Schedule</button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    title="Delete Doctor"
+                    onClick={() => setDeleteDoctor(d)}
+                  >🗑</button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
