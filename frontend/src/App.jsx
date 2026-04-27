@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from 'rea
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
+import SubscriptionBanner from './components/SubscriptionBanner';
 import RoleGuard from './components/RoleGuard';
 import Dashboard        from './pages/Dashboard';
 import BookAppointment  from './pages/BookAppointment';
@@ -16,9 +17,13 @@ import Patients         from './pages/Patients';
 import PatientDetail    from './pages/PatientDetail';
 import PrescriptionForm from './pages/PrescriptionForm';
 import UserManagement   from './pages/UserManagement';
+import SubscriptionPlans from './pages/SubscriptionPlans';
+import BillingHistory   from './pages/BillingHistory';
 
 const Login  = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
+const PaymentSuccess = React.lazy(() => import('./pages/PaymentSuccess'));
+const PaymentCancel  = React.lazy(() => import('./pages/PaymentCancel'));
 
 const RequireAuth = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -56,6 +61,8 @@ const ROUTE_CONFIG = [
   { path: '/patients', component: Patients, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/patients/:id', component: PatientDetail, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/prescription-form', component: PrescriptionForm, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/subscription-plans', component: SubscriptionPlans, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/billing-history', component: BillingHistory, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
 ];
 
 const Layout = () => {
@@ -86,6 +93,7 @@ const Layout = () => {
         <span className="mobile-header-title">MediCare+</span>
       </div>
       <main className="main-content">
+        <SubscriptionBanner />
         <React.Suspense fallback={<div style={{padding: '2rem', textAlign: 'center'}}><div className="spinner" style={{margin: '0 auto 1rem', width: 40, height: 40}} />Loading page...</div>}>
           <Outlet />
         </React.Suspense>
@@ -118,6 +126,16 @@ const AppRoutes = () => {
       <Route path="/signup" element={
         <React.Suspense fallback={null}>
           <Signup />
+        </React.Suspense>
+      } />
+      <Route path="/payment/success" element={
+        <React.Suspense fallback={null}>
+          <PaymentSuccess />
+        </React.Suspense>
+      } />
+      <Route path="/payment/cancel" element={
+        <React.Suspense fallback={null}>
+          <PaymentCancel />
         </React.Suspense>
       } />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

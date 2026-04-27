@@ -46,4 +46,7 @@ public interface AppointmentRepo extends JpaRepository<Appointment, UUID> {
 
     @Query("SELECT COUNT(a) FROM Appointment a WHERE a.doctor.id = :doctorId AND a.appointmentDate = :date AND a.status <> 'cancelled'")
     Long countActiveAppointmentsForDoctorOnDate(@Param("doctorId") UUID doctorId, @Param("date") LocalDate date);
+
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.hospital.id = :hospitalId AND a.appointmentDate BETWEEN :start AND :end")
+    Long countByHospitalIdAndAppointmentDateBetween(@Param("hospitalId") UUID hospitalId, @Param("start") LocalDate start, @Param("end") LocalDate end);
 }

@@ -10,6 +10,7 @@ import com.hospital.repository.DepartmentRepo;
 import com.hospital.repository.DoctorRepo;
 import com.hospital.repository.DoctorScheduleRepo;
 import com.hospital.security.RequireHospitalContext;
+import com.hospital.security.RequireSubscription;
 import com.hospital.security.TenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -96,6 +97,7 @@ public class DoctorManagementController {
     @PostMapping
     @PreAuthorize("hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN')")
     @RequireHospitalContext
+    @RequireSubscription
     @Operation(summary = "Add a new doctor")
     public ResponseEntity<ApiResponse<DoctorResponse>> createDoctor(
             @Valid @RequestBody DoctorSaveRequest request) {
@@ -133,6 +135,7 @@ public class DoctorManagementController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN')")
     @RequireHospitalContext
+    @RequireSubscription
     @Operation(summary = "Update doctor details")
     public ResponseEntity<ApiResponse<DoctorResponse>> updateDoctor(
             @PathVariable UUID id,
@@ -171,6 +174,7 @@ public class DoctorManagementController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN')")
     @RequireHospitalContext
+    @RequireSubscription
     @Operation(summary = "Delete a doctor")
     public ResponseEntity<ApiResponse<String>> deleteDoctor(@PathVariable UUID id) {
         try {
@@ -213,6 +217,7 @@ public class DoctorManagementController {
     }
 
     @PostMapping("/schedules")
+    @RequireSubscription
     @Operation(summary = "Add a schedule for a doctor")
     public ResponseEntity<ApiResponse<ScheduleResponse>> addSchedule(
             @Valid @RequestBody ScheduleSaveRequest request) {

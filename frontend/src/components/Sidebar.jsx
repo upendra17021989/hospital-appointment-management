@@ -60,6 +60,17 @@ const getNavGroups = (role) => {
     });
   }
 
+  if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'billing',
+      label: 'Billing & Plans',
+      items: [
+        { id: 'subscription-plans', label: 'Plans', icon: 'appointment' },
+        { id: 'billing-history', label: 'Billing History', icon: 'patient' },
+      ],
+    });
+  }
+
   roleBasedGroups.push({
     key: 'directory',
     label: 'Directory',

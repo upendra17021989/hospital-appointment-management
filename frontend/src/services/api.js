@@ -63,4 +63,22 @@ const api = {
   },
 };
 
+// ── Subscription API helpers ──────────────────────────────────
+
+export const subscriptionApi = {
+  getPlans: () => api.get('/subscriptions/plans'),
+  getMySubscription: () => api.get('/subscriptions/me'),
+  getUsage: () => api.get('/subscriptions/usage'),
+  createCheckout: (planId, billingCycle = 'monthly') =>
+    api.post(`/subscriptions/checkout?planId=${planId}&billingCycle=${billingCycle}`),
+  cancel: () => api.post('/subscriptions/cancel'),
+};
+
+// ── Payment API helpers ───────────────────────────────────────
+
+export const paymentApi = {
+  getHistory: (page = 0, size = 20) =>
+    api.get(`/payments/history?page=${page}&size=${size}`),
+};
+
 export default api;

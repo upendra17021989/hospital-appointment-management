@@ -218,6 +218,94 @@ BEFORE INSERT ON appointments
 FOR EACH ROW EXECUTE FUNCTION generate_token_number();
 
 -- ============================================
+-- SUBSCRIPTION PLANS TABLE
+-- ============================================
+CREATE TABLE subscription_plans (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(50) NOT NULL UNIQUE,
+    slug VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    monthly_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    yearly_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    stripe_price_id_monthly VARCHAR(100),
+    stripe_price_id_yearly VARCHAR(100),
+    max_doctors INTEGER DEFAULT 3,
+    max_users INTEGER DEFAULT 2,
+    max_appointments_per_month INTEGER DEFAULT 100,
+    allow_prescriptions BOOLEAN DEFAULT FALSE,
+    allow_sms BOOLEAN DEFAULT FALSE,
+    allow_whatsapp BOOLEAN DEFAULT FALSE,
+    allow_custom_branding BOOLEAN DEFAULT FALSE,
+    priority_support BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- HOSPITAL SUBSCRIPTIONS TABLE
+-- ============================================
+CREATE TABLE hospital_subscriptions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hospital_id UUID NOT NULL REFERENCES hospitals(id) ON DELETE CASCADE,
+    plan_id UUID NOT NULL REFERENCES subscription_plans(id),
+    status VARCHAR(20) DEFAULT 'trial' CHECK (
+        status IN ('trial', 'active', 'past_due', 'cancelled', 'expired')
+    ),
+    billing_cycle VARCHAR(10) DEFAULT 'monthly' CHECK (
+        billing_cycle IN ('monthly', 'yearly')
+    ),
+    trial_ends_at TIMESTAMPTZ,
+    current_period_start TIMESTAMPTZ,
+    current_period_end TIMESTAMPTZ,
+    stripe_customer_id VARCHAR(100),
+    stripe_subscription_id VARCHAR(100),
+    cancelled_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- PAYMENTS TABLE
+-- ============================================
+CREATE TABLE payments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hospital_id UUID NOT NULL REFERENCES hospitals(id) ON DELETE CASCADE,
+    subscription_id UUID REFERENCES hospital_subscriptions(id),
+    stripe_payment_intent_id VARCHAR(100),
+    stripe_invoice_id VARCHAR(100),
+    amount DECIMAL(10,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    status VARCHAR(20) DEFAULT 'pending' CHECK (
+        status IN ('pending', 'succeeded', 'failed', 'refunded')
+    ),
+    description TEXT,
+    paid_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- SUBSCRIPTION-RELATED INDEXES
+-- ============================================
+CREATE INDEX idx_hospital_subscriptions_hospital ON hospital_subscriptions(hospital_id);
+CREATE INDEX idx_hospital_subscriptions_status ON hospital_subscriptions(status);
+CREATE INDEX idx_payments_hospital ON payments(hospital_id);
+CREATE INDEX idx_payments_subscription ON payments(subscription_id);
+
+-- ============================================
+-- SUBSCRIPTION TRIGGERS
+-- ============================================
+CREATE TRIGGER update_hospital_subscriptions_updated_at BEFORE UPDATE ON hospital_subscriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- SEED SUBSCRIPTION PLANS
+-- ============================================
+INSERT INTO subscription_plans (name, slug, description, monthly_price, yearly_price, max_doctors, max_users, max_appointments_per_month, allow_prescriptions, allow_sms, allow_whatsapp, allow_custom_branding, priority_support) VALUES
+('Free', 'free', 'Basic features for small clinics just getting started', 0.00, 0.00, 3, 2, 100, FALSE, FALSE, FALSE, FALSE, FALSE),
+('Basic', 'basic', 'Essential tools for growing practices', 29.00, 290.00, 10, 5, 500, TRUE, FALSE, FALSE, FALSE, FALSE),
+('Pro', 'pro', 'Advanced features for established hospitals', 79.00, 790.00, 25, 15, 999999, TRUE, TRUE, TRUE, TRUE, TRUE),
+('Enterprise', 'enterprise', 'Unlimited everything with dedicated support', 199.00, 1990.00, 999, 50, 999999, TRUE, TRUE, TRUE, TRUE, TRUE);
+
+-- ============================================
 -- ROW LEVEL SECURITY (RLS) - Supabase
 -- ============================================
 ALTER TABLE departments ENABLE ROW LEVEL SECURITY;

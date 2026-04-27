@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -10,13 +10,24 @@ export const AuthProvider = ({ children }) => {
   const [user,    setUser]    = useState(() => {
     try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
   });
-const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [lastActivity, setLastActivity] = useState(Date.now());
 
   const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes inactivity
   const CHECK_INTERVAL_MS = 30 * 1000; // 30 seconds check
 
   const isAuthenticated = !!token && !!user;
+
+  // Subscription helpers derived from user data
+  const subscription = useMemo(() => user?.subscription || null, [user]);
+  const isTrial = useMemo(() => !!subscription?.isTrial, [subscription]);
+  const isExpired = useMemo(() => !!subscription?.isExpired, [subscription]);
+  const planSlug = useMemo(() => subscription?.planSlug || 'free', [subscription]);
+  const daysUntilExpiry = useMemo(() => subscription?.daysUntilExpiry ?? null, [subscription]);
+  const prescriptionsEnabled = useMemo(() => {
+    if (!subscription) return false;
+    return !isExpired && (planSlug !== 'free' || isTrial);
+  }, [subscription, isExpired, planSlug, isTrial]);
 
   const saveAuth = (tokenVal, userData) => {
     localStorage.setItem(TOKEN_KEY, tokenVal);
@@ -25,14 +36,13 @@ const [loading, setLoading] = useState(false);
     setUser(userData);
   };
 
-const logout = useCallback(() => {
+  const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     setToken(null);
     setUser(null);
     window.location.href = '/login';
   }, []);
-
 
   // Verify token on mount
   useEffect(() => {
@@ -67,7 +77,7 @@ const logout = useCallback(() => {
     if (!isAuthenticated) return;
 
     const resetActivity = () => setLastActivity(Date.now());
-    
+
     const handleActivity = () => resetActivity();
     document.addEventListener('mousemove', handleActivity);
     document.addEventListener('keydown', handleActivity);
@@ -86,7 +96,11 @@ const logout = useCallback(() => {
   }, [isAuthenticated, lastActivity, logout]);
 
   return (
-    <AuthContext.Provider value={{ token, user, isAuthenticated, loading, saveAuth, logout }}>
+    <AuthContext.Provider value={{
+      token, user, isAuthenticated, loading,
+      subscription, isTrial, isExpired, planSlug, daysUntilExpiry, prescriptionsEnabled,
+      saveAuth, logout
+    }}>
       {children}
     </AuthContext.Provider>
   );

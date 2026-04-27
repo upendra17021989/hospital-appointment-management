@@ -69,4 +69,10 @@ public class Hospital {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Transient
+    public boolean hasActiveSubscription() {
+        // Will be populated by service layer
+        return true;
+    }
 }

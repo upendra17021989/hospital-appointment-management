@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.hospital.security.RequireSubscription;
 import com.hospital.security.TenantContext;
 import org.springframework.web.bind.annotation.*;
 
@@ -85,6 +86,7 @@ public class AppointmentController {
 
     @GetMapping("/hospital")
     @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @RequireSubscription
     @Operation(summary = "Get hospital-scoped appointments with optional filters")
     public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getHospitalAppointments(
             @RequestParam(required = false) String date,
@@ -98,6 +100,7 @@ public class AppointmentController {
 
     @PatchMapping("/hospital/{id}/status")
     @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @RequireSubscription
     @Operation(summary = "Update hospital-scoped appointment status")
     public ResponseEntity<ApiResponse<AppointmentResponse>> updateHospitalStatus(
             @PathVariable UUID id,

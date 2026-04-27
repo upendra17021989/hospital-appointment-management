@@ -217,6 +217,72 @@ public class Dtos {
         private String displayTime;
     }
 
+    // ========== SUBSCRIPTION PLAN ===========
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class SubscriptionPlanResponse {
+        private UUID id;
+        private String name;
+        private String slug;
+        private String description;
+        private BigDecimal monthlyPrice;
+        private BigDecimal yearlyPrice;
+        private Integer maxDoctors;
+        private Integer maxUsers;
+        private Integer maxAppointmentsPerMonth;
+        private Boolean allowPrescriptions;
+        private Boolean allowSms;
+        private Boolean allowWhatsapp;
+        private Boolean allowCustomBranding;
+        private Boolean prioritySupport;
+        private Boolean isActive;
+    }
+
+    // ========== HOSPITAL SUBSCRIPTION ===========
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class SubscriptionResponse {
+        private UUID id;
+        private SubscriptionPlanResponse plan;
+        private String status;
+        private String billingCycle;
+        private LocalDateTime trialEndsAt;
+        private LocalDateTime currentPeriodStart;
+        private LocalDateTime currentPeriodEnd;
+        private LocalDateTime cancelledAt;
+        private Boolean isTrial;
+        private Boolean isExpired;
+        private Integer daysUntilExpiry;
+    }
+
+    // ========== PAYMENT ===========
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class PaymentResponse {
+        private UUID id;
+        private BigDecimal amount;
+        private String currency;
+        private String status;
+        private String description;
+        private LocalDateTime paidAt;
+        private LocalDateTime createdAt;
+    }
+
+    // ========== CHECKOUT SESSION ===========
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class CheckoutSessionResponse {
+        private String checkoutUrl;
+    }
+
+    // ========== SUBSCRIPTION USAGE ===========
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class SubscriptionUsageResponse {
+        private Integer doctorsUsed;
+        private Integer doctorsLimit;
+        private Integer usersUsed;
+        private Integer usersLimit;
+        private Long appointmentsThisMonth;
+        private Integer appointmentsLimit;
+        private Boolean prescriptionsEnabled;
+    }
+
     // ========== API RESPONSE WRAPPER ===========
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
     public static class ApiResponse<T> {

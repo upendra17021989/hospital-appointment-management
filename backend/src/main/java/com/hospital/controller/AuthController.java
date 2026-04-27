@@ -2,8 +2,12 @@ package com.hospital.controller;
 
 import com.hospital.dto.Dtos.ApiResponse;
 import com.hospital.model.Hospital;
+import com.hospital.model.HospitalSubscription;
+import com.hospital.model.SubscriptionPlan;
 import com.hospital.model.User;
 import com.hospital.repository.HospitalRepo;
+import com.hospital.repository.HospitalSubscriptionRepo;
+import com.hospital.repository.SubscriptionPlanRepo;
 import com.hospital.repository.UserRepo;
 import com.hospital.security.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +17,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,9 +39,14 @@ public class AuthController {
 
     private final HospitalRepo hospitalRepo;
     private final UserRepo userRepo;
+    private final HospitalSubscriptionRepo subscriptionRepo;
+    private final SubscriptionPlanRepo planRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+
+    @Value("${app.subscription.trial-days:14}")
+    private int trialDays;
 
     // ── DTOs ──────────────────────────────────────────────────────
 
@@ -87,6 +97,7 @@ public class AuthController {
         private String fullName;
         private String role;
         private HospitalInfo hospital;
+        private SubscriptionInfo subscription;
     }
 
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
@@ -98,6 +109,18 @@ public class AuthController {
         private String phone;
         private String email;
         private String logoUrl;
+    }
+
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class SubscriptionInfo {
+        private String planName;
+        private String planSlug;
+        private String status;
+        private Boolean isTrial;
+        private Boolean isExpired;
+        private Integer daysUntilExpiry;
+        private LocalDateTime trialEndsAt;
+        private LocalDateTime currentPeriodEnd;
     }
 
     // ── Register Hospital + Admin ─────────────────────────────────
@@ -144,6 +167,22 @@ public class AuthController {
                 .build();
 
         User savedAdmin = userRepo.save(admin);
+
+        // Create trial subscription (Free plan)
+        SubscriptionPlan freePlan = planRepo.findBySlug("free")
+                .orElseGet(() -> planRepo.findByIsActiveTrueOrderByMonthlyPriceAsc().stream().findFirst().orElse(null));
+
+        if (freePlan != null) {
+            HospitalSubscription subscription = HospitalSubscription.builder()
+                    .hospital(savedHospital)
+                    .plan(freePlan)
+                    .status(HospitalSubscription.Status.trial)
+                    .trialEndsAt(LocalDateTime.now().plusDays(trialDays))
+                    .currentPeriodStart(LocalDateTime.now())
+                    .currentPeriodEnd(LocalDateTime.now().plusDays(trialDays))
+                    .build();
+            subscriptionRepo.save(subscription);
+        }
 
         String token = jwtService.generateToken(
                 savedAdmin,
@@ -262,12 +301,42 @@ public class AuthController {
                     .logoUrl(hospital.getLogoUrl())
                     .build();
         }
+
+        SubscriptionInfo subscriptionInfo = null;
+        if (hospital != null) {
+            HospitalSubscription sub = subscriptionRepo.findByHospitalId(hospital.getId()).orElse(null);
+            if (sub != null && sub.getPlan() != null) {
+                boolean isTrial = sub.getStatus() == HospitalSubscription.Status.trial;
+                boolean isExpired = sub.isExpired();
+
+                Integer daysUntilExpiry = null;
+                if (isTrial && sub.getTrialEndsAt() != null) {
+                    daysUntilExpiry = (int) java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), sub.getTrialEndsAt());
+                } else if (sub.getStatus() == HospitalSubscription.Status.active && sub.getCurrentPeriodEnd() != null) {
+                    daysUntilExpiry = (int) java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), sub.getCurrentPeriodEnd());
+                }
+                if (daysUntilExpiry != null && daysUntilExpiry < 0) daysUntilExpiry = 0;
+
+                subscriptionInfo = SubscriptionInfo.builder()
+                        .planName(sub.getPlan().getName())
+                        .planSlug(sub.getPlan().getSlug())
+                        .status(sub.getStatus().name())
+                        .isTrial(isTrial)
+                        .isExpired(isExpired)
+                        .daysUntilExpiry(daysUntilExpiry)
+                        .trialEndsAt(sub.getTrialEndsAt())
+                        .currentPeriodEnd(sub.getCurrentPeriodEnd())
+                        .build();
+            }
+        }
+
         return AuthResponse.builder()
                 .token(token)
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
                 .hospital(hospitalInfo)
+                .subscription(subscriptionInfo)
                 .build();
     }
 

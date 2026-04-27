@@ -6,6 +6,7 @@ import com.hospital.model.User;
 import com.hospital.repository.HospitalRepo;
 import com.hospital.repository.UserRepo;
 import com.hospital.security.RequireHospitalContext;
+import com.hospital.security.RequireSubscription;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -123,6 +124,7 @@ public class UserController {
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('HOSPITAL_ADMIN')")
     @RequireHospitalContext
+    @RequireSubscription
     @Operation(summary = "Create a new user")
     public ResponseEntity<ApiResponse<UserDto>> createUser(
             @Valid @RequestBody CreateUserRequest request) {

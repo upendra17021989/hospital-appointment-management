@@ -6,6 +6,7 @@ import com.hospital.repository.*;
 import com.hospital.service.EmailService;
 import com.hospital.service.PrescriptionPdfService;
 import com.hospital.service.SmsService;
+import com.hospital.security.RequireSubscription;
 import com.hospital.service.WhatsAppService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -208,6 +209,7 @@ public class PrescriptionController {
     @PostMapping
     @Operation(summary = "Create a new prescription")
     @PreAuthorize("hasAnyRole('HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @RequireSubscription(feature = "prescriptions")
     public ResponseEntity<ApiResponse<PrescriptionResponse>> create(
             @Valid @RequestBody PrescriptionRequest req) {
         try {

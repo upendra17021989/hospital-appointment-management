@@ -1,52 +1,36 @@
-# Add Age Field to Patient Registration and Related Pages
+# Subscription & Monetization Implementation Tracker
 
-## Overview
-Add `age` field (Integer) alongside `dateOfBirth` in:
-- Database schema
-- Backend (model, DTOs, service)
-- Frontend: PatientForm.jsx, BookAppointment.jsx (new patient), PatientDetails.jsx (list/edit/display)
+## Phase 1: Backend Core Fixes
+- [x] 1.1 Create TODO.md tracker
+- [x] 1.2 Complete `SubscriptionService.java` — finish `createTrialSubscription()` + implement `getUsage()`
+- [x] 1.3 Create `PaymentController.java` — webhook + billing history endpoints
+- [x] 1.4 Update `SubscriptionPlanRepo.java` — add `findByIsActiveTrueOrderByMonthlyPriceAsc()`
+- [x] 1.5 Update `SecurityConfig.java` — expose `/subscriptions/plans` as public
+- [x] 1.6 Update `AppointmentRepo.java` — add `countByHospitalIdAndAppointmentDateBetween()` for usage stats
 
-Age is direct input (validated 0-150), kept alongside DOB for quick reference (no auto-calc in DB/backend).
+## Phase 2: Feature Gating
+- [x] 2.1 Add `@RequireSubscription` to `DoctorManagementController` (create/update/delete/schedule endpoints)
+- [x] 2.2 Add `@RequireSubscription` to `UserController` (create endpoint)
+- [x] 2.3 Add `@RequireSubscription` to `AppointmentController` (hospital endpoints)
+- [x] 2.4 Add `@RequireSubscription(feature = "prescriptions")` to `PrescriptionController`
 
-## Steps
+## Phase 3: Frontend Core Wiring
+- [x] 3.1 Update `AuthContext.jsx` — store subscription state from auth response
+- [x] 3.2 Update `api.js` — add subscription/payment API helpers
 
-### 1. [x] Update database/schema.sql
-- Add `age INTEGER CHECK (age >= 0 AND age <= 150)` to patients table (after date_of_birth)
+## Phase 4: Frontend Pages & Components
+- [x] 4.1 Create `SubscriptionPlans.jsx` page
+- [x] 4.2 Create `BillingHistory.jsx` page
+- [x] 4.3 Create `PaymentSuccess.jsx` page
+- [x] 4.4 Create `PaymentCancel.jsx` page
+- [x] 4.5 Create `SubscriptionBanner.jsx` component
+- [x] 4.6 Create `SubscriptionGuard.jsx` component
+- [x] 4.7 Update `App.jsx` — add new routes
+- [x] 4.8 Update `Sidebar.jsx` — add billing menu
 
-### 2. [x] Update backend/src/main/java/com/hospital/model/Patient.java
-- Add `@Column(name = "age") private Integer age;`
-- Add getter/setter if needed (Lombok handles)
+## Phase 5: Styles
+- [x] 5.1 Update `_pages.scss` — add subscription page styles
 
-### 3. [x] Update backend/src/main/java/com/hospital/dto/Dtos.java
-- PatientRequest: Add `private Integer age;`
-- PatientResponse: Add `private Integer age;`
-- Update builders/mappers
-
-### 4. [x] Update backend/src/main/java/com/hospital/service/PatientService.java
-- registerPatient/updatePatient: Set `patient.setAge(request.getAge());`
-- mapToResponse: `.age(p.getAge())`
-
-### 5. [x] Update frontend/src/pages/PatientForm.jsx
-- Add age input (number, min=0 max=150) near DOB
-- Include age in payload to /patients
-
-### 6. [x] Update frontend/src/pages/BookAppointment.jsx
-- Step4PatientInfo (new patient mode): Add age input near DOB
-- Include in new patient POST
-
-### 7. [x] Update frontend/src/pages/PatientDetails.jsx
-- List table: Add Age column after Gender
-- Detail view: Use patient.age || calcAge(patient.dateOfBirth)
-- Edit tab: Add age input, handle in PUT
-
-### 8. [ ] Test & Followup
-- Restart backend: `mvn spring-boot:run` (in backend/)
-- Test PatientForm registration (check DB)
-- Test BookAppointment new patient
-- Test PatientDetails list/edit/display
-- Verify Supabase: Run ALTER TABLE if needed (manual)
-
-## Progress Tracking
-- Mark [x] when complete
-- Update after each file
-
+## Phase 6: Verification
+- [x] 6.1 Verify backend compiles
+- [x] 6.2 Verify frontend builds
