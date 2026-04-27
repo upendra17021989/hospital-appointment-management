@@ -80,7 +80,7 @@ const getNavGroups = (role) => {
   return [...baseGroups, ...roleBasedGroups];
 };
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { role } = useRole();
@@ -95,13 +95,29 @@ const Sidebar = () => {
     return location.pathname === getPath(id);
   };
 
+  const handleNavClick = () => {
+    if (onClose) onClose();
+  };
+
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Brand */}
       <div className="sidebar-header">
-        <div className="sidebar-logo">MediCare+</div>
-        <div className="sidebar-tagline">Hospital Management System</div>
+        <div>
+          <div className="sidebar-logo">MediCare+</div>
+          <div className="sidebar-tagline">Hospital Management System</div>
+        </div>
+        <button
+          className="sidebar-close"
+          onClick={onClose}
+          aria-label="Close navigation menu"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
 
       {/* Hospital badge */}
@@ -126,6 +142,7 @@ const Sidebar = () => {
                 key={item.id}
                 to={getPath(item.id)}
                 className={`nav-item ${isActive(item.id) ? 'active' : ''}`}
+                onClick={handleNavClick}
               >
                 <span className="nav-icon"><Icon name={item.icon} /></span>
                 {item.label}

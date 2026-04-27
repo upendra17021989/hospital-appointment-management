@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -59,9 +59,32 @@ const ROUTE_CONFIG = [
 ];
 
 const Layout = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setIsSidebarOpen(v => !v);
+  const closeSidebar = () => setIsSidebarOpen(false);
+
   return (
     <div className="layout">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+      {isSidebarOpen && (
+        <div className="sidebar-backdrop" onClick={closeSidebar} aria-hidden="true" />
+      )}
+      <div className="mobile-header">
+        <button
+          className="mobile-menu-toggle"
+          onClick={toggleSidebar}
+          aria-label="Toggle navigation menu"
+          aria-expanded={isSidebarOpen}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <span className="mobile-header-title">MediCare+</span>
+      </div>
       <main className="main-content">
         <React.Suspense fallback={<div style={{padding: '2rem', textAlign: 'center'}}><div className="spinner" style={{margin: '0 auto 1rem', width: 40, height: 40}} />Loading page...</div>}>
           <Outlet />
