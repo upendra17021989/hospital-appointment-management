@@ -245,3 +245,74 @@
     }
   }
 }
+
+// ── Appointment Cards (Mobile) ──────────────────────────────
+.appointments-table-desktop {
+  display: table;
+
+  @include responsive-mobile {
+    display: none;
+  }
+}
+
+.appointments-mobile {
+  display: none;
+
+  @include responsive-mobile {
+    display: block;
+  }
+}
+
+.appointment-card {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid $border;
+  box-shadow: $shadow;
+
+  &-header {
+    @include flex-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid $border;
+  }
+
+  &-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+
+  &-label {
+    font-size: 12px;
+    color: $text-muted;
+    font-weight: 500;
+  }
+
+  &-value {
+    font-weight: 600;
+    color: $text;
+    text-align: right;
+  }
+
+  &-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid $border;
+
+    .btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+}

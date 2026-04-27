@@ -224,6 +224,8 @@ const injectStyles = () => {
       .step:not(:last-child)::after { margin: 0 6px; font-size: 14px; }
       .step-num { width: 24px; height: 24px; font-size: 11px; }
       .step-label { font-size: 11px; }
+
+      .tabs { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding: 12px 16px; gap: 4px; }
     }
   `;
 

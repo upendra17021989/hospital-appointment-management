@@ -282,6 +282,12 @@
   &.full {
     grid-column: 1 / -1;
   }
+
+  @include responsive-mobile {
+    input, select {
+      width: 100%;
+    }
+  }
 }
 
 // ── Modal ─────────────────────────────────────────────────────
@@ -362,6 +368,18 @@
   display: flex;
   gap: 4px;
   margin-bottom: 20px;
+
+  @include responsive-mobile {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    padding: 12px 16px;
+    gap: 4px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }
 
 .tab {

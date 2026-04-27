@@ -69,57 +69,112 @@ const Appointments = () => {
         {loading ? <LoadingSpinner /> : filtered.length === 0 ? (
           <EmptyState icon="📅" title="No appointments found" />
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Token</th>
-                <th>Patient</th>
-                <th>Doctor</th>
-                <th>Department</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(a => (
-                <tr key={a.id}>
-                  <td><span className="token-badge">{a.tokenNumber}</span></td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{a.patient?.fullName}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.patient?.phone}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{a.doctor?.fullName}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.doctor?.specialization}</div>
-                  </td>
-                  <td>{a.department?.name}</td>
-                  <td>{a.appointmentDate}</td>
-                  <td>{a.appointmentTime}</td>
-                  <td><Badge status={a.appointmentType} /></td>
-                  <td><Badge status={a.status} /></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {a.status === 'pending' && (
-                        <button className="btn btn-accent btn-sm" disabled={updating === a.id}
-                          onClick={() => updateStatus(a.id, 'confirmed')}>Confirm</button>
-                      )}
-                      {a.status === 'confirmed' && (
-                        <button className="btn btn-secondary btn-sm" disabled={updating === a.id}
-                          onClick={() => updateStatus(a.id, 'completed')}>Complete</button>
-                      )}
-                      {(a.status === 'pending' || a.status === 'confirmed') && (
-                        <button className="btn btn-danger btn-sm" disabled={updating === a.id}
-                          onClick={() => updateStatus(a.id, 'cancelled')}>Cancel</button>
-                      )}
-                    </div>
-                  </td>
+          <>
+            {/* Desktop Table */}
+            <table className="appointments-table-desktop">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Patient</th>
+                  <th>Doctor</th>
+                  <th>Department</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
+              </thead>
+              <tbody>
+                {filtered.map(a => (
+                  <tr key={a.id}>
+                    <td><span className="token-badge">{a.tokenNumber}</span></td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{a.patient?.fullName}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.patient?.phone}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{a.doctor?.fullName}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.doctor?.specialization}</div>
+                    </td>
+                    <td>{a.department?.name}</td>
+                    <td>{a.appointmentDate}</td>
+                    <td>{a.appointmentTime}</td>
+                    <td><Badge status={a.appointmentType} /></td>
+                    <td><Badge status={a.status} /></td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {a.status === 'pending' && (
+                          <button className="btn btn-accent btn-sm" disabled={updating === a.id}
+                            onClick={() => updateStatus(a.id, 'confirmed')}>Confirm</button>
+                        )}
+                        {a.status === 'confirmed' && (
+                          <button className="btn btn-secondary btn-sm" disabled={updating === a.id}
+                            onClick={() => updateStatus(a.id, 'completed')}>Complete</button>
+                        )}
+                        {(a.status === 'pending' || a.status === 'confirmed') && (
+                          <button className="btn btn-danger btn-sm" disabled={updating === a.id}
+                            onClick={() => updateStatus(a.id, 'cancelled')}>Cancel</button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Mobile Cards */}
+            <div className="appointments-mobile">
+              {filtered.map(a => (
+                <div className="appointment-card" key={a.id}>
+                  <div className="appointment-card-header">
+                    <span className="token-badge">{a.tokenNumber}</span>
+                    <Badge status={a.status} />
+                  </div>
+                  <div className="appointment-card-body">
+                    <div className="appointment-card-row">
+                      <span className="appointment-card-label">Patient</span>
+                      <span className="appointment-card-value">{a.patient?.fullName}</span>
+                    </div>
+                    <div className="appointment-card-row">
+                      <span className="appointment-card-label">Phone</span>
+                      <span className="appointment-card-value">{a.patient?.phone}</span>
+                    </div>
+                    <div className="appointment-card-row">
+                      <span className="appointment-card-label">Doctor</span>
+                      <span className="appointment-card-value">{a.doctor?.fullName}</span>
+                    </div>
+                    <div className="appointment-card-row">
+                      <span className="appointment-card-label">Department</span>
+                      <span className="appointment-card-value">{a.department?.name}</span>
+                    </div>
+                    <div className="appointment-card-row">
+                      <span className="appointment-card-label">Date & Time</span>
+                      <span className="appointment-card-value">{a.appointmentDate} at {a.appointmentTime}</span>
+                    </div>
+                    <div className="appointment-card-row">
+                      <span className="appointment-card-label">Type</span>
+                      <Badge status={a.appointmentType} />
+                    </div>
+                  </div>
+                  <div className="appointment-card-actions">
+                    {a.status === 'pending' && (
+                      <button className="btn btn-accent btn-sm" disabled={updating === a.id}
+                        onClick={() => updateStatus(a.id, 'confirmed')}>Confirm</button>
+                    )}
+                    {a.status === 'confirmed' && (
+                      <button className="btn btn-secondary btn-sm" disabled={updating === a.id}
+                        onClick={() => updateStatus(a.id, 'completed')}>Complete</button>
+                    )}
+                    {(a.status === 'pending' || a.status === 'confirmed') && (
+                      <button className="btn btn-danger btn-sm" disabled={updating === a.id}
+                        onClick={() => updateStatus(a.id, 'cancelled')}>Cancel</button>
+                    )}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
     </div>
