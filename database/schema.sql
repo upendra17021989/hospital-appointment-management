@@ -299,6 +299,11 @@ CREATE TRIGGER update_hospital_subscriptions_updated_at BEFORE UPDATE ON hospita
 -- ============================================
 -- SEED SUBSCRIPTION PLANS
 -- ============================================
+-- IMPORTANT: After seeding, configure Stripe Price IDs for paid plans:
+--   UPDATE subscription_plans SET stripe_price_id_monthly = 'price_xxx' WHERE slug = 'basic';
+--   UPDATE subscription_plans SET stripe_price_id_yearly  = 'price_yyy' WHERE slug = 'basic';
+-- Repeat for 'pro' and 'enterprise' plans.
+-- The Free plan (price = 0) bypasses Stripe checkout automatically.
 INSERT INTO subscription_plans (name, slug, description, monthly_price, yearly_price, max_doctors, max_users, max_appointments_per_month, allow_prescriptions, allow_sms, allow_whatsapp, allow_custom_branding, priority_support) VALUES
 ('Free', 'free', 'Basic features for small clinics just getting started', 0.00, 0.00, 3, 2, 100, FALSE, FALSE, FALSE, FALSE, FALSE),
 ('Basic', 'basic', 'Essential tools for growing practices', 29.00, 290.00, 10, 5, 500, TRUE, FALSE, FALSE, FALSE, FALSE),

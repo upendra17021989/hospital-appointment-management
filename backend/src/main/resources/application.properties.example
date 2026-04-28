@@ -59,6 +59,11 @@ stripe.webhook.secret=whsec_your_webhook_secret_here
 stripe.success.url=http://localhost:5173/payment/success
 stripe.cancel.url=http://localhost:5173/payment/cancel
 
+# Fallback Stripe Price ID (optional, for testing when plan price IDs are not configured)
+# Set this to a real Stripe test price ID if you want to test checkout without configuring each plan.
+# Example: stripe.fallback.price.id=price_1Test1234567890abcdef
+stripe.fallback.price.id=
+
 # ============================================
 # Subscription Settings
 # ============================================

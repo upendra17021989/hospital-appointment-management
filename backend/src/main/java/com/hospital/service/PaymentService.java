@@ -50,6 +50,9 @@ public class PaymentService {
     @Value("${stripe.cancel.url}")
     private String cancelUrl;
 
+    @Value("${stripe.fallback.price.id:}")
+    private String fallbackPriceId;
+
     @PostConstruct
     public void init() {
         Stripe.apiKey = stripeSecretKey;
@@ -80,14 +83,29 @@ public class PaymentService {
             customerId = customer.getId();
         }
 
+        // Free plans should not go through Stripe checkout
+        BigDecimal planPrice = "yearly".equalsIgnoreCase(billingCycle)
+                ? plan.getYearlyPrice()
+                : plan.getMonthlyPrice();
+        if (planPrice != null && planPrice.compareTo(BigDecimal.ZERO) == 0) {
+            throw new IllegalStateException("Free plans cannot be processed through Stripe. Please activate the free plan directly.");
+        }
+
         String priceId = "yearly".equalsIgnoreCase(billingCycle)
                 ? plan.getStripePriceIdYearly()
                 : plan.getStripePriceIdMonthly();
 
         if (priceId == null || priceId.isBlank()) {
-            // Fallback: use test mode without real Stripe price IDs
-            log.warn("No Stripe price ID configured for plan {}. Running in test mode.", plan.getSlug());
-            priceId = "price_test_fallback";
+            if (fallbackPriceId != null && !fallbackPriceId.isBlank()) {
+                log.warn("No Stripe price ID configured for plan {}. Using configured fallback price ID.", plan.getSlug());
+                priceId = fallbackPriceId;
+            } else {
+                throw new IllegalStateException(
+                        "No Stripe price ID configured for plan '" + plan.getSlug() + "' and billing cycle '" + billingCycle + "'. " +
+                        "Please set the stripe_price_id_monthly / stripe_price_id_yearly columns in the subscription_plans table, " +
+                        "or configure stripe.fallback.price.id in application.properties for testing."
+                );
+            }
         }
 
         SessionCreateParams.Builder sessionBuilder = SessionCreateParams.builder()

@@ -19,11 +19,13 @@ import com.stripe.exception.StripeException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -42,6 +44,9 @@ public class SubscriptionController {
     private final PaymentService paymentService;
     private final SubscriptionService subscriptionService;
     private final TenantContext tenantContext;
+
+    @Value("${stripe.success.url}")
+    private String successUrl;
 
     // ── GET /subscriptions/plans - Public list of active plans ──
 
@@ -113,6 +118,23 @@ public class SubscriptionController {
         Hospital hospital = hospitalRepo.findById(hospitalId)
                 .orElseThrow(() -> new RuntimeException("Hospital not found"));
 
+        SubscriptionPlan plan = planRepo.findById(planId)
+                .orElseThrow(() -> new RuntimeException("Plan not found"));
+
+        // Free plans bypass Stripe and activate immediately
+        BigDecimal planPrice = "yearly".equalsIgnoreCase(billingCycle)
+                ? plan.getYearlyPrice()
+                : plan.getMonthlyPrice();
+        if (planPrice != null && planPrice.compareTo(BigDecimal.ZERO) == 0) {
+            HospitalSubscription.BillingCycle cycle = "yearly".equalsIgnoreCase(billingCycle)
+                    ? HospitalSubscription.BillingCycle.yearly
+                    : HospitalSubscription.BillingCycle.monthly;
+            subscriptionService.createOrUpdateSubscription(hospital, plan,
+                    HospitalSubscription.Status.active, cycle);
+            return ResponseEntity.ok(ApiResponse.success(
+                    CheckoutSessionResponse.builder().checkoutUrl(successUrl + "?free_plan=true").build()));
+        }
+
         try {
             String checkoutUrl = paymentService.createCheckoutSession(
                     hospitalId, planId, billingCycle, user.getEmail(), hospital.getName());
@@ -120,6 +142,8 @@ public class SubscriptionController {
                     CheckoutSessionResponse.builder().checkoutUrl(checkoutUrl).build()));
         } catch (StripeException e) {
             return ResponseEntity.ok(ApiResponse.error("Payment service error: " + e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
         }
     }
 
