@@ -4,6 +4,7 @@ import com.hospital.dto.Dtos.ApiResponse;
 import com.hospital.dto.Dtos.AppointmentRequest;
 import com.hospital.dto.Dtos.AppointmentResponse;
 import com.hospital.dto.Dtos.AppointmentStatusUpdateRequest;
+import com.hospital.dto.Dtos.PagedResponse;
 import com.hospital.service.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -96,6 +97,23 @@ public class AppointmentController {
         List<AppointmentResponse> appointments = appointmentService.getHospitalAppointments(
                 hospitalId, date, doctorId, patientId);
         return ResponseEntity.ok(ApiResponse.success(appointments));
+    }
+
+    @GetMapping("/hospital/paged")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @RequireSubscription
+    @Operation(summary = "Get hospital-scoped appointments with pagination and sorting")
+    public ResponseEntity<ApiResponse<PagedResponse<AppointmentResponse>>> getHospitalAppointmentsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection,
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) String status) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        PagedResponse<AppointmentResponse> pagedResponse = appointmentService.getHospitalAppointmentsPaged(
+                hospitalId, page, size, sortBy, sortDirection, date, status);
+        return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
     @PatchMapping("/hospital/{id}/status")

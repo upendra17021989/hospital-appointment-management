@@ -5,6 +5,10 @@ import com.hospital.model.*;
 import com.hospital.repository.*;
 import com.hospital.security.TenantContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -83,6 +87,34 @@ public class AppointmentService {
             appointments = appointmentRepo.findByHospitalOrDoctorHospitalId(hospitalId);
         }
         return appointments.stream().map(this::mapToResponse).toList();
+    }
+
+    public PagedResponse<AppointmentResponse> getHospitalAppointmentsPaged(UUID hospitalId, int page, int size, String sortBy, String sortDirection, String date, String status) {
+        Sort sort = Sort.by(sortDirection.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy != null ? sortBy : "createdAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Appointment> appointmentPage;
+        if (date != null && !date.isBlank()) {
+            LocalDate localDate = LocalDate.parse(date);
+            appointmentPage = appointmentRepo.findByHospitalOrDoctorHospitalIdAndAppointmentDatePaged(hospitalId, localDate, pageable);
+        } else if (status != null && !status.isBlank() && !status.equals("all")) {
+            Appointment.Status appointmentStatus = Appointment.Status.valueOf(status.toLowerCase());
+            appointmentPage = appointmentRepo.findByHospitalOrDoctorHospitalIdAndStatusPaged(hospitalId, appointmentStatus, pageable);
+        } else {
+            appointmentPage = appointmentRepo.findByHospitalOrDoctorHospitalIdPaged(hospitalId, pageable);
+        }
+
+List<AppointmentResponse> content = appointmentPage.getContent().stream().map(this::mapToResponse).toList();
+        return PagedResponse.<AppointmentResponse>builder()
+                .content(content)
+                .currentPage(appointmentPage.getNumber())
+                .pageSize(appointmentPage.getSize())
+                .totalElements(appointmentPage.getTotalElements())
+                .totalPages(appointmentPage.getTotalPages())
+                .first(appointmentPage.isFirst())
+                .last(appointmentPage.isLast())
+                .empty(appointmentPage.isEmpty())
+                .build();
     }
 
     @Transactional
