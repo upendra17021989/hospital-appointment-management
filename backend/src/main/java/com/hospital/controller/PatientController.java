@@ -1,6 +1,7 @@
 package com.hospital.controller;
 
 import com.hospital.dto.Dtos.ApiResponse;
+import com.hospital.dto.Dtos.PagedResponse;
 import com.hospital.dto.Dtos.PatientRequest;
 import com.hospital.dto.Dtos.PatientResponse;
 import com.hospital.service.PatientService;
@@ -67,12 +68,24 @@ public class PatientController {
         return ResponseEntity.ok(ApiResponse.success(results));
     }
 
-    @GetMapping("/hospital")
+@GetMapping("/hospital")
     @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Get hospital-scoped patients")
     public ResponseEntity<ApiResponse<List<PatientResponse>>> getHospitalPatients() {
         UUID hospitalId = tenantContext.requireHospitalId();
         return ResponseEntity.ok(ApiResponse.success(patientService.getHospitalPatients(hospitalId)));
+    }
+
+@GetMapping("/hospital/paged")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @Operation(summary = "Get hospital patients with pagination and sorting")
+    public ResponseEntity<ApiResponse<PagedResponse<PatientResponse>>> getHospitalPatientsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        return ResponseEntity.ok(ApiResponse.success(patientService.getHospitalPatientsPaged(hospitalId, page, size, sortBy, sortDirection)));
     }
 
 @GetMapping("/hospital/search")

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useRole } from '../hooks/useRole';
@@ -12,56 +12,110 @@ const formatDate = (d) => {
   });
 };
 
+const calcAge = (dob) => {
+  if (!dob) return null;
+  const diff = Date.now() - new Date(dob).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+};
+
 // ── Patient List ──────────────────────────────────────────────────
 const Patients = () => {
   const navigate = useNavigate();
-  const [patients,  setPatients]  = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [search,    setSearch]    = useState('');
-  const [filtered,  setFiltered]  = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  
+  // Pagination state
+  const [patients, setPatients] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  
+  // Sorting state
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortDirection, setSortDirection] = useState('DESC');
+  
   const { isStaff, isReceptionist } = useRole();
 
-  useEffect(() => {
-    api.get('/patients/hospital')
-      .then(data => { 
-        setPatients(data || []); 
-        setFiltered(data || []); 
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!search.trim()) { 
-      setFiltered(patients); 
-      return; 
+  const fetchPatients = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = { page, size, sortBy, sortDirection };
+      const response = await api.get('/patients/hospital/paged', { params });
+      const pagedData = response;
+      if (pagedData) {
+        setPatients(pagedData.content || []);
+        setTotalPages(pagedData.totalPages || 0);
+        setTotalElements(pagedData.totalElements || 0);
+      } else {
+        setPatients([]);
+      }
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+      setPatients([]);
+    } finally {
+      setLoading(false);
     }
-    const q = search.toLowerCase();
-    setFiltered(patients.filter(p =>
-      p.fullName?.toLowerCase().includes(q) ||
-      p.phone?.includes(search) ||
-      p.email?.toLowerCase().includes(q) ||
-      p.bloodGroup?.toLowerCase().includes(q)
-    ));
-  }, [search, patients]);
+  }, [page, size, sortBy, sortDirection]);
 
-  if (loading) return <LoadingSpinner />;
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      setPage(newPage);
+    }
+  };
+
+  const handleSizeChange = (newSize) => {
+    setSize(newSize);
+    setPage(0); // Reset to first page
+  };
+
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC');
+    } else {
+      setSortBy(field);
+      setSortDirection('DESC');
+    }
+    setPage(0); // Reset to first page
+  };
+
+  const getSortIcon = (field) => {
+    if (sortBy !== field) return '⇅';
+    return sortDirection === 'ASC' ? '↑' : '↓';
+  };
+
+  // Filter patients locally by search (for client-side filtering within current page)
+  const filtered = search.trim() 
+    ? patients.filter(p =>
+        p.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+        p.phone?.includes(search) ||
+        p.email?.toLowerCase().includes(search.toLowerCase()) ||
+        p.bloodGroup?.toLowerCase().includes(search.toLowerCase())
+      )
+    : patients;
+
+  if (loading && page === 0) return <LoadingSpinner />;
 
   return (
     <div>
       <div className="page-header">
         <div>
           <h1 className="page-title">Patients</h1>
-          <p className="page-subtitle">{patients.length} registered patients</p>
+          <p className="page-subtitle">{totalElements} registered patients</p>
         </div>
         <button className="btn btn-primary" onClick={() => navigate('/patient-form')}>
           + Register Patient
         </button>
       </div>
 
-      {/* Search */}
-      <div className="search-bar" style={{ marginBottom: 20 }}>
-        <div className="search-input-wrap" style={{ flex: 1 }}>
+      {/* Search & Controls */}
+      <div className="search-bar" style={{ marginBottom: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <div className="search-input-wrap" style={{ flex: 1, minWidth: 200 }}>
           <span className="search-icon">🔍</span>
           <input
             value={search}
@@ -76,7 +130,25 @@ const Patients = () => {
         )}
       </div>
 
-      {filtered.length === 0 ? (
+      {/* Table Controls */}
+      <div style={{ marginBottom: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <label style={{ fontSize: 14, color: 'var(--text-muted)' }}>Show:</label>
+          <select 
+            value={size} 
+            onChange={e => handleSizeChange(Number(e.target.value))}
+            style={{ padding: '6px 10px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 14 }}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={15}>15</option>
+            <option value={100}>100</option>
+          </select>
+          <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>records</span>
+        </div>
+      </div>
+
+      {filtered.length === 0 && !loading ? (
         <EmptyState icon="👥" title="No patients found" subtitle="Register a new patient to get started" />
       ) : (
         <div className="table-wrap">
@@ -84,13 +156,24 @@ const Patients = () => {
           <table className="patients-table-desktop">
             <thead>
               <tr>
-                <th>Patient</th>
-                <th>Phone</th>
-                <th>Gender</th>
-                <th>Age</th>
-                <th>Blood Group</th>
-                <th>DOB</th>
-                <th>Registered</th>
+                <th onClick={() => handleSort('firstName')} style={{ cursor: 'pointer' }}>
+                  Patient {getSortIcon('firstName')}
+                </th>
+                <th onClick={() => handleSort('phone')} style={{ cursor: 'pointer' }}>
+                  Phone {getSortIcon('phone')}
+                </th>
+                <th onClick={() => handleSort('gender')} style={{ cursor: 'pointer' }}>
+                  Gender {getSortIcon('gender')}
+                </th>
+                <th onClick={() => handleSort('age')} style={{ cursor: 'pointer' }}>
+                  Age {getSortIcon('age')}
+                </th>
+                <th onClick={() => handleSort('bloodGroup')} style={{ cursor: 'pointer' }}>
+                  Blood Group {getSortIcon('bloodGroup')}
+                </th>
+                <th onClick={() => handleSort('createdAt')} style={{ cursor: 'pointer' }}>
+                  Registered {getSortIcon('createdAt')}
+                </th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -118,7 +201,6 @@ const Patients = () => {
                       ? <span className="pd-blood-badge">{p.bloodGroup}</span>
                       : '—'}
                   </td>
-                  <td>{p.dateOfBirth ? formatDate(p.dateOfBirth) : '—'}</td>
                   <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatDate(p.createdAt)}</td>
                   <td>
                     {isStaff() || isReceptionist() ? (
@@ -206,15 +288,52 @@ const Patients = () => {
           </div>
         </div>
       )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <button 
+            className="btn btn-secondary btn-sm"
+            onClick={() => handlePageChange(0)}
+            disabled={page === 0}
+            title="First page"
+          >
+            ⏮
+          </button>
+          <button 
+            className="btn btn-secondary btn-sm"
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 0}
+            title="Previous page"
+          >
+            ◀ Prev
+          </button>
+          
+          <span style={{ padding: '0 15px', fontSize: 14 }}>
+            Page {page + 1} of {totalPages}
+            {totalElements > 0 && ` (${totalElements} records)`}
+          </span>
+          
+          <button 
+            className="btn btn-secondary btn-sm"
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages - 1}
+            title="Next page"
+          >
+            Next ▶
+          </button>
+          <button 
+            className="btn btn-secondary btn-sm"
+            onClick={() => handlePageChange(totalPages - 1)}
+            disabled={page >= totalPages - 1}
+            title="Last page"
+          >
+            ⏭
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-const calcAge = (dob) => {
-  if (!dob) return null;
-  const diff = Date.now() - new Date(dob).getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
-};
-
 export default Patients;
-

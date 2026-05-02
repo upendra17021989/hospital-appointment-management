@@ -12,8 +12,21 @@ const headers = (extra = {}) => {
 };
 
 const api = {
-  get: async (path) => {
-    const res = await fetch(`${API_BASE}${path}`, { headers: headers() });
+  get: async (path, options = {}) => {
+    let url = `${API_BASE}${path}`;
+    if (options.params) {
+      const searchParams = new URLSearchParams();
+      Object.entries(options.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          searchParams.append(key, value);
+        }
+      });
+      const queryString = searchParams.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+    }
+    const res = await fetch(url, { headers: headers() });
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     const data = await res.json();
     return data.data;

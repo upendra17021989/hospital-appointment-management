@@ -7,6 +7,10 @@ import com.hospital.repository.HospitalRepo;
 import com.hospital.repository.PatientRepo;
 import com.hospital.security.TenantContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,6 +90,52 @@ public class PatientService {
 public List<PatientResponse> getHospitalPatients(UUID hospitalId) {
         return patientRepo.findByHospitalIdOrderByCreatedAtDesc(hospitalId).stream()
                 .map(this::mapToResponse).toList();
+    }
+
+    public PagedResponse<PatientResponse> getHospitalPatientsPaged(UUID hospitalId, int page, int size, String sortBy, String sortDirection) {
+        // Validate and normalize page size
+        int pageSize = size;
+        if (pageSize != 5 && pageSize != 10 && pageSize != 15 && pageSize != 100) {
+            pageSize = 10; // Default to 10
+        }
+        
+        // Validate sortBy field
+        String sortField = sortBy;
+        if (sortField == null || sortField.isBlank()) {
+            sortField = "createdAt";
+        }
+        
+        // Valid sortable fields
+        List<String> validSortFields = List.of("firstName", "lastName", "phone", "email", "age", "gender", "bloodGroup", "createdAt");
+        if (!validSortFields.contains(sortField)) {
+            sortField = "createdAt";
+        }
+        
+        // Validate sort direction
+        Sort.Direction direction = Sort.Direction.DESC;
+        if ("ASC".equalsIgnoreCase(sortDirection)) {
+            direction = Sort.Direction.ASC;
+        }
+        
+        Sort sort = Sort.by(direction, sortField);
+        Pageable pageable = PageRequest.of(page, pageSize, sort);
+        
+        Page<Patient> patientPage = patientRepo.findByHospitalId(hospitalId, pageable);
+        
+        List<PatientResponse> content = patientPage.getContent().stream()
+                .map(this::mapToResponse)
+                .toList();
+        
+        return PagedResponse.<PatientResponse>builder()
+                .content(content)
+                .currentPage(patientPage.getNumber())
+                .pageSize(patientPage.getSize())
+                .totalPages(patientPage.getTotalPages())
+                .totalElements(patientPage.getTotalElements())
+                .first(patientPage.isFirst())
+                .last(patientPage.isLast())
+                .empty(patientPage.isEmpty())
+                .build();
     }
 
     public List<PatientResponse> searchByHospitalPhone(UUID hospitalId, String phone) {

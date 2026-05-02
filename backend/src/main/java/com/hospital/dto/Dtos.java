@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -283,7 +284,7 @@ public class Dtos {
         private Boolean prescriptionsEnabled;
     }
 
-    // ========== API RESPONSE WRAPPER ===========
+// ========== API RESPONSE WRAPPER ===========
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
     public static class ApiResponse<T> {
         private Boolean success;
@@ -312,5 +313,18 @@ public class Dtos {
                     .message(message)
                     .build();
         }
+    }
+
+    // ========== PAGED RESPONSE ===========
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class PagedResponse<T> {
+        private List<T> content;
+        private Integer currentPage;
+        private Integer pageSize;
+        private Integer totalPages;
+        private Long totalElements;
+        private Boolean first;
+        private Boolean last;
+        private Boolean empty;
     }
 }

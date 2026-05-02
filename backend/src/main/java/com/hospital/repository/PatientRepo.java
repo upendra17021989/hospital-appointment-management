@@ -1,6 +1,8 @@
 package com.hospital.repository;
 
 import com.hospital.model.Patient;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +15,8 @@ import java.util.UUID;
 public interface PatientRepo extends JpaRepository<Patient, UUID> {
     List<Patient> findByPhone(String phone);
     List<Patient> findByEmail(String email);
-List<Patient> findByHospitalId(UUID hospitalId);
+    List<Patient> findByHospitalId(UUID hospitalId);
+    Page<Patient> findByHospitalId(UUID hospitalId, Pageable pageable);
     List<Patient> findByHospitalIdOrderByCreatedAtDesc(UUID hospitalId);
     List<Patient> findByHospitalIdAndPhone(UUID hospitalId, String phone);
     List<Patient> findByHospitalIdAndEmail(UUID hospitalId, String email);
