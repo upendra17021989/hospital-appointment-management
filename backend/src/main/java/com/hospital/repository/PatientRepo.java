@@ -13,9 +13,10 @@ import java.util.UUID;
 public interface PatientRepo extends JpaRepository<Patient, UUID> {
     List<Patient> findByPhone(String phone);
     List<Patient> findByEmail(String email);
-    List<Patient> findByHospitalId(UUID hospitalId);
+List<Patient> findByHospitalId(UUID hospitalId);
+    List<Patient> findByHospitalIdOrderByCreatedAtDesc(UUID hospitalId);
     List<Patient> findByHospitalIdAndPhone(UUID hospitalId, String phone);
-List<Patient> findByHospitalIdAndEmail(UUID hospitalId, String email);
+    List<Patient> findByHospitalIdAndEmail(UUID hospitalId, String email);
 
     @Query("SELECT p FROM Patient p WHERE p.hospital.id = :hospitalId " +
             "AND (LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :query, '%')) " +

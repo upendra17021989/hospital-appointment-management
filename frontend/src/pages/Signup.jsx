@@ -92,8 +92,9 @@ const Signup = () => {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!data.success) { setError(data.message || 'Registration failed.'); setStep(2); return; }
+if (!data.success) { setError(data.message || 'Registration failed.'); setStep(2); return; }
       saveAuth(data.data.token, data.data);
+      navigate('/dashboard');
     } catch {
       setError('Unable to connect to server. Please try again.');
       setStep(2);

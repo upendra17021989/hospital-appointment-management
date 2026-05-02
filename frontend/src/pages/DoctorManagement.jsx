@@ -177,8 +177,8 @@ const ScheduleModal = ({ doctor, onClose }) => {
         maxAppointments: Number(form.maxAppointments),
         isActive: true,
       };
-      const saved = await api.post('/doctors/schedules', payload);
-      setSchedules(s => [...s, saved]);
+const saved = await api.post('/doctors/schedules', payload);
+      setSchedules(s => [...s, saved.data]);
       setForm({ ...EMPTY_SCHEDULE });
       setSuccess('Schedule added successfully!');
       setTimeout(() => setSuccess(''), 3000);
@@ -199,10 +199,10 @@ const ScheduleModal = ({ doctor, onClose }) => {
     }
   };
 
-  const handleToggle = async (schedule) => {
+const handleToggle = async (schedule) => {
     try {
       const updated = await api.patch(`/doctors/schedules/${schedule.id}/toggle`, {});
-      setSchedules(s => s.map(sc => sc.id === schedule.id ? updated : sc));
+      setSchedules(s => s.map(sc => sc.id === schedule.id ? updated.data : sc));
     } catch (e) {
       setError(e.message);
     }

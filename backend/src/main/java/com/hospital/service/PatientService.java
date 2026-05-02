@@ -83,8 +83,8 @@ public class PatientService {
         return mapToResponse(patientRepo.save(patient));
     }
 
-    public List<PatientResponse> getHospitalPatients(UUID hospitalId) {
-        return patientRepo.findByHospitalId(hospitalId).stream()
+public List<PatientResponse> getHospitalPatients(UUID hospitalId) {
+        return patientRepo.findByHospitalIdOrderByCreatedAtDesc(hospitalId).stream()
                 .map(this::mapToResponse).toList();
     }
 
