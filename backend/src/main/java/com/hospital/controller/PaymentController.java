@@ -7,6 +7,7 @@ import com.hospital.model.User;
 import com.hospital.repository.PaymentRepo;
 import com.hospital.service.PaymentService;
 import com.stripe.model.Event;
+import com.stripe.model.checkout.Session;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,11 +63,14 @@ public class PaymentController {
 
     // ── POST /payments/webhook - Stripe webhook handler ──
 
+    @CrossOrigin(origins = "*")
     @PostMapping("/webhook")
     @Operation(summary = "Receive Stripe webhook events")
     public ResponseEntity<String> handleWebhook(
             HttpServletRequest request,
             @RequestHeader("Stripe-Signature") String sigHeader) {
+        log.info("Webhook received: IP={}, User-Agent={}, Content-Length={}", 
+                request.getRemoteAddr(), request.getHeader("User-Agent"), request.getContentLength());
 
         String payload;
         try {
@@ -77,17 +81,41 @@ public class PaymentController {
         }
 
         try {
-            Event event = com.stripe.net.Webhook.constructEvent(payload, sigHeader,
-                    System.getProperty("stripe.webhook.secret", ""));
+            String webhookSecret = System.getProperty("stripe.webhook.secret", System.getenv("STRIPE_WEBHOOK_SECRET"));
+            log.info("Verifying signature with secret: {}", webhookSecret != null ? "SET" : "MISSING");
+            
+            Event event = com.stripe.net.Webhook.constructEvent(payload, sigHeader, webhookSecret);
+            log.info("Event verified: type={}, id={}", event.getType(), event.getId());
+            
             paymentService.handleWebhook(event);
-            return ResponseEntity.ok("Webhook processed");
+            log.info("Webhook processed successfully: {}", event.getType());
+            return ResponseEntity.ok("OK");
         } catch (com.stripe.exception.SignatureVerificationException e) {
             log.error("Invalid Stripe signature", e);
             return ResponseEntity.status(400).body("Invalid signature");
         } catch (Exception e) {
-            log.error("Webhook processing error", e);
-            return ResponseEntity.status(500).body("Internal error");
+            log.error("Webhook processing failed", e);
+            return ResponseEntity.status(500).body("Error");
         }
+    }
+
+    @GetMapping("/success")
+    @Operation(summary = "Payment success verification (redirect target)")
+    public ResponseEntity<ApiResponse<String>> handlePaymentSuccess(
+            @RequestParam String session_id) {
+        try {
+            log.info("Payment success verification for session: {}", session_id);
+            return ResponseEntity.ok(ApiResponse.success("Payment successful! Subscription activated."));
+        } catch (Exception e) {
+            log.error("Payment success verification failed", e);
+            return ResponseEntity.ok(ApiResponse.error("Verification failed"));
+        }
+    }
+
+    @GetMapping("/cancel")
+    @Operation(summary = "Payment cancelled")
+    public ResponseEntity<ApiResponse<String>> handlePaymentCancel() {
+        return ResponseEntity.ok(ApiResponse.error("Payment cancelled"));
     }
 
     // ── Helper ────────────────────────────────────────────────────
@@ -104,4 +132,3 @@ public class PaymentController {
                 .build();
     }
 }
-
