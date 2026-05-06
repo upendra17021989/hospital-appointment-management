@@ -1,5 +1,9 @@
 package com.hospital.service;
 
+import com.stripe.model.Event;
+import com.stripe.model.EventDataObjectDeserializer;
+import com.stripe.model.StripeObject;
+import com.stripe.model.checkout.Session;
 import com.hospital.model.Hospital;
 import com.hospital.model.HospitalSubscription;
 import com.hospital.model.Payment;
@@ -127,8 +131,11 @@ public class PaymentService {
         if (sub != null && sub.getStripeSubscriptionId() != null) {
             sessionBuilder.setSubscriptionData(
                     SessionCreateParams.SubscriptionData.builder()
-                            .setProrationBehavior(SessionCreateParams.SubscriptionData.ProrationBehavior.CREATE_PRORATIONS)
-                            .build()
+                        // Anchor to "now" so Stripe can calculate proration for the upgrade.
+                        // The Java SDK binding expects a timestamp (Long) for billing_cycle_anchor.
+                        .setBillingCycleAnchor(Long.valueOf(Instant.now().getEpochSecond()))
+                        .setProrationBehavior(SessionCreateParams.SubscriptionData.ProrationBehavior.CREATE_PRORATIONS)
+                        .build()
             );
         }
 
@@ -165,48 +172,154 @@ public class PaymentService {
     }
 
     private void handleCheckoutSessionCompleted(Event event) {
-        Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
-        if (session == null) return;
 
+        log.info("Event received: type={}, apiVersion={}", event.getType(), event.getApiVersion());
+
+        // ✅ Only process correct event
+        if (!"checkout.session.completed".equals(event.getType())) {
+            log.warn("Ignoring unsupported event type: {}", event.getType());
+            return;
+        }
+
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+
+        Session session = null;
+
+        try {
+            // ✅ First try safe deserialization
+            if (deserializer.getObject().isPresent()) {
+                session = (Session) deserializer.getObject().get();
+                log.info("✅ Safe deserialization worked");
+            } else {
+                // ⚠️ Fallback to unsafe (required for API mismatch)
+                log.warn("⚠️ Safe deserialization failed, using unsafe fallback");
+
+                StripeObject stripeObject = deserializer.deserializeUnsafe();
+
+                if (stripeObject instanceof Session) {
+                    session = (Session) stripeObject;
+                    log.info("✅ Unsafe deserialization worked");
+                } else {
+                    log.error("❌ Deserialized object is not a Session: {}", stripeObject.getClass());
+                    return;
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Failed to deserialize Stripe event", e);
+            return;
+        }
+
+        // ❌ Still null → stop
+        if (session == null) {
+            log.error("❌ Session is NULL even after unsafe deserialization");
+            return;
+        }
+
+        // ✅ Debug logs
+        log.info("Session ID: {}", session.getId());
+        log.info("Customer: {}", session.getCustomer());
+        log.info("Subscription: {}", session.getSubscription());
+        log.info("Payment Status: {}", session.getPaymentStatus());
+
+        // ✅ Extract metadata
         String hospitalIdStr = session.getMetadata() != null ? session.getMetadata().get("hospital_id") : null;
         String planIdStr = session.getMetadata() != null ? session.getMetadata().get("plan_id") : null;
         String billingCycle = session.getMetadata() != null ? session.getMetadata().get("billing_cycle") : "monthly";
 
-        if (hospitalIdStr == null || planIdStr == null) return;
+        log.info("Metadata → hospitalId={}, planId={}, billingCycle={}",
+                hospitalIdStr, planIdStr, billingCycle);
 
-        UUID hospitalId = UUID.fromString(hospitalIdStr);
-        UUID planId = UUID.fromString(planIdStr);
-
-        Hospital hospital = hospitalRepo.findById(hospitalId).orElse(null);
-        SubscriptionPlan plan = planRepo.findById(planId).orElse(null);
-        if (hospital == null || plan == null) return;
-
-        HospitalSubscription sub = subscriptionRepo.findByHospitalId(hospitalId).orElse(null);
-        if (sub == null) {
-            sub = HospitalSubscription.builder()
-                    .hospital(hospital)
-                    .plan(plan)
-                    .build();
+        if (hospitalIdStr == null || planIdStr == null) {
+            log.error("❌ Missing metadata, skipping processing");
+            return;
         }
 
-        sub.setPlan(plan);
-        sub.setStatus(HospitalSubscription.Status.active);
-        sub.setBillingCycle("yearly".equalsIgnoreCase(billingCycle)
-                ? HospitalSubscription.BillingCycle.yearly
-                : HospitalSubscription.BillingCycle.monthly);
-        sub.setStripeCustomerId(session.getCustomer());
-        sub.setStripeSubscriptionId(session.getSubscription());
-        sub.setTrialEndsAt(null);
-        sub.setCurrentPeriodStart(LocalDateTime.now());
-        sub.setCurrentPeriodEnd(LocalDateTime.now().plusMonths("yearly".equalsIgnoreCase(billingCycle) ? 12 : 1));
+        try {
+            UUID hospitalId = UUID.fromString(hospitalIdStr);
+            UUID planId = UUID.fromString(planIdStr);
 
-        subscriptionRepo.save(sub);
-        log.info("Subscription activated for hospital {} on plan {}", hospitalId, plan.getName());
+            Hospital hospital = hospitalRepo.findById(hospitalId).orElse(null);
+            SubscriptionPlan plan = planRepo.findById(planId).orElse(null);
+
+            if (hospital == null || plan == null) {
+                log.error("❌ Invalid hospital or plan");
+                return;
+            }
+
+            HospitalSubscription sub = subscriptionRepo.findByHospitalId(hospitalId).orElse(null);
+
+            if (sub == null) {
+                sub = HospitalSubscription.builder()
+                        .hospital(hospital)
+                        .plan(plan)
+                        .build();
+            }
+
+            sub.setPlan(plan);
+            sub.setStatus(HospitalSubscription.Status.active);
+            sub.setBillingCycle("yearly".equalsIgnoreCase(billingCycle)
+                    ? HospitalSubscription.BillingCycle.yearly
+                    : HospitalSubscription.BillingCycle.monthly);
+            sub.setStripeCustomerId(session.getCustomer());
+            sub.setStripeSubscriptionId(session.getSubscription());
+            sub.setTrialEndsAt(null);
+            sub.setCurrentPeriodStart(LocalDateTime.now());
+            sub.setCurrentPeriodEnd(LocalDateTime.now().plusMonths(
+                    "yearly".equalsIgnoreCase(billingCycle) ? 12 : 1));
+
+            subscriptionRepo.save(sub);
+
+            log.info("✅ Subscription activated for hospital {}", hospitalId);
+
+        } catch (Exception e) {
+            log.error("❌ Error processing subscription logic", e);
+        }
     }
 
     private void handleInvoicePaymentSucceeded(Event event) {
-        Invoice invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
-        if (invoice == null) return;
+        log.info("Event received: type={}, apiVersion={}", event.getType(), event.getApiVersion());
+
+        // ✅ Only process correct event
+        if (!"invoice.payment_succeeded".equals(event.getType())) {
+            log.warn("Ignoring unsupported event type: {}", event.getType());
+            return;
+        }
+
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+
+        Invoice invoice = null;
+
+        try {
+            // ✅ First try safe deserialization
+            if (deserializer.getObject().isPresent()) {
+                invoice = (Invoice) deserializer.getObject().get();
+                log.info("✅ Safe deserialization worked");
+            } else {
+                // ⚠️ Fallback to unsafe (required for API mismatch)
+                log.warn("⚠️ Safe deserialization failed, using unsafe fallback");
+
+                StripeObject stripeObject = deserializer.deserializeUnsafe();
+
+                if (stripeObject instanceof Invoice) {
+                    invoice = (Invoice) stripeObject;
+                    log.info("✅ Unsafe deserialization worked");
+                } else {
+                    log.error("❌ Deserialized object is not an Invoice: {}", stripeObject.getClass());
+                    return;
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Failed to deserialize Stripe event", e);
+            return;
+        }
+
+        // ❌ Still null → stop
+        if (invoice == null) {
+            log.error("❌ Invoice is NULL even after unsafe deserialization");
+            return;
+        }
 
         String customerId = invoice.getCustomer();
         Optional<HospitalSubscription> subOpt = subscriptionRepo.findByStripeCustomerId(customerId);
@@ -245,8 +358,48 @@ public class PaymentService {
     }
 
     private void handleInvoicePaymentFailed(Event event) {
-        Invoice invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
-        if (invoice == null) return;
+        log.info("Event received: type={}, apiVersion={}", event.getType(), event.getApiVersion());
+
+        // ✅ Only process correct event
+        if (!"invoice.payment_failed".equals(event.getType())) {
+            log.warn("Ignoring unsupported event type: {}", event.getType());
+            return;
+        }
+
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+
+        Invoice invoice = null;
+
+        try {
+            // ✅ First try safe deserialization
+            if (deserializer.getObject().isPresent()) {
+                invoice = (Invoice) deserializer.getObject().get();
+                log.info("✅ Safe deserialization worked");
+            } else {
+                // ⚠️ Fallback to unsafe (required for API mismatch)
+                log.warn("⚠️ Safe deserialization failed, using unsafe fallback");
+
+                StripeObject stripeObject = deserializer.deserializeUnsafe();
+
+                if (stripeObject instanceof Invoice) {
+                    invoice = (Invoice) stripeObject;
+                    log.info("✅ Unsafe deserialization worked");
+                } else {
+                    log.error("❌ Deserialized object is not an Invoice: {}", stripeObject.getClass());
+                    return;
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Failed to deserialize Stripe event", e);
+            return;
+        }
+
+        // ❌ Still null → stop
+        if (invoice == null) {
+            log.error("❌ Invoice is NULL even after unsafe deserialization");
+            return;
+        }
 
         String customerId = invoice.getCustomer();
         Optional<HospitalSubscription> subOpt = subscriptionRepo.findByStripeCustomerId(customerId);
@@ -271,8 +424,48 @@ public class PaymentService {
     }
 
     private void handleSubscriptionDeleted(Event event) {
-        Subscription stripeSub = (Subscription) event.getDataObjectDeserializer().getObject().orElse(null);
-        if (stripeSub == null) return;
+        log.info("Event received: type={}, apiVersion={}", event.getType(), event.getApiVersion());
+
+        // ✅ Only process correct event
+        if (!"customer.subscription.deleted".equals(event.getType())) {
+            log.warn("Ignoring unsupported event type: {}", event.getType());
+            return;
+        }
+
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+
+        Subscription stripeSub = null;
+
+        try {
+            // ✅ First try safe deserialization
+            if (deserializer.getObject().isPresent()) {
+                stripeSub = (Subscription) deserializer.getObject().get();
+                log.info("✅ Safe deserialization worked");
+            } else {
+                // ⚠️ Fallback to unsafe (required for API mismatch)
+                log.warn("⚠️ Safe deserialization failed, using unsafe fallback");
+
+                StripeObject stripeObject = deserializer.deserializeUnsafe();
+
+                if (stripeObject instanceof Subscription) {
+                    stripeSub = (Subscription) stripeObject;
+                    log.info("✅ Unsafe deserialization worked");
+                } else {
+                    log.error("❌ Deserialized object is not a Subscription: {}", stripeObject.getClass());
+                    return;
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Failed to deserialize Stripe event", e);
+            return;
+        }
+
+        // ❌ Still null → stop
+        if (stripeSub == null) {
+            log.error("❌ Subscription is NULL even after unsafe deserialization");
+            return;
+        }
 
         Optional<HospitalSubscription> subOpt = subscriptionRepo.findByStripeSubscriptionId(stripeSub.getId());
         if (subOpt.isEmpty()) return;
@@ -286,9 +479,48 @@ public class PaymentService {
     }
 
     private void handleSubscriptionUpdated(Event event) {
-        Subscription stripeSub = (Subscription) event.getDataObjectDeserializer().getObject().orElse(null);
-        if (stripeSub == null) return;
+         log.info("Event received: type={}, apiVersion={}", event.getType(), event.getApiVersion());
 
+        // ✅ Only process correct event
+        if (!"customer.subscription.updated".equals(event.getType())) {
+            log.warn("Ignoring unsupported event type: {}", event.getType());
+            return;
+        }
+
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+
+        Subscription stripeSub = null;
+
+        try {
+            // ✅ First try safe deserialization
+            if (deserializer.getObject().isPresent()) {
+                stripeSub = (Subscription) deserializer.getObject().get();
+                log.info("✅ Safe deserialization worked");
+            } else {
+                // ⚠️ Fallback to unsafe (required for API mismatch)
+                log.warn("⚠️ Safe deserialization failed, using unsafe fallback");
+
+                StripeObject stripeObject = deserializer.deserializeUnsafe();
+
+                if (stripeObject instanceof Subscription) {
+                    stripeSub = (Subscription) stripeObject;
+                    log.info("✅ Unsafe deserialization worked");
+                } else {
+                    log.error("❌ Deserialized object is not a Subscription: {}", stripeObject.getClass());
+                    return;
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Failed to deserialize Stripe event", e);
+            return;
+        }
+
+        // ❌ Still null → stop
+        if (stripeSub == null) {
+            log.error("❌ Subscription is NULL even after unsafe deserialization");
+            return;
+        }
         Optional<HospitalSubscription> subOpt = subscriptionRepo.findByStripeSubscriptionId(stripeSub.getId());
         if (subOpt.isEmpty()) return;
 

@@ -7,7 +7,6 @@ import com.hospital.model.User;
 import com.hospital.repository.PaymentRepo;
 import com.hospital.service.PaymentService;
 import com.stripe.model.Event;
-import com.stripe.model.checkout.Session;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,9 +18,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,6 +39,10 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final PaymentRepo paymentRepo;
+
+    @org.springframework.beans.factory.annotation.Value("${stripe.webhook.secret:}")
+    private String webhookSecret;
+
 
     // ── GET /payments/history - Billing history for current hospital ──
 
@@ -63,39 +71,35 @@ public class PaymentController {
 
     // ── POST /payments/webhook - Stripe webhook handler ──
 
-    @CrossOrigin(origins = "*")
-    @PostMapping("/webhook")
+    @PostMapping(value = "/webhook", produces = "text/plain")
     @Operation(summary = "Receive Stripe webhook events")
     public ResponseEntity<String> handleWebhook(
-            HttpServletRequest request,
-            @RequestHeader("Stripe-Signature") String sigHeader) {
-        log.info("Webhook received: IP={}, User-Agent={}, Content-Length={}", 
-                request.getRemoteAddr(), request.getHeader("User-Agent"), request.getContentLength());
+            @RequestBody String payload,
+            @RequestHeader("Stripe-Signature") String sigHeader,
+            HttpServletRequest request) {
 
-        String payload;
-        try {
-            payload = request.getReader().lines().collect(java.util.stream.Collectors.joining(System.lineSeparator()));
-        } catch (IOException e) {
-            log.error("Failed to read webhook payload", e);
-            return ResponseEntity.badRequest().body("Invalid payload");
+        log.info("Webhook received: User-Agent={}, Content-Length={}",
+                request.getHeader("User-Agent"), payload.length());
+
+        if (webhookSecret == null || webhookSecret.isBlank()) {
+            log.error("STRIPE_WEBHOOK_SECRET not configured");
+            return ResponseEntity.status(500).body("Server config error");
         }
 
+
         try {
-            String webhookSecret = System.getProperty("stripe.webhook.secret", System.getenv("STRIPE_WEBHOOK_SECRET"));
-            log.info("Verifying signature with secret: {}", webhookSecret != null ? "SET" : "MISSING");
-            
             Event event = com.stripe.net.Webhook.constructEvent(payload, sigHeader, webhookSecret);
             log.info("Event verified: type={}, id={}", event.getType(), event.getId());
-            
+
             paymentService.handleWebhook(event);
             log.info("Webhook processed successfully: {}", event.getType());
-            return ResponseEntity.ok("OK");
+            return ResponseEntity.ok().body("OK");
         } catch (com.stripe.exception.SignatureVerificationException e) {
             log.error("Invalid Stripe signature", e);
             return ResponseEntity.status(400).body("Invalid signature");
         } catch (Exception e) {
             log.error("Webhook processing failed", e);
-            return ResponseEntity.status(500).body("Error");
+            return ResponseEntity.status(500).body("Webhook error");
         }
     }
 
@@ -132,3 +136,4 @@ public class PaymentController {
                 .build();
     }
 }
+
