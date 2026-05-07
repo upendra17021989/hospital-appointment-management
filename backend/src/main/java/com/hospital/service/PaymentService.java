@@ -15,12 +15,11 @@ import com.hospital.repository.SubscriptionPlanRepo;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
-import com.stripe.model.Event;
 import com.stripe.model.Invoice;
 import com.stripe.model.Subscription;
-import com.stripe.model.checkout.Session;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
+
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -130,12 +129,16 @@ public class PaymentService {
         // If upgrading from an existing paid subscription, allow proration
         if (sub != null && sub.getStripeSubscriptionId() != null) {
             sessionBuilder.setSubscriptionData(
-                    SessionCreateParams.SubscriptionData.builder()
-                        // Anchor to "now" so Stripe can calculate proration for the upgrade.
-                        // The Java SDK binding expects a timestamp (Long) for billing_cycle_anchor.
-                        .setBillingCycleAnchor(Long.valueOf(Instant.now().getEpochSecond()))
-                        .setProrationBehavior(SessionCreateParams.SubscriptionData.ProrationBehavior.CREATE_PRORATIONS)
-                        .build()
+                SessionCreateParams.SubscriptionData.builder()
+                    .setBillingCycleAnchor(
+                        Instant.now()
+                            .plusSeconds(60)
+                            .getEpochSecond()
+                    )
+                    .setProrationBehavior(
+                        SessionCreateParams.SubscriptionData.ProrationBehavior.CREATE_PRORATIONS
+                    )
+                    .build()
             );
         }
 
@@ -264,9 +267,17 @@ public class PaymentService {
             sub.setStripeCustomerId(session.getCustomer());
             sub.setStripeSubscriptionId(session.getSubscription());
             sub.setTrialEndsAt(null);
-            sub.setCurrentPeriodStart(LocalDateTime.now());
-            sub.setCurrentPeriodEnd(LocalDateTime.now().plusMonths(
-                    "yearly".equalsIgnoreCase(billingCycle) ? 12 : 1));
+
+            LocalDateTime computedStart = LocalDateTime.now();
+            int monthsToAdd = "yearly".equalsIgnoreCase(billingCycle) ? 12 : 1;
+            LocalDateTime computedEnd = computedStart.plusMonths(monthsToAdd);
+
+            log.info("[checkout.session.completed] hospitalId={}, billingCycle={}, monthsToAdd={}, computedStart={}, computedEnd={}",
+                    hospitalId, billingCycle, monthsToAdd, computedStart, computedEnd);
+
+            sub.setCurrentPeriodStart(computedStart);
+            sub.setCurrentPeriodEnd(computedEnd);
+
 
             subscriptionRepo.save(sub);
 
@@ -342,17 +353,28 @@ public class PaymentService {
 
         paymentRepo.save(payment);
 
-        // Update subscription period
+        // Update subscription period (prevent clobbering computed end with unexpected Stripe payload)
         if (invoice.getPeriodStart() != null) {
-            sub.setCurrentPeriodStart(LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(invoice.getPeriodStart()), ZoneId.systemDefault()));
+            LocalDateTime stripeStart = LocalDateTime.ofInstant(
+                    Instant.ofEpochSecond(invoice.getPeriodStart()), ZoneId.systemDefault());
+            if (sub.getCurrentPeriodStart() == null) {
+                sub.setCurrentPeriodStart(stripeStart);
+            }
+
         }
         if (invoice.getPeriodEnd() != null) {
-            sub.setCurrentPeriodEnd(LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(invoice.getPeriodEnd()), ZoneId.systemDefault()));
+            LocalDateTime stripeEnd = LocalDateTime.ofInstant(
+                    Instant.ofEpochSecond(invoice.getPeriodEnd()), ZoneId.systemDefault());
+            if (sub.getCurrentPeriodEnd() == null || stripeEnd.isAfter(sub.getCurrentPeriodEnd())) {
+                sub.setCurrentPeriodEnd(stripeEnd);
+            }
         }
+
+        // Only flip status; period end should remain what we computed unless Stripe sends a newer value.
         sub.setStatus(HospitalSubscription.Status.active);
         subscriptionRepo.save(sub);
+
+
 
         log.info("Payment succeeded for hospital {}: ${}", sub.getHospital().getId(), payment.getAmount());
     }
