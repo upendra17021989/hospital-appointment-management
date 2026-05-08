@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { EmptyState, LoadingSpinner, Modal } from '../components/Common';
 import { useAuth } from '../context/AuthContext';
+import { useRole } from '../hooks/useRole';
+
 
 const DEPT_ICONS = ['🏥', '🩺', '🫀', '🧠', '🫁', '👶', '🦴', '👁️', '🦷', '🔬'];
 
-const DepartmentCard = ({ department, icon, onEdit, onDelete }) => (
+const DepartmentCard = ({ department, icon, onEdit, onDelete, canEdit }) => (
   <div className="card" style={{ border: '1px solid var(--border)' }}>
     <div style={{ fontSize: 34, marginBottom: 10 }}>{icon}</div>
+
     <div className="card-title">{department.name}</div>
     <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>
       {department.description || 'No description available.'}
@@ -27,16 +30,22 @@ const DepartmentCard = ({ department, icon, onEdit, onDelete }) => (
         <div style={{ fontWeight: 700 }}>{department.doctorCount ?? 0}</div>
       </div>
     </div>
-    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-      <button className="btn btn-secondary btn-sm" onClick={() => onEdit(department)}>Edit</button>
-      <button className="btn btn-danger btn-sm" onClick={() => onDelete(department)}>Delete</button>
-    </div>
+    {canEdit && (
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <button className="btn btn-secondary btn-sm" onClick={() => onEdit(department)}>Edit</button>
+        <button className="btn btn-danger btn-sm" onClick={() => onDelete(department)}>Delete</button>
+      </div>
+    )}
+
   </div>
 );
 
 const Departments = () => {
   const { user } = useAuth();
+  const { isStaff, isReceptionist } = useRole();
+
   const [departments, setDepartments] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -86,6 +95,9 @@ const Departments = () => {
     setError('');
     setShowDeleteModal(true);
   };
+
+  const canEditDepartments = !(isStaff() || isReceptionist());
+
 
   const handleCreateDepartment = async (e) => {
     e.preventDefault();
@@ -170,9 +182,12 @@ const Departments = () => {
             {user?.hospital?.name ? `${user.hospital.name} has` : 'Your hospital has'} {departments.length} active department{departments.length === 1 ? '' : 's'}
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => { resetForm(); setShowAddModal(true); }}>
-          + Add Department
-        </button>
+        {canEditDepartments && (
+          <button className="btn btn-primary" onClick={() => { resetForm(); setShowAddModal(true); }}>
+            + Add Department
+          </button>
+        )}
+
       </div>
 
       {departments.length === 0 ? (
@@ -190,8 +205,10 @@ const Departments = () => {
               icon={DEPT_ICONS[i % DEPT_ICONS.length]}
               onEdit={openEditModal}
               onDelete={openDeleteModal}
+              canEdit={canEditDepartments}
             />
           ))}
+
         </div>
       )}
 
