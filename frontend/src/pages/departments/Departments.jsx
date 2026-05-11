@@ -1,44 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
-import { EmptyState, LoadingSpinner, Modal } from '../components/Common';
-import { useAuth } from '../context/AuthContext';
-import { useRole } from '../hooks/useRole';
-
+import api from '../../services/api';
+import { EmptyState, LoadingSpinner, Modal } from '../../components/Common';
+import { useAuth } from '../../context/AuthContext';
+import { useRole } from '../../hooks/useRole';
+import DepartmentCard from './DepartmentCard';
 
 const DEPT_ICONS = ['🏥', '🩺', '🫀', '🧠', '🫁', '👶', '🦴', '👁️', '🦷', '🔬'];
-
-const DepartmentCard = ({ department, icon, onEdit, onDelete, canEdit }) => (
-  <div className="card" style={{ border: '1px solid var(--border)' }}>
-    <div style={{ fontSize: 34, marginBottom: 10 }}>{icon}</div>
-
-    <div className="card-title">{department.name}</div>
-    <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14 }}>
-      {department.description || 'No description available.'}
-    </p>
-
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-      <div style={{ background: 'var(--bg)', padding: '8px 10px', borderRadius: 8 }}>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-          Floor
-        </div>
-        <div style={{ fontWeight: 700 }}>{department.floorNumber ?? 'N/A'}</div>
-      </div>
-      <div style={{ background: 'var(--bg)', padding: '8px 10px', borderRadius: 8 }}>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-          Doctors
-        </div>
-        <div style={{ fontWeight: 700 }}>{department.doctorCount ?? 0}</div>
-      </div>
-    </div>
-    {canEdit && (
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-        <button className="btn btn-secondary btn-sm" onClick={() => onEdit(department)}>Edit</button>
-        <button className="btn btn-danger btn-sm" onClick={() => onDelete(department)}>Delete</button>
-      </div>
-    )}
-
-  </div>
-);
 
 const Departments = () => {
   const { user } = useAuth();
@@ -62,7 +29,8 @@ const Departments = () => {
   });
 
   useEffect(() => {
-    api.get('/departments/hospital')
+    api
+      .get('/departments/hospital')
       .then((data) => setDepartments(data || []))
       .catch(() => setDepartments([]))
       .finally(() => setLoading(false));
@@ -97,7 +65,6 @@ const Departments = () => {
   };
 
   const canEditDepartments = !(isStaff() || isReceptionist());
-
 
   const handleCreateDepartment = async (e) => {
     e.preventDefault();
@@ -179,15 +146,22 @@ const Departments = () => {
         <div>
           <h1 className="page-title">Departments</h1>
           <p className="page-subtitle">
-            {user?.hospital?.name ? `${user.hospital.name} has` : 'Your hospital has'} {departments.length} active department{departments.length === 1 ? '' : 's'}
+            {user?.hospital?.name
+              ? `${user.hospital.name} has`
+              : 'Your hospital has'} {departments.length} active department{departments.length === 1 ? '' : 's'}
           </p>
         </div>
         {canEditDepartments && (
-          <button className="btn btn-primary" onClick={() => { resetForm(); setShowAddModal(true); }}>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              resetForm();
+              setShowAddModal(true);
+            }}
+          >
             + Add Department
           </button>
         )}
-
       </div>
 
       {departments.length === 0 ? (
@@ -208,12 +182,17 @@ const Departments = () => {
               canEdit={canEditDepartments}
             />
           ))}
-
         </div>
       )}
 
       {showAddModal && (
-        <Modal title="Add Department" onClose={() => { setShowAddModal(false); resetForm(); }}>
+        <Modal
+          title="Add Department"
+          onClose={() => {
+            setShowAddModal(false);
+            resetForm();
+          }}
+        >
           <form onSubmit={handleCreateDepartment}>
             <div className="modal-body">
               <div className="form-group">
@@ -222,12 +201,23 @@ const Departments = () => {
               </div>
               <div className="form-group">
                 <label>Description</label>
-                <textarea rows={3} value={form.description} onChange={setField('description')} placeholder="Short department description" />
+                <textarea
+                  rows={3}
+                  value={form.description}
+                  onChange={setField('description')}
+                  placeholder="Short department description"
+                />
               </div>
               <div className="form-grid-2">
                 <div className="form-group">
                   <label>Floor Number</label>
-                  <input type="number" min="0" value={form.floorNumber} onChange={setField('floorNumber')} placeholder="e.g. 2" />
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.floorNumber}
+                    onChange={setField('floorNumber')}
+                    placeholder="e.g. 2"
+                  />
                 </div>
                 <div className="form-group">
                   <label>Phone</label>
@@ -236,12 +226,24 @@ const Departments = () => {
               </div>
               <div className="form-group">
                 <label>Email</label>
-                <input type="email" value={form.email} onChange={setField('email')} placeholder="department@hospital.com" />
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={setField('email')}
+                  placeholder="department@hospital.com"
+                />
               </div>
               {error && <div style={{ color: '#d64545', fontSize: 13 }}>{error}</div>}
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={() => { setShowAddModal(false); resetForm(); }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowAddModal(false);
+                  resetForm();
+                }}
+              >
                 Cancel
               </button>
               <button type="submit" className="btn btn-primary" disabled={saving}>
@@ -253,7 +255,14 @@ const Departments = () => {
       )}
 
       {showEditModal && (
-        <Modal title="Edit Department" onClose={() => { setShowEditModal(false); setSelectedDepartment(null); resetForm(); }}>
+        <Modal
+          title="Edit Department"
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedDepartment(null);
+            resetForm();
+          }}
+        >
           <form onSubmit={handleUpdateDepartment}>
             <div className="modal-body">
               <div className="form-group">
@@ -281,7 +290,15 @@ const Departments = () => {
               {error && <div style={{ color: '#d64545', fontSize: 13 }}>{error}</div>}
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={() => { setShowEditModal(false); setSelectedDepartment(null); resetForm(); }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedDepartment(null);
+                  resetForm();
+                }}
+              >
                 Cancel
               </button>
               <button type="submit" className="btn btn-primary" disabled={saving}>
@@ -293,13 +310,30 @@ const Departments = () => {
       )}
 
       {showDeleteModal && (
-        <Modal title="Delete Department" onClose={() => { setShowDeleteModal(false); setSelectedDepartment(null); setError(''); }}>
+        <Modal
+          title="Delete Department"
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedDepartment(null);
+            setError('');
+          }}
+        >
           <div className="modal-body">
-            <p>Delete <strong>{selectedDepartment?.name}</strong>? This action cannot be undone.</p>
+            <p>
+              Delete <strong>{selectedDepartment?.name}</strong>? This action cannot be undone.
+            </p>
             {error && <div style={{ color: '#d64545', fontSize: 13 }}>{error}</div>}
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={() => { setShowDeleteModal(false); setSelectedDepartment(null); setError(''); }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setSelectedDepartment(null);
+                setError('');
+              }}
+            >
               Cancel
             </button>
             <button type="button" className="btn btn-danger" disabled={saving} onClick={handleDeleteDepartment}>
@@ -313,3 +347,4 @@ const Departments = () => {
 };
 
 export default Departments;
+

@@ -11,7 +11,7 @@ import Appointments     from './pages/Appointments';
 import Enquiries        from './pages/Enquiries';
 import Doctors          from './pages/Doctors';
 import DoctorManagement from './pages/DoctorManagement';
-import Departments      from './pages/Departments';
+import Departments      from './pages/departments/Departments';
 import PatientForm      from './pages/PatientForm';
 import Patients         from './pages/Patients';
 import PatientDetail    from './pages/PatientDetail';

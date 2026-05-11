@@ -238,12 +238,12 @@ const UserManagement = ({ onNavigate }) => {
                         >
                           {u.isActive ? 'Deactivate' : 'Activate'}
                         </button>
-                        <button
+                        {/* <button
                           className="btn btn-sm btn-danger"
                           onClick={() => setDeleteUser(u)}
                         >
                           Delete
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -294,12 +294,12 @@ const UserManagement = ({ onNavigate }) => {
                     >
                       {u.isActive ? 'Deactivate' : 'Activate'}
                     </button>
-                    <button
+                    {/* <button
                       className="btn btn-danger btn-sm"
                       onClick={() => setDeleteUser(u)}
                     >
                       🗑
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               ))}
