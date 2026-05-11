@@ -28,13 +28,22 @@ const Departments = () => {
     email: '',
   });
 
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
+      const data = await api.get('/departments/hospital');
+      setDepartments(data || []);
+    } catch {
+      setDepartments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    api
-      .get('/departments/hospital')
-      .then((data) => setDepartments(data || []))
-      .catch(() => setDepartments([]))
-      .finally(() => setLoading(false));
+    fetchDepartments();
   }, []);
+
 
   const setField = (key) => (e) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -82,11 +91,12 @@ const Departments = () => {
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
       };
-      const created = await api.post('/departments/hospital', payload);
-      setDepartments((prev) => [created, ...prev]);
+      await api.post('/departments/hospital', payload);
       setShowAddModal(false);
       resetForm();
+      await fetchDepartments();
     } catch (err) {
+
       setError(err?.message || 'Failed to create department.');
     } finally {
       setSaving(false);
@@ -115,6 +125,8 @@ const Departments = () => {
       setShowEditModal(false);
       setSelectedDepartment(null);
       resetForm();
+      await fetchDepartments();
+
     } catch (err) {
       setError(err?.message || 'Failed to update department.');
     } finally {
