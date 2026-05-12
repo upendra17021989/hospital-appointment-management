@@ -606,7 +606,7 @@ const [selectedPatient, setSelectedPatient] = useState(routePrefillPatient || pr
         <div className="rx-quick-add">
           <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Quick add ({commonMedicines?.length}):</span>
           {commonMedicines?.slice(0, 12).map(m => (
-            <button key={m} className="rx-quick-btn" onClick={() => setMedicines(ms => [...ms, { medicineName: m, dosage: '', frequency: '', duration: '', route: 'Oral', beforeFood: false, instructions: '', sortOrder: ms.length }])}>
+            <button key={m} className="rx-quick-btn" onClick={() => setMedicines(ms => [...ms, { medicineName: m, dosage: '', frequency: '', duration: '', route: 'Oral', beforeFood: false, instructions: '', sortOrder: ms.length,  __closeMedicineDd: true, }])}>
               {m}
             </button>
           ))}
@@ -658,7 +658,7 @@ const [selectedPatient, setSelectedPatient] = useState(routePrefillPatient || pr
         <div className="rx-quick-add">
           <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Quick add ({commonTests?.length}):</span>
           {commonTests?.slice(0, 12).map(t => (
-            <button key={t} className="rx-quick-btn" onClick={() => setLabTests(ts => [...ts, { testName: t, instructions: '', isUrgent: false, sortOrder: ts.length }])}>
+            <button key={t} className="rx-quick-btn" onClick={() => setLabTests(ts => [...ts, { testName: t, instructions: '', isUrgent: false, sortOrder: ts.length, __closeTestDd: true }])}>
               {t}
             </button>
           ))}
