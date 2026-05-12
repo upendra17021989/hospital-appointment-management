@@ -34,6 +34,10 @@ const MedicineRow = ({ med, idx, onChange, onRemove, commonMedicinesForRow }) =>
 
   const query = (med?.medicineName || '').trim();
 
+  const showDropdown =
+    query &&
+    !med.__closeMedicineDd &&
+    commonMedicinesForRow(query).length > 0;
 
   return (
     <div className="rx-med-row">
@@ -51,7 +55,7 @@ const MedicineRow = ({ med, idx, onChange, onRemove, commonMedicinesForRow }) =>
             placeholder="Medicine name (generic/brand)"
             autoComplete="off"
           />
-          {commonMedicinesForRow(query).length > 0 && (
+          {showDropdown && (
 
             <div className="rx-dropdown rx-medicine-dropdown">
               {commonMedicinesForRow(query).slice(0, 8).map((m) => (
@@ -112,23 +116,54 @@ const MedicineRow = ({ med, idx, onChange, onRemove, commonMedicinesForRow }) =>
 };
 
 // ── Lab Test Row ──────────────────────────────────────────────
-const LabTestRow = ({ test, idx, onChange, onRemove }) => {
+const LabTestRow = ({ test, idx, onChange, onRemove, commonTestsForRow }) => {
   const set = k => e => onChange(idx, k, e.target.value);
   const setB = k => e => onChange(idx, k, e.target.checked);
 
+  const query = (test?.testName || '').trim();
+
+  const showDropdown =
+    query &&
+    !test.__closeTestDd &&
+    commonTestsForRow(query).length > 0;
+
   return (
+
     <div className="rx-lab-row">
+
       <div className="rx-med-num">{idx + 1}</div>
       <div className="rx-lab-fields">
-        <input
-          value={test.testName}
-          onChange={set('testName')}
-          placeholder="Test name (e.g. CBC, Blood Sugar)"
-          className="rx-lab-name"
-          maxLength={200}
-          required
-          aria-label={`Lab test name (row ${idx + 1})`}
-        />
+        <div style={{ position: 'relative' }}>
+          <input
+            style={{width: '100%'}}
+            value={test.testName}
+            onChange={set('testName')}
+            placeholder="Test name (e.g. CBC, Blood Sugar)"
+            className="rx-lab-name"
+            maxLength={200}
+            required
+            aria-label={`Lab test name (row ${idx + 1})`}
+          />
+          {showDropdown && (
+
+            <div className="rx-dropdown rx-medicine-dropdown">
+              {commonTestsForRow(query).slice(0, 8).map((t) => (
+                <div
+                  key={t}
+                  className="rx-dropdown-item"
+                  onClick={() => {
+                    onChange(idx, 'testName', t);
+                    // close dropdown quickly (no-op placeholder; keep simple)
+                    onChange(idx, '__closeTestDd', true);
+
+                  }}
+                >
+                  {t}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <input value={test.instructions} onChange={set('instructions')} placeholder="Instructions (e.g. Fasting required)" />
         <label className="rx-food-check">
           <input type="checkbox" checked={test.isUrgent} onChange={setB('isUrgent')} />
@@ -139,6 +174,7 @@ const LabTestRow = ({ test, idx, onChange, onRemove }) => {
     </div>
   );
 };
+
 
 // ── Print Prescription ────────────────────────────────────────
 const printPrescription = (data) => {
@@ -634,8 +670,24 @@ const [selectedPatient, setSelectedPatient] = useState(routePrefillPatient || pr
         </div>
 
         {labTests.map((test, i) => (
-          <LabTestRow key={i} test={test} idx={i} onChange={updateLabTest} onRemove={removeLabTest} />
+          <LabTestRow
+            key={i}
+            test={test}
+            idx={i}
+            onChange={updateLabTest}
+            onRemove={removeLabTest}
+            commonTestsForRow={(query) => {
+              if (!query || query.length < 1) return [];
+              const q = query.trim().toLowerCase();
+              if (!q) return [];
+              const list = commonTests || [];
+              return list
+                .filter((t) => t && t.toLowerCase().includes(q))
+                .slice(0, 50);
+            }}
+          />
         ))}
+
 
         {labTests.length === 0 && (
           <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)', fontSize: 13 }}>
