@@ -28,16 +28,51 @@ const VitalField = ({ label, unit, value, onChange, placeholder }) => (
 );
 
 // ── Medicine Row ──────────────────────────────────────────────
-const MedicineRow = ({ med, idx, onChange, onRemove }) => {
+const MedicineRow = ({ med, idx, onChange, onRemove, commonMedicinesForRow }) => {
   const set = k => e => onChange(idx, k, e.target.value);
   const setB = k => e => onChange(idx, k, e.target.checked);
+
+  const query = (med?.medicineName || '').trim();
+
 
   return (
     <div className="rx-med-row">
       <div className="rx-med-num">{idx + 1}</div>
       <div className="rx-med-fields">
-        <input className="rx-med-name" value={med.medicineName} onChange={set('medicineName')}
-          placeholder="Medicine name (generic/brand)" />
+        <div style={{ position: 'relative' }}>
+          <input
+            style={{width: '100%'}} 
+            className="rx-med-name"
+            value={med.medicineName}
+            onChange={e => {
+              const v = e.target.value;
+              onChange(idx, 'medicineName', v);
+            }}
+            placeholder="Medicine name (generic/brand)"
+            autoComplete="off"
+          />
+          {commonMedicinesForRow(query).length > 0 && (
+
+            <div className="rx-dropdown rx-medicine-dropdown">
+              {commonMedicinesForRow(query).slice(0, 8).map((m) => (
+
+                <div
+                  key={m}
+                  className="rx-dropdown-item"
+                  onClick={() => {
+                    onChange(idx, 'medicineName', m);
+                    setTimeout(() => {
+                      // close dropdown quickly
+                      onChange(idx, '__closeMedicineDd', true);
+                    }, 0);
+                  }}
+                >
+                  {m}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="rx-med-details">
           <input value={med.dosage} onChange={set('dosage')} placeholder="Dosage (e.g. 500mg)" />
           <select value={med.frequency} onChange={set('frequency')}>
@@ -85,7 +120,15 @@ const LabTestRow = ({ test, idx, onChange, onRemove }) => {
     <div className="rx-lab-row">
       <div className="rx-med-num">{idx + 1}</div>
       <div className="rx-lab-fields">
-        <input value={test.testName} onChange={set('testName')} placeholder="Test name (e.g. CBC, Blood Sugar)" className="rx-lab-name" />
+        <input
+          value={test.testName}
+          onChange={set('testName')}
+          placeholder="Test name (e.g. CBC, Blood Sugar)"
+          className="rx-lab-name"
+          maxLength={200}
+          required
+          aria-label={`Lab test name (row ${idx + 1})`}
+        />
         <input value={test.instructions} onChange={set('instructions')} placeholder="Instructions (e.g. Fasting required)" />
         <label className="rx-food-check">
           <input type="checkbox" checked={test.isUrgent} onChange={setB('isUrgent')} />
@@ -413,6 +456,7 @@ const [selectedPatient, setSelectedPatient] = useState(routePrefillPatient || pr
             ) : (
               <div style={{ position: 'relative' }}>
                 <input
+                  style={{width: '100%'}}
                   value={patientSearch}
                   onChange={e => { setPatientSearch(e.target.value); setShowPatientDrop(true); }}
                   placeholder="Search patients by name, phone, or address..."
@@ -543,7 +587,22 @@ const [selectedPatient, setSelectedPatient] = useState(routePrefillPatient || pr
         </div>
 
         {medicines.map((med, i) => (
-          <MedicineRow key={i} med={med} idx={i} onChange={updateMedicine} onRemove={removeMedicine} />
+          <MedicineRow
+            key={i}
+            med={med}
+            idx={i}
+            onChange={updateMedicine}
+            onRemove={removeMedicine}
+            commonMedicinesForRow={(query) => {
+              if (!query || query.length < 1) return [];
+              const q = query.trim().toLowerCase();
+              if (!q) return [];
+              const list = commonMedicines || [];
+              return list
+                .filter((m) => m && m.toLowerCase().includes(q))
+                .slice(0, 50);
+            }}
+          />
         ))}
 
         {medicines.length === 0 && (
