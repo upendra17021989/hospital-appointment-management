@@ -47,7 +47,7 @@ public class WhatsAppService {
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("To", formattedPhone);
-        formData.add("From", fromNumber);
+        formData.add("From", "whatsapp:" + fromNumber);
         formData.add("Body", message);
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formData, headers);
