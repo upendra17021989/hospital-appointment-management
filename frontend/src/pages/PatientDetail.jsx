@@ -362,7 +362,17 @@ const PatientDetail = () => {
         <div className="pd-hero-actions">
           <button
             className="btn btn-secondary btn-sm"
-            onClick={() => setEditMode(e => !e)}
+            onClick={() => {
+              if (editMode) {
+                setEditMode(false);
+                setActiveTab('overview');
+                setEditForm(patient || {});
+              } else {
+                setActiveTab('edit');
+                setEditMode(true);
+                setEditForm(patient || {});
+              }
+            }}
           >
             {editMode ? '✕ Cancel Edit' : '✏️ Edit'}
           </button>
