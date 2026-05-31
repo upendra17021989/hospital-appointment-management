@@ -288,6 +288,27 @@ const PatientDetail = () => {
 
   const age = patient?.age || calcAge(patient?.dateOfBirth);
 
+  const setDateOfBirth = (e) => {
+    const nextDob = e.target.value;
+    const nextAge = calcAge(nextDob);
+    setEditForm((f) => ({ ...f, dateOfBirth: nextDob, age: nextAge ?? '' }));
+  };
+
+  useEffect(() => {
+    if (!editMode) return;
+    if (!editForm?.dateOfBirth) {
+      setEditForm((f) => ({ ...f, age: '' }));
+      return;
+    }
+
+    const nextAge = calcAge(editForm.dateOfBirth);
+    setEditForm((f) => ({ ...f, age: nextAge ?? '' }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editForm.dateOfBirth]);
+
+
+
+
   const completedAppts  = appointments.filter(a => a.status === 'completed').length;
   const upcomingAppts   = appointments.filter(a => ['pending', 'confirmed'].includes(a.status)).length;
   const cancelledAppts  = appointments.filter(a => a.status === 'cancelled').length;
@@ -529,12 +550,21 @@ const PatientDetail = () => {
               </div>
               <div className="form-group">
                 <label>Date of Birth</label>
-                <input type="date" value={editForm.dateOfBirth || ''} onChange={setEF('dateOfBirth')} />
+                <input type="date" value={editForm.dateOfBirth || ''} onChange={setDateOfBirth} />
               </div>
+
               <div className="form-group">
                 <label>Age</label>
-                <input type="number" value={editForm.age || ''} onChange={setEF('age')} min="0" max="150" placeholder="e.g. 30" />
+                <input
+                  type="number"
+                  value={editForm.age || ''}
+                  readOnly
+                  min="0"
+                  max="150"
+                  placeholder="e.g. 30"
+                />
               </div>
+
               <div className="form-group">
                 <label>Gender</label>
                 <select value={editForm.gender || ''} onChange={setEF('gender')}>
