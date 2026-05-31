@@ -190,10 +190,9 @@ const Step4PatientInfo = ({
   const genderError = touchedFields.gender && !patientData.gender;
   const reasonError = touchedFields.reasonForVisit && !visitData.reasonForVisit.trim();
 
-  const isValid = (isNewPatient ? 
-    (patientData.firstName.trim() && patientData.lastName.trim() && !phoneError && !!patientData.gender && !reasonError) :
-    (!!selectedExistingPatient?.id && !phoneError && !reasonError)
-  );
+  const isValid = isNewPatient
+    ? patientData.firstName.trim() && patientData.lastName.trim() && !phoneError && !!patientData.gender && !reasonError
+    : !!selectedExistingPatient?.id && !reasonError;
 
   const touchField = (field) => () => setTouchedFields(t => ({ ...t, [field]: true }));
 
@@ -205,23 +204,32 @@ const Step4PatientInfo = ({
     reasonForVisit: true
   });
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    if (selectedExistingPatient) {
+      setSelectedExistingPatient(null);
+      setPatientData({ firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '', age: '' });
+    }
+  };
+
   const handlePhoneChange = (e) => {
     const raw = e.target.value.replace(/[^\d\s\-+]/g, '');
     setPatientData(p => ({ ...p, phone: raw }));
-    if (!isNewPatient) setSearchQuery(raw);
   };
 
   const handlePatientSelect = (patient) => {
     setSelectedExistingPatient(patient);
-      setPatientData({
-        firstName: patient.firstName || '',
-        lastName: patient.lastName || '',
-        phone: patient.phone || '',
-        email: patient.email || '',
-        gender: patient.gender || '',
-        dateOfBirth: patient.dateOfBirth || '',
-        age: patient.age || ''
-      });
+    setPatientData({
+      firstName: patient.firstName || '',
+      lastName: patient.lastName || '',
+      phone: patient.phone || '',
+      email: patient.email || '',
+      gender: patient.gender || '',
+      dateOfBirth: patient.dateOfBirth || '',
+      age: patient.age || ''
+    });
+    setSearchQuery('');
+    setSearchedPatients([]);
   };
 
   const handleToggleMode = () => {
@@ -267,24 +275,17 @@ const Step4PatientInfo = ({
         // Existing Patient Mode
         <div>
           <div className="form-group">
-            <label>Search by Phone</label>
-            <input
-              value={searchQuery}
-              onChange={handlePhoneChange}
-              onBlur={touchField('phone')}
-              placeholder="Enter phone number (10 digits)"
-              style={{
-                borderColor: phoneError ? '#c0220a' : undefined,
-                boxShadow: phoneError ? '0 0 0 3px rgba(192,34,10,0.1)' : undefined,
-              }}
-            />
-            {phoneError && (
-              <span style={{ fontSize: 12, color: '#c0220a', marginTop: 2 }}>
-                ⚠ {phoneError}
-              </span>
-            )}
+            <label>Search Patient</label>
+            <div className="search-input-wrap">
+              <span className="search-icon">🔍</span>
+              <input
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search by name, phone, or address..."
+              />
+            </div>
             <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-              Enter 10-digit phone to search existing patients
+              Enter 2+ characters to search existing patients
             </span>
           </div>
 
@@ -300,34 +301,54 @@ const Step4PatientInfo = ({
                   <div
                     key={p.id}
                     className="doctor-card"
-                    style={{ 
-                      cursor: 'pointer', 
-                      border: selectedExistingPatient?.id === p.id ? '2px solid var(--primary)' : undefined 
+                    style={{
+                      cursor: 'pointer',
+                      border: selectedExistingPatient?.id === p.id ? '2px solid var(--primary)' : undefined
                     }}
                     onClick={() => handlePatientSelect(p)}
                   >
                     <div className="doctor-avatar">{p.firstName?.[0]}{p.lastName?.[0]}</div>
                     <div className="doctor-name">{p.fullName || `${p.firstName} ${p.lastName}`}</div>
                     <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                      {p.phone}
+                      📱 {p.phone}
                     </div>
+                    {p.address && (
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        {p.address.split(',')[0]}
+                      </div>
+                    )}
                     {p.email && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.email}</div>}
                   </div>
                 ))}
               </div>
             </div>
-          ) : searchQuery.length >= 10 && !searchLoading ? (
+          ) : searchQuery.trim().length >= 2 && !searchLoading ? (
             <div className="empty-state">
               <div className="empty-state-icon">👤</div>
               <div className="empty-state-title">No patients found</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Try a different phone number</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Try a different name, phone, or address</div>
             </div>
           ) : null}
 
           {selectedExistingPatient && (
             <div style={{ background: 'var(--bg-light)', padding: 16, borderRadius: 8, marginBottom: 20 }}>
               <div style={{ fontWeight: 600, marginBottom: 8 }}>Selected: {selectedExistingPatient.fullName}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{selectedExistingPatient.phone}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                {selectedExistingPatient.phone}
+                {selectedExistingPatient.age != null ? ` · ${selectedExistingPatient.age} yrs` : ''}
+                {selectedExistingPatient.gender ? ` · ${selectedExistingPatient.gender}` : ''}
+              </div>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                style={{ marginTop: 10 }}
+                onClick={() => {
+                  setSelectedExistingPatient(null);
+                  setPatientData({ firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '', age: '' });
+                }}
+              >
+                ✕ Change patient
+              </button>
             </div>
           )}
         </div>
@@ -644,24 +665,24 @@ const BookAppointment = () => {
     }
   }, [selectedDoctor, selectedDate]);
 
-  // Debounced patient search
+  // Debounced patient search (name, phone, or address)
   useEffect(() => {
-    if (searchQuery.length < 10) {
+    const q = searchQuery.trim();
+    if (q.length < 2) {
       setSearchedPatients([]);
       return;
     }
     const timer = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        const digitsOnly = searchQuery.replace(/\D/g, '');
-        const patients = await api.get(`/patients/hospital/search?query=${digitsOnly}`);
+        const patients = await api.get(`/patients/hospital/search?query=${encodeURIComponent(q)}`);
         setSearchedPatients(patients);
       } catch {
         setSearchedPatients([]);
       } finally {
         setSearchLoading(false);
       }
-    }, 500);
+    }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -700,6 +721,8 @@ const BookAppointment = () => {
   const prefillPatient = location.state?.prefillPatient;
   useEffect(() => {
     if (prefillPatient) {
+      setIsNewPatient(false);
+      setSelectedExistingPatient(prefillPatient);
       setPatientData({
         firstName: prefillPatient.firstName || '',
         lastName: prefillPatient.lastName || '',
