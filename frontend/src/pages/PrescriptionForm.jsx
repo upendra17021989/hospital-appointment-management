@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
 
@@ -15,6 +15,28 @@ const Field = ({ label, required, children, hint, col }) => (
     {hint && <span className="pf-hint">{hint}</span>}
   </div>
 );
+
+const todayIso = () => new Date().toISOString().split('T')[0];
+
+const addDaysToDate = (isoDate, days) => {
+  if (!isoDate || !days || days <= 0) return null;
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  date.setDate(date.getDate() + days);
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${mm}-${dd}`;
+};
+
+const formatDisplayDate = (isoDate) => {
+  if (!isoDate) return '';
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
 
 // ── Vital Sign Input ──────────────────────────────────────────
 const VitalField = ({ label, unit, value, onChange, placeholder }) => (
@@ -310,7 +332,8 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
     diagnosis:      '',
     chiefComplaint: '',
     examinationNotes: '',
-    followUpDate:   '',
+    prescriptionDate: todayIso(),
+    followUpAfterDays: '',
     followUpInstructions: '',
     dietInstructions: '',
     activityRestrictions: '',
@@ -326,6 +349,12 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
 
   const [medicines, setMedicines] = useState([]);
   const [labTests,  setLabTests]  = useState([]);
+
+  const computedFollowUpDate = useMemo(() => {
+    const days = parseInt(form.followUpAfterDays, 10);
+    if (!days || days <= 0) return null;
+    return addDaysToDate(form.prescriptionDate || todayIso(), days);
+  }, [form.prescriptionDate, form.followUpAfterDays]);
 
   // Load full patient record (includes height/weight from medical profile)
   useEffect(() => {
@@ -401,9 +430,14 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
     }
     setLoading(true); setError('');
     try {
+      const days = parseInt(form.followUpAfterDays, 10);
+      const { followUpAfterDays: _days, ...formRest } = form;
       const payload = {
-        ...form,
+        ...formRest,
         appointmentId: form.appointmentId || null,
+        prescriptionDate: form.prescriptionDate || todayIso(),
+        followUpAfterDays: days > 0 ? days : null,
+        followUpDate: null,
         vitalSigns: JSON.stringify(vitals),
         medicines:  validMeds.map((m, i) => ({ ...m, sortOrder: i })),
         labTests:   labTests.filter(t => t.testName.trim()).map((t, i) => ({ ...t, sortOrder: i })),
@@ -478,7 +512,7 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
               }}>📱 Send SMS</button>
             </>
           )}
-          <button className="btn btn-secondary" onClick={() => { setSuccess(null); setForm({ patientId: '', doctorId: '', appointmentId: '', diagnosis: '', chiefComplaint: '', examinationNotes: '', followUpDate: '', followUpInstructions: '', dietInstructions: '', activityRestrictions: '', additionalNotes: '' }); setMedicines([{ medicineName: '', dosage: '', frequency: '', duration: '', route: 'Oral', beforeFood: false, instructions: '' }]); setLabTests([]); setSelectedPatient(null); setSelectedDoctor(null); }}>New Prescription</button>
+          <button className="btn btn-secondary" onClick={() => { setSuccess(null); setForm({ patientId: '', doctorId: '', appointmentId: '', diagnosis: '', chiefComplaint: '', examinationNotes: '', prescriptionDate: todayIso(), followUpAfterDays: '', followUpInstructions: '', dietInstructions: '', activityRestrictions: '', additionalNotes: '' }); setMedicines([{ medicineName: '', dosage: '', frequency: '', duration: '', route: 'Oral', beforeFood: false, instructions: '' }]); setLabTests([]); setSelectedPatient(null); setSelectedDoctor(null); }}>New Prescription</button>
           <button className="btn btn-secondary" onClick={() => navigate('/appointments')}>View Appointments</button>
 
         </div>
@@ -595,7 +629,7 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
 
           <div className="form-group">
             <label>Prescription Date</label>
-            <input type="date" value={form.prescriptionDate || new Date().toISOString().split('T')[0]} onChange={setF('prescriptionDate')} />
+            <input type="date" value={form.prescriptionDate} onChange={setF('prescriptionDate')} />
           </div>
         </div>
       </div>
@@ -739,8 +773,21 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
         <div className="card-title">📅 Follow Up & Instructions</div>
         <div className="form-grid">
           <div className="form-group">
-            <label>Follow-up Date</label>
-            <input type="date" value={form.followUpDate} onChange={setF('followUpDate')} min={new Date().toISOString().split('T')[0]} />
+            <label>Follow-up After (days)</label>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={form.followUpAfterDays}
+              onChange={setF('followUpAfterDays')}
+              placeholder="e.g. 5"
+            />
+            {computedFollowUpDate && (
+              <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                Follow-up on: <strong>{formatDisplayDate(computedFollowUpDate)}</strong>
+                {' '}(prescription date + {form.followUpAfterDays} days)
+              </span>
+            )}
           </div>
           <div className="form-group">
             <label>Follow-up Instructions</label>

@@ -78,6 +78,8 @@ public class PrescriptionController {
         private String chiefComplaint;
         private String examinationNotes;
         private String vitalSigns;          // JSON string
+        private LocalDate prescriptionDate;
+        private Integer followUpAfterDays;
         private LocalDate followUpDate;
         private String followUpInstructions;
         private String dietInstructions;
@@ -229,16 +231,24 @@ public class PrescriptionController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Doctor not found for current hospital"));
             }
 
+            LocalDate prescriptionDate = req.getPrescriptionDate() != null
+                    ? req.getPrescriptionDate()
+                    : LocalDate.now();
+            LocalDate followUpDate = req.getFollowUpDate();
+            if (req.getFollowUpAfterDays() != null && req.getFollowUpAfterDays() > 0) {
+                followUpDate = prescriptionDate.plusDays(req.getFollowUpAfterDays());
+            }
+
             Prescription prescription = Prescription.builder()
                     .hospital(hospital)
                     .patient(patient)
                     .doctor(doctor)
-                    .prescriptionDate(LocalDate.now())
+                    .prescriptionDate(prescriptionDate)
                     .diagnosis(req.getDiagnosis())
                     .chiefComplaint(req.getChiefComplaint())
                     .examinationNotes(req.getExaminationNotes())
                     .vitalSigns(req.getVitalSigns())
-                    .followUpDate(req.getFollowUpDate())
+                    .followUpDate(followUpDate)
                     .followUpInstructions(req.getFollowUpInstructions())
                     .dietInstructions(req.getDietInstructions())
                     .activityRestrictions(req.getActivityRestrictions())
