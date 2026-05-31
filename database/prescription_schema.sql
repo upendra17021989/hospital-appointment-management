@@ -58,6 +58,7 @@ CREATE TABLE prescriptions (
     vital_signs TEXT,               -- JSON: {bp, pulse, temp, weight, height, spo2}
 
     follow_up_date DATE,
+    follow_up_after_days INTEGER,
     follow_up_instructions TEXT,
     diet_instructions TEXT,
     activity_restrictions TEXT,

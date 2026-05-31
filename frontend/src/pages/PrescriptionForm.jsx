@@ -200,9 +200,18 @@ const LabTestRow = ({ test, idx, onChange, onRemove, commonTestsForRow }) => {
 
 // ── Print Prescription ────────────────────────────────────────
 const printPrescription = (data) => {
-  const { patient, doctor, diagnosis, medicines, labTests, prescriptionDate, vitalSigns, followUpDate, additionalNotes } = data;
+  const {
+    patient, doctor, diagnosis, medicines, labTests, prescriptionDate, vitalSigns,
+    followUpDate, followUpAfterDays, additionalNotes,
+  } = data;
   let vitals = {};
   try { vitals = JSON.parse(vitalSigns || '{}'); } catch {}
+
+  const followUpHtml = followUpAfterDays === 0
+    ? `<div class="followup followup-none" style="margin-top:12px">No follow-up required.</div>`
+    : followUpDate
+      ? `<div class="followup" style="margin-top:12px">📅 Follow-up on: <strong>${formatDisplayDate(String(followUpDate).slice(0, 10))}</strong></div>`
+      : '';
 
   const html = `
     <!DOCTYPE html><html><head><meta charset="UTF-8">
@@ -229,6 +238,7 @@ const printPrescription = (data) => {
       .footer { margin-top:30px; display:flex; justify-content:space-between; align-items:flex-end; border-top:1px dashed #ddd; padding-top:14px; }
       .sign-line { width:180px; border-top:1px solid #333; text-align:center; font-size:11px; color:#888; padding-top:4px; }
       .followup { background:#e6f4ee; border:1px solid #3d7a5e; border-radius:6px; padding:8px 12px; font-size:12px; }
+      .followup-none { background:#f5f5f5; border:1px solid #ccc; color:#555; }
       @media print { body { padding:0; } }
     </style></head><body>
     <div class="header">
@@ -296,7 +306,7 @@ const printPrescription = (data) => {
 
     ${additionalNotes ? `<h4>Notes</h4><p style="font-size:12px;line-height:1.6">${additionalNotes}</p>` : ''}
 
-    ${followUpDate ? `<div class="followup" style="margin-top:12px">📅 Follow-up on: <strong>${followUpDate}</strong></div>` : ''}
+    ${followUpHtml}
 
     <div class="footer">
       <div style="font-size:11px;color:#888">This prescription is valid for 30 days from the date of issue.</div>
@@ -430,13 +440,14 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
     }
     setLoading(true); setError('');
     try {
-      const days = parseInt(form.followUpAfterDays, 10);
+      const days =
+        form.followUpAfterDays === '' ? null : parseInt(form.followUpAfterDays, 10);
       const { followUpAfterDays: _days, ...formRest } = form;
       const payload = {
         ...formRest,
         appointmentId: form.appointmentId || null,
         prescriptionDate: form.prescriptionDate || todayIso(),
-        followUpAfterDays: days > 0 ? days : null,
+        followUpAfterDays: Number.isFinite(days) ? days : null,
         followUpDate: null,
         vitalSigns: JSON.stringify(vitals),
         medicines:  validMeds.map((m, i) => ({ ...m, sortOrder: i })),
@@ -776,18 +787,22 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
             <label>Follow-up After (days)</label>
             <input
               type="number"
-              min="1"
+              min="0"
               step="1"
               value={form.followUpAfterDays}
               onChange={setF('followUpAfterDays')}
-              placeholder="e.g. 5"
+              placeholder="0 = no follow-up, e.g. 5"
             />
-            {computedFollowUpDate && (
+            {form.followUpAfterDays === '0' || form.followUpAfterDays === 0 ? (
+              <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                No follow-up required.
+              </span>
+            ) : computedFollowUpDate ? (
               <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                 Follow-up on: <strong>{formatDisplayDate(computedFollowUpDate)}</strong>
                 {' '}(prescription date + {form.followUpAfterDays} days)
               </span>
-            )}
+            ) : null}
           </div>
           <div className="form-group">
             <label>Follow-up Instructions</label>

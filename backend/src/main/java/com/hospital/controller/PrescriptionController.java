@@ -124,6 +124,7 @@ public class PrescriptionController {
         private String examinationNotes;
         private String vitalSigns;
         private LocalDate followUpDate;
+        private Integer followUpAfterDays;
         private String followUpInstructions;
         private String dietInstructions;
         private String activityRestrictions;
@@ -235,8 +236,12 @@ public class PrescriptionController {
                     ? req.getPrescriptionDate()
                     : LocalDate.now();
             LocalDate followUpDate = req.getFollowUpDate();
-            if (req.getFollowUpAfterDays() != null && req.getFollowUpAfterDays() > 0) {
-                followUpDate = prescriptionDate.plusDays(req.getFollowUpAfterDays());
+            if (req.getFollowUpAfterDays() != null) {
+                if (req.getFollowUpAfterDays() > 0) {
+                    followUpDate = prescriptionDate.plusDays(req.getFollowUpAfterDays());
+                } else {
+                    followUpDate = null;
+                }
             }
 
             Prescription prescription = Prescription.builder()
@@ -249,6 +254,7 @@ public class PrescriptionController {
                     .examinationNotes(req.getExaminationNotes())
                     .vitalSigns(req.getVitalSigns())
                     .followUpDate(followUpDate)
+                    .followUpAfterDays(req.getFollowUpAfterDays())
                     .followUpInstructions(req.getFollowUpInstructions())
                     .dietInstructions(req.getDietInstructions())
                     .activityRestrictions(req.getActivityRestrictions())
@@ -505,6 +511,7 @@ public ResponseEntity<ApiResponse<String>> sendPrescription(
                 .examinationNotes(p.getExaminationNotes())
                 .vitalSigns(p.getVitalSigns())
                 .followUpDate(p.getFollowUpDate())
+                .followUpAfterDays(p.getFollowUpAfterDays())
                 .followUpInstructions(p.getFollowUpInstructions())
                 .dietInstructions(p.getDietInstructions())
                 .activityRestrictions(p.getActivityRestrictions())

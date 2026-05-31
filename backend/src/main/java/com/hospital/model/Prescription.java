@@ -60,6 +60,9 @@ public class Prescription {
     @Column(name = "follow_up_date")
     private LocalDate followUpDate;
 
+    @Column(name = "follow_up_after_days")
+    private Integer followUpAfterDays;
+
     @Column(name = "follow_up_instructions", columnDefinition = "TEXT")
     private String followUpInstructions;
 
