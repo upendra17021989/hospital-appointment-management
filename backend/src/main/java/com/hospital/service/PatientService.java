@@ -3,7 +3,9 @@ package com.hospital.service;
 import com.hospital.dto.Dtos.*;
 import com.hospital.model.Hospital;
 import com.hospital.model.Patient;
+import com.hospital.model.PatientMedicalProfile;
 import com.hospital.repository.HospitalRepo;
+import com.hospital.repository.PatientMedicalProfileRepo;
 import com.hospital.repository.PatientRepo;
 import com.hospital.security.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import java.util.UUID;
 public class PatientService {
 
     private final PatientRepo patientRepo;
+    private final PatientMedicalProfileRepo medicalProfileRepo;
     private final HospitalRepo hospitalRepo;
     private final TenantContext tenantContext;
 
@@ -48,7 +51,9 @@ public class PatientService {
                 .medicalHistory(request.getMedicalHistory())
                 .allergies(request.getAllergies())
                 .build();
-        return mapToResponse(patientRepo.save(patient));
+        Patient saved = patientRepo.save(patient);
+        saveMedicalProfile(saved, hospital, request);
+        return mapToResponse(saved);
     }
 
     public Optional<PatientResponse> getPatientById(UUID id) {
@@ -84,7 +89,9 @@ public class PatientService {
         patient.setEmergencyContactPhone(request.getEmergencyContactPhone());
         patient.setMedicalHistory(request.getMedicalHistory());
         patient.setAllergies(request.getAllergies());
-        return mapToResponse(patientRepo.save(patient));
+        Patient saved = patientRepo.save(patient);
+        saveMedicalProfile(saved, patient.getHospital(), request);
+        return mapToResponse(saved);
     }
 
 public List<PatientResponse> getHospitalPatients(UUID hospitalId) {
@@ -183,7 +190,9 @@ public List<PatientResponse> getHospitalPatients(UUID hospitalId) {
         patient.setMedicalHistory(request.getMedicalHistory());
         patient.setAllergies(request.getAllergies());
 
-        return mapToResponse(patientRepo.save(patient));
+        Patient saved = patientRepo.save(patient);
+        saveMedicalProfile(saved, patient.getHospital(), request);
+        return mapToResponse(saved);
     }
 
     public Optional<PatientResponse> getHospitalPatientById(UUID hospitalId, UUID id) {
@@ -192,8 +201,69 @@ public List<PatientResponse> getHospitalPatients(UUID hospitalId) {
                 .map(this::mapToResponse);
     }
 
+    private void saveMedicalProfile(Patient patient, Hospital hospital, PatientRequest request) {
+        if (!hasMedicalProfileData(request)) {
+            return;
+        }
+
+        PatientMedicalProfile profile = medicalProfileRepo.findByPatient_Id(patient.getId())
+                .orElseGet(() -> PatientMedicalProfile.builder().patient(patient).build());
+
+        profile.setHospital(hospital);
+        profile.setBloodGroup(blankToNull(request.getBloodGroup()));
+        profile.setHeightCm(request.getHeightCm());
+        profile.setWeightKg(request.getWeightKg());
+        profile.setKnownAllergies(blankToNull(request.getAllergies()));
+        profile.setChronicConditions(blankToNull(request.getChronicConditions()));
+        profile.setCurrentMedications(blankToNull(request.getCurrentMedications()));
+        profile.setPastSurgeries(blankToNull(request.getPastSurgeries()));
+        profile.setFamilyHistory(blankToNull(request.getFamilyHistory()));
+        profile.setSmokingStatus(blankToNull(request.getSmokingStatus()));
+        profile.setAlcoholConsumption(blankToNull(request.getAlcoholConsumption()));
+        profile.setOccupation(blankToNull(request.getOccupation()));
+        profile.setInsuranceProvider(blankToNull(request.getInsuranceProvider()));
+        profile.setInsurancePolicyNumber(blankToNull(request.getInsurancePolicyNumber()));
+        profile.setEmergencyContactName(blankToNull(request.getEmergencyContactName()));
+        profile.setEmergencyContactPhone(blankToNull(request.getEmergencyContactPhone()));
+        profile.setEmergencyContactRelation(blankToNull(request.getEmergencyContactRelation()));
+
+        medicalProfileRepo.save(profile);
+    }
+
+    private boolean hasMedicalProfileData(PatientRequest request) {
+        return request.getHeightCm() != null
+                || request.getWeightKg() != null
+                || isNotBlank(request.getBloodGroup())
+                || isNotBlank(request.getAllergies())
+                || isNotBlank(request.getChronicConditions())
+                || isNotBlank(request.getCurrentMedications())
+                || isNotBlank(request.getPastSurgeries())
+                || isNotBlank(request.getFamilyHistory())
+                || isNotBlank(request.getSmokingStatus())
+                || isNotBlank(request.getAlcoholConsumption())
+                || isNotBlank(request.getOccupation())
+                || isNotBlank(request.getInsuranceProvider())
+                || isNotBlank(request.getInsurancePolicyNumber())
+                || isNotBlank(request.getEmergencyContactName())
+                || isNotBlank(request.getEmergencyContactPhone())
+                || isNotBlank(request.getEmergencyContactRelation());
+    }
+
+    private static boolean isNotBlank(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     private PatientResponse mapToResponse(Patient p) {
-        return PatientResponse.builder()
+        PatientMedicalProfile profile = medicalProfileRepo.findByPatient_Id(p.getId()).orElse(null);
+        return mapToResponse(p, profile);
+    }
+
+    private PatientResponse mapToResponse(Patient p, PatientMedicalProfile profile) {
+        PatientResponse.PatientResponseBuilder builder = PatientResponse.builder()
                 .id(p.getId())
                 .firstName(p.getFirstName())
                 .lastName(p.getLastName())
@@ -209,7 +279,16 @@ public List<PatientResponse> getHospitalPatients(UUID hospitalId) {
                 .emergencyContactPhone(p.getEmergencyContactPhone())
                 .medicalHistory(p.getMedicalHistory())
                 .allergies(p.getAllergies())
-                .createdAt(p.getCreatedAt())
-                .build();
+                .createdAt(p.getCreatedAt());
+
+        if (profile != null) {
+            builder.heightCm(profile.getHeightCm());
+            builder.weightKg(profile.getWeightKg());
+            if (profile.getBloodGroup() != null) {
+                builder.bloodGroup(profile.getBloodGroup());
+            }
+        }
+
+        return builder.build();
     }
 }

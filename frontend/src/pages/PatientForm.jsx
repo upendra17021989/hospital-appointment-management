@@ -218,6 +218,24 @@ const PatientForm = ({ prefillData, onSaved }) => {
         allergies: medical.knownAllergies || null,
         emergencyContactName: emergency.emergencyContactName || null,
         emergencyContactPhone: emergency.emergencyContactPhone || null,
+        emergencyContactRelation: emergency.emergencyContactRelation || null,
+        heightCm: medical.height ? parseFloat(medical.height) : null,
+        weightKg: medical.weight ? parseFloat(medical.weight) : null,
+        chronicConditions: medical.chronicConditions || null,
+        currentMedications: medical.currentMedications || null,
+        pastSurgeries: medical.pastSurgeries || null,
+        familyHistory:
+          [
+            medical.familyHistory,
+            medical.vaccinationHistory && `Vaccinations: ${medical.vaccinationHistory}`,
+          ]
+            .filter(Boolean)
+            .join('\n') || null,
+        smokingStatus: lifestyle.smokingStatus || null,
+        alcoholConsumption: lifestyle.alcoholConsumption || null,
+        occupation: lifestyle.occupation || null,
+        insuranceProvider: lifestyle.insuranceProvider || null,
+        insurancePolicyNumber: lifestyle.insurancePolicyNumber || null,
       };
 
       const saved = await api.post('/patients', payload);

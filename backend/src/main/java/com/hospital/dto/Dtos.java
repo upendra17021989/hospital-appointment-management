@@ -76,8 +76,21 @@ public class Dtos {
         private String bloodGroup;
         private String emergencyContactName;
         private String emergencyContactPhone;
+        private String emergencyContactRelation;
         private String medicalHistory;
         private String allergies;
+
+        private BigDecimal heightCm;
+        private BigDecimal weightKg;
+        private String chronicConditions;
+        private String currentMedications;
+        private String pastSurgeries;
+        private String familyHistory;
+        private String smokingStatus;
+        private String alcoholConsumption;
+        private String occupation;
+        private String insuranceProvider;
+        private String insurancePolicyNumber;
     }
 
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
@@ -97,6 +110,8 @@ public class Dtos {
         private String emergencyContactPhone;
         private String medicalHistory;
         private String allergies;
+        private BigDecimal heightCm;
+        private BigDecimal weightKg;
         private LocalDateTime createdAt;
     }
 

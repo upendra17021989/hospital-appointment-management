@@ -318,13 +318,42 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
   });
 
   const [vitals, setVitals] = useState({ bp: '', pulse: '', temp: '', weight: '', height: '', spo2: '', rr: '' });
-  const [medicines, setMedicines] = useState([]);
-  const [labTests,  setLabTests]  = useState([]);
 
-const [selectedPatient, setSelectedPatient] = useState(routePrefillPatient || prefillPatient || null);
+  const [selectedPatient, setSelectedPatient] = useState(routePrefillPatient || prefillPatient || null);
   const [selectedDoctor,  setSelectedDoctor]  = useState(prefillDoctor  || null);
   const [commonMedicines, setCommonMedicines] = useState([]);
   const [commonTests,     setCommonTests]     = useState([]);
+
+  const [medicines, setMedicines] = useState([]);
+  const [labTests,  setLabTests]  = useState([]);
+
+  // Load full patient record (includes height/weight from medical profile)
+  useEffect(() => {
+    if (!form.patientId) return;
+    api.get(`/patients/hospital/${form.patientId}`)
+      .then((p) => { if (p) setSelectedPatient(p); })
+      .catch(() => {});
+  }, [form.patientId]);
+
+  // Prefill or clear height/weight when patient selection changes
+  useEffect(() => {
+    if (!selectedPatient) {
+      setVitals((v) => ({ ...v, weight: '', height: '' }));
+      return;
+    }
+
+    const nextWeight =
+      selectedPatient.weightKg ?? selectedPatient.weight ?? selectedPatient?.medical?.weightKg;
+    const nextHeight =
+      selectedPatient.heightCm ?? selectedPatient.height ?? selectedPatient?.medical?.heightCm;
+
+    setVitals((v) => ({
+      ...v,
+      weight: nextWeight != null && nextWeight !== '' ? String(nextWeight) : '',
+      height: nextHeight != null && nextHeight !== '' ? String(nextHeight) : '',
+    }));
+  }, [selectedPatient?.id, selectedPatient?.weightKg, selectedPatient?.heightCm]);
+
 
   useEffect(() => {
     api.get('/doctors/hospital/list').then(setDoctors).catch(() => {});
@@ -487,7 +516,16 @@ const [selectedPatient, setSelectedPatient] = useState(routePrefillPatient || pr
                   <div style={{ fontWeight: 700 }}>{selectedPatient.fullName}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{selectedPatient.phone} · {selectedPatient.bloodGroup || 'Blood group unknown'}</div>
                 </div>
-                <button className="rx-clear-btn" onClick={() => { setSelectedPatient(null); setForm(f => ({ ...f, patientId: '' })); }}>✕ Change</button>
+                <button
+                  className="rx-clear-btn"
+                  onClick={() => {
+                    setSelectedPatient(null);
+                    setPatientSearch('');
+                    setForm((f) => ({ ...f, patientId: '' }));
+                  }}
+                >
+                  ✕ Change
+                </button>
               </div>
             ) : (
               <div style={{ position: 'relative' }}>
