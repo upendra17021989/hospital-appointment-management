@@ -138,6 +138,7 @@ public class PrescriptionController {
     public static class PatientInfo {
         private UUID id; private String fullName;
         private String phone; private String email;
+        private Integer age;
         private String gender; private String bloodGroup;
     }
 
@@ -466,6 +467,7 @@ public ResponseEntity<ApiResponse<String>> sendPrescription(
                 .fullName(p.getPatient().getFullName())
                 .phone(p.getPatient().getPhone())
                 .email(p.getPatient().getEmail())
+                .age(p.getPatient().getAge())
                 .gender(p.getPatient().getGender())
                 .bloodGroup(p.getPatient().getBloodGroup())
                 .build();

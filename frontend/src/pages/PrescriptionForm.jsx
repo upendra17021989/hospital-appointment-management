@@ -207,6 +207,14 @@ const printPrescription = (data) => {
   let vitals = {};
   try { vitals = JSON.parse(vitalSigns || '{}'); } catch {}
 
+  const patientHeight = vitals.height || '';
+  const patientWeight = vitals.weight || '';
+  const visitVitals = { bp: vitals.bp, pulse: vitals.pulse, temp: vitals.temp, spo2: vitals.spo2, rr: vitals.rr };
+  const ageGender = [
+    patient?.age != null ? `${patient.age} yrs` : '',
+    patient?.gender ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1) : '',
+  ].filter(Boolean).join(' / ') || '—';
+
   const followUpHtml = followUpAfterDays === 0
     ? `<div class="followup followup-none" style="margin-top:12px">No follow-up required.</div>`
     : followUpDate
@@ -257,19 +265,20 @@ const printPrescription = (data) => {
 
     <div class="patient-box">
       <div class="item"><label>Patient</label><div>${patient?.fullName || ''}</div></div>
-      <div class="item"><label>Age / Gender</label><div>${patient?.gender || ''}</div></div>
+      <div class="item"><label>Age / Gender</label><div>${ageGender}</div></div>
+      ${patientHeight ? `<div class="item"><label>Height</label><div>${patientHeight} cm</div></div>` : ''}
+      ${patientWeight ? `<div class="item"><label>Weight</label><div>${patientWeight} kg</div></div>` : ''}
       <div class="item"><label>Phone</label><div>${patient?.phone || ''}</div></div>
       ${patient?.bloodGroup ? `<div class="item"><label>Blood Group</label><div>${patient.bloodGroup}</div></div>` : ''}
     </div>
 
-    ${Object.keys(vitals).some(k => vitals[k]) ? `
+    ${Object.keys(visitVitals).some(k => visitVitals[k]) ? `
     <div class="vitals">
-      ${vitals.bp       ? `<div class="vital">BP: <span>${vitals.bp}</span> mmHg</div>` : ''}
-      ${vitals.pulse    ? `<div class="vital">Pulse: <span>${vitals.pulse}</span> bpm</div>` : ''}
-      ${vitals.temp     ? `<div class="vital">Temp: <span>${vitals.temp}</span>°F</div>` : ''}
-      ${vitals.weight   ? `<div class="vital">Weight: <span>${vitals.weight}</span> kg</div>` : ''}
-      ${vitals.height   ? `<div class="vital">Height: <span>${vitals.height}</span> cm</div>` : ''}
-      ${vitals.spo2     ? `<div class="vital">SpO₂: <span>${vitals.spo2}</span>%</div>` : ''}
+      ${visitVitals.bp    ? `<div class="vital">BP: <span>${visitVitals.bp}</span> mmHg</div>` : ''}
+      ${visitVitals.pulse ? `<div class="vital">Pulse: <span>${visitVitals.pulse}</span> bpm</div>` : ''}
+      ${visitVitals.temp  ? `<div class="vital">Temp: <span>${visitVitals.temp}</span>°F</div>` : ''}
+      ${visitVitals.spo2  ? `<div class="vital">SpO₂: <span>${visitVitals.spo2}</span>%</div>` : ''}
+      ${visitVitals.rr    ? `<div class="vital">Resp. Rate: <span>${visitVitals.rr}</span> /min</div>` : ''}
     </div>` : ''}
 
     <h4>Diagnosis</h4>
