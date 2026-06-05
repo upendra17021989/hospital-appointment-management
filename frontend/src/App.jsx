@@ -19,6 +19,7 @@ import PrescriptionForm from './pages/PrescriptionForm';
 import UserManagement   from './pages/UserManagement';
 import SubscriptionPlans from './pages/SubscriptionPlans';
 import BillingHistory   from './pages/BillingHistory';
+import Reports          from './pages/Reports';
 
 const Login  = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
@@ -63,6 +64,7 @@ const ROUTE_CONFIG = [
   { path: '/prescription-form', component: PrescriptionForm, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/subscription-plans', component: SubscriptionPlans, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/billing-history', component: BillingHistory, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/reports', component: Reports, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
 ];
 
 const Layout = () => {
@@ -164,4 +166,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-

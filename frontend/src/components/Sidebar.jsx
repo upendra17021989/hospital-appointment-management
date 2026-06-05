@@ -71,6 +71,16 @@ const getNavGroups = (role) => {
     });
   }
 
+  if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'reports',
+      label: 'Reports',
+      items: [
+        { id: 'reports', label: 'Patient Reports', icon: 'dashboard' },
+      ],
+    });
+  }
+
   roleBasedGroups.push({
     key: 'directory',
     label: 'Directory',

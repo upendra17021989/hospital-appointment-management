@@ -452,6 +452,146 @@
   }
 }
 
+// ── Reports ───────────────────────────────────────────────────
+.report-filters {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  @include responsive-mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-results {
+  margin-top: 8px;
+}
+
+.report-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.report-tab {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: $text-muted;
+  font-family: $font-body;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    background: $border;
+    color: $text;
+  }
+
+  &.active {
+    background: $primary;
+    color: white;
+  }
+}
+
+.report-section {
+  animation: fadeIn 0.25s ease;
+}
+
+.report-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+
+  @include responsive-mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.report-stat-card {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  padding: 24px;
+  border: 2px solid $border;
+  box-shadow: $shadow;
+  text-align: center;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &.accent {
+    border-color: $accent;
+    background: rgba($accent, 0.03);
+  }
+
+  &.dark {
+    border-color: $bg-dark;
+    background: rgba($bg-dark, 0.03);
+  }
+}
+
+.report-stat-value {
+  @include display-font;
+  font-size: 40px;
+  font-weight: 800;
+  color: $text;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.report-stat-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-stat-desc {
+  font-size: 12px;
+  color: $text-muted;
+  margin-top: 8px;
+}
+
+.empty-cell {
+  text-align: center;
+  color: $text-muted;
+  padding: 32px !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 // ── Search Bar ────────────────────────────────────────────────
 .search-bar {
   display: flex;
