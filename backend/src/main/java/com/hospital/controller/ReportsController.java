@@ -45,11 +45,65 @@ public class ReportsController {
         result.put("startDate", startDate.toString());
         result.put("endDate", endDate.toString());
 
-        // All Patients
+        // All Patients (aggregate)
         Map<String, Object> allPatients = new LinkedHashMap<>();
         allPatients.put("totalUniquePatients", uniquePatientIds.size());
         allPatients.put("totalVisits", appointments.size());
         result.put("allPatients", allPatients);
+
+        // Patients list (basic details) — used for table rendering on frontend
+        // We show one row per unique patient, plus their last visit date/time within the range.
+        Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
+        for (Appointment a : appointments) {
+            UUID pid = a.getPatient().getId();
+            Appointment current = lastVisitByPatient.get(pid);
+            if (current == null) {
+                lastVisitByPatient.put(pid, a);
+            } else {
+                // compare by date then time
+                if (a.getAppointmentDate().isAfter(current.getAppointmentDate())
+                        || (a.getAppointmentDate().isEqual(current.getAppointmentDate())
+                        && a.getAppointmentTime().compareTo(current.getAppointmentTime()) > 0)) {
+                    lastVisitByPatient.put(pid, a);
+                }
+            }
+        }
+
+        // Pre-compute visit counts per patient to avoid repeated O(n^2) counting
+        Map<UUID, Long> visitCountByPatientId = appointments.stream()
+                .collect(Collectors.groupingBy(a -> a.getPatient().getId(), Collectors.counting()));
+
+        List<Map<String, Object>> patientsList = lastVisitByPatient.values().stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    Patient p = a.getPatient();
+
+                    long visitCount = visitCountByPatientId.getOrDefault(p.getId(), 0L);
+
+                    m.put("patientId", p.getId());
+                    m.put("patientName", p.getFullName());
+                    m.put("age", p.getAge());
+                    m.put("gender", p.getGender());
+                    m.put("phone", p.getPhone());
+                    m.put("lastVisitDate", a.getAppointmentDate());
+                    m.put("lastVisitTime", a.getAppointmentTime());
+                    m.put("visitCount", visitCount);
+                    return m;
+                })
+                .sorted((m1, m2) -> {
+                    // sort by lastVisitDate desc
+                    LocalDate d1 = (LocalDate) m1.get("lastVisitDate");
+                    LocalDate d2 = (LocalDate) m2.get("lastVisitDate");
+                    if (d1 != null && d2 != null) {
+                        return d2.compareTo(d1);
+                    }
+                    return 0;
+                })
+                .collect(Collectors.toList());
+
+
+        result.put("patientsList", patientsList);
+
 
         // Department-wise
         Map<String, Long> deptWise = appointments.stream()
