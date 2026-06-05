@@ -45,6 +45,7 @@ public class SecurityConfig {
         "/swagger-ui/**",
         "/swagger-ui.html",
         "/payments/webhook",
+        "/reports/**",
     };
 
     private static final String[] HOSPITAL_ADMIN_ENDPOINTS = {
@@ -61,6 +62,7 @@ public class SecurityConfig {
         "/appointments/**",
         "/enquiries/**",
     };
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

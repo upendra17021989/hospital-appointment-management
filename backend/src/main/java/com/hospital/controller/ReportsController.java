@@ -167,6 +167,98 @@ public class ReportsController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @GetMapping("/patients/download")
+    @Operation(summary = "Download patient visit report between dates (CSV)")
+    public ResponseEntity<byte[]> downloadPatientsReport(
+
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        // returns CSV
+
+
+        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
+        // Unique patients
+        Set<UUID> uniquePatientIds = appointments.stream()
+                .map(a -> a.getPatient().getId())
+                .collect(Collectors.toSet());
+
+        Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
+        for (Appointment a : appointments) {
+            UUID pid = a.getPatient().getId();
+            Appointment current = lastVisitByPatient.get(pid);
+            if (current == null) {
+                lastVisitByPatient.put(pid, a);
+            } else {
+                if (a.getAppointmentDate().isAfter(current.getAppointmentDate())
+                        || (a.getAppointmentDate().isEqual(current.getAppointmentDate())
+                        && a.getAppointmentTime().compareTo(current.getAppointmentTime()) > 0)) {
+                    lastVisitByPatient.put(pid, a);
+                }
+            }
+        }
+
+        Map<UUID, Long> visitCountByPatientId = appointments.stream()
+                .collect(Collectors.groupingBy(a -> a.getPatient().getId(), Collectors.counting()));
+
+        List<Map<String, Object>> patientsList = lastVisitByPatient.values().stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    Patient p = a.getPatient();
+                    m.put("patientId", p.getId());
+                    m.put("patientName", p.getFullName());
+                    m.put("age", p.getAge());
+                    m.put("gender", p.getGender());
+                    m.put("phone", p.getPhone());
+                    m.put("lastVisitDate", a.getAppointmentDate());
+                    m.put("lastVisitTime", a.getAppointmentTime());
+                    m.put("visitCount", visitCountByPatientId.getOrDefault(p.getId(), 0L));
+                    return m;
+                })
+                .sorted((m1, m2) -> {
+                    LocalDate d1 = (LocalDate) m1.get("lastVisitDate");
+                    LocalDate d2 = (LocalDate) m2.get("lastVisitDate");
+                    if (d1 != null && d2 != null) return d2.compareTo(d1);
+                    return 0;
+                })
+                .collect(Collectors.toList());
+
+        // Build CSV
+        StringBuilder sb = new StringBuilder();
+        sb.append("PatientId,PatientName,Age,Gender,Phone,LastVisitDate,LastVisitTime,VisitCount\n");
+        for (Map<String, Object> row : patientsList) {
+            UUID pid = (UUID) row.get("patientId");
+            String patientName = String.valueOf(row.get("patientName"));
+            Integer age = (Integer) row.get("age");
+            String gender = String.valueOf(row.get("gender"));
+            String phone = String.valueOf(row.get("phone"));
+            LocalDate lastVisitDate = (LocalDate) row.get("lastVisitDate");
+            Object lastVisitTime = row.get("lastVisitTime");
+            Long visitCount = (Long) row.get("visitCount");
+
+            // CSV escape minimal (quotes)
+            sb.append(pid).append(",")
+                    .append('"').append(patientName.replace("\"", "\"\"")).append("\"").append(",")
+                    .append(age == null ? "" : age).append(",")
+                    .append('"').append(gender == null ? "" : gender.replace("\"", "\"\"")).append("\"").append(",")
+                    .append('"').append(phone == null ? "" : phone.replace("\"", "\"\"")).append("\"").append(",")
+                    .append(lastVisitDate == null ? "" : lastVisitDate).append(",")
+                    .append(lastVisitTime == null ? "" : lastVisitTime).append(",")
+                    .append(visitCount == null ? "" : visitCount)
+                    .append("\n");
+        }
+
+        byte[] bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        String filename = "patient-report-" + startDate + "-" + endDate + ".csv";
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/csv; charset=UTF-8")
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(bytes);
+    }
+
     private List<Appointment> getAppointmentsInRange(UUID hospitalId, LocalDate start, LocalDate end) {
         if (hospitalId != null) {
             // Filter appointments within date range for this hospital

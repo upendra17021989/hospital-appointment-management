@@ -215,6 +215,18 @@ const Reports = () => {
         <button className="btn btn-primary" onClick={fetchReports} disabled={loading}>
           {loading ? 'Loading...' : 'Generate Report'}
         </button>
+        <button
+          className="btn btn-secondary"
+          onClick={() => {
+            if (!startDate || !endDate) {
+              setError('Please select both start and end dates to download.');
+              return;
+            }
+            window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5173/api'}/reports/patients/download?startDate=${startDate}&endDate=${endDate}`;
+          }}
+        >
+          ⬇️ Download CSV
+        </button>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
