@@ -4,13 +4,19 @@ import com.hospital.dto.Dtos.ApiResponse;
 import com.hospital.model.*;
 import com.hospital.repository.*;
 import com.hospital.security.TenantContext;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -258,6 +264,98 @@ public class ReportsController {
                 .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
                 .body(bytes);
     }
+
+    @GetMapping("/patients/download/pdf")
+    @Operation(summary = "Download patient visit report between dates (PDF)")
+    public ResponseEntity<byte[]> downloadPatientsReportPdf(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
+        Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
+        for (Appointment a : appointments) {
+            UUID pid = a.getPatient().getId();
+            Appointment current = lastVisitByPatient.get(pid);
+            if (current == null) {
+                lastVisitByPatient.put(pid, a);
+            } else {
+                if (a.getAppointmentDate().isAfter(current.getAppointmentDate())
+                        || (a.getAppointmentDate().isEqual(current.getAppointmentDate())
+                        && a.getAppointmentTime().compareTo(current.getAppointmentTime()) > 0)) {
+                    lastVisitByPatient.put(pid, a);
+                }
+            }
+        }
+
+        Map<UUID, Long> visitCountByPatientId = appointments.stream()
+                .collect(Collectors.groupingBy(a -> a.getPatient().getId(), Collectors.counting()));
+
+        List<Map<String, Object>> patientsList = lastVisitByPatient.values().stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    Patient p = a.getPatient();
+                    m.put("patientId", p.getId());
+                    m.put("patientName", p.getFullName());
+                    m.put("age", p.getAge());
+                    m.put("gender", p.getGender());
+                    m.put("phone", p.getPhone());
+                    m.put("lastVisitDate", a.getAppointmentDate());
+                    m.put("lastVisitTime", a.getAppointmentTime());
+                    m.put("visitCount", visitCountByPatientId.getOrDefault(p.getId(), 0L));
+                    return m;
+                })
+                .sorted((m1, m2) -> {
+                    LocalDate d1 = (LocalDate) m1.get("lastVisitDate");
+                    LocalDate d2 = (LocalDate) m2.get("lastVisitDate");
+                    if (d1 != null && d2 != null) return d2.compareTo(d1);
+                    return 0;
+                })
+                .toList();
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(out);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document document = new Document(pdf);
+
+        document.add(new Paragraph("Patient Visit Report"));
+        document.add(new Paragraph("Start Date: " + startDate));
+        document.add(new Paragraph("End Date: " + endDate));
+        document.add(new Paragraph(" "));
+
+        document.add(new Paragraph("Patients:"));
+        for (Map<String, Object> row : patientsList) {
+            UUID pid = (UUID) row.get("patientId");
+            String patientName = String.valueOf(row.get("patientName"));
+            Integer age = (Integer) row.get("age");
+            String gender = String.valueOf(row.get("gender"));
+            String phone = String.valueOf(row.get("phone"));
+            LocalDate lastVisitDate = (LocalDate) row.get("lastVisitDate");
+            Object lastVisitTime = row.get("lastVisitTime");
+            Long visitCount = (Long) row.get("visitCount");
+
+            document.add(new Paragraph(
+                    "- " + patientName + " (ID: " + pid + ")" +
+                            " | Age: " + (age == null ? "" : age) +
+                            " | Gender: " + (gender == null ? "" : gender) +
+                            " | Phone: " + (phone == null ? "" : phone) +
+                            " | Last Visit: " + (lastVisitDate == null ? "" : lastVisitDate) +
+                            (lastVisitTime == null ? "" : (" " + lastVisitTime)) +
+                            " | Visits: " + (visitCount == null ? "" : visitCount)
+            ));
+        }
+
+        document.close();
+        byte[] bytes = out.toByteArray();
+        String filename = "patient-report-" + startDate + "-" + endDate + ".pdf";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(bytes);
+    }
+
 
     private List<Appointment> getAppointmentsInRange(UUID hospitalId, LocalDate start, LocalDate end) {
         if (hospitalId != null) {
