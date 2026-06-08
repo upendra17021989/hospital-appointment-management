@@ -244,8 +244,77 @@ public class ReportsController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @GetMapping("/patients/by-doctor")
+    @Operation(summary = "Get patient visit records between dates for a specific doctor")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDoctorPatients(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam String doctor) {
+
+        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
+        List<Appointment> docAppointments = appointments.stream()
+                .filter(a -> a.getDoctor() != null && doctor.equals(a.getDoctor().getFullName()))
+                .collect(Collectors.toList());
+
+        // Pre-compute visit counts per patient
+        Map<UUID, Long> visitCountByPatientId = docAppointments.stream()
+                .collect(Collectors.groupingBy(a -> a.getPatient().getId(), Collectors.counting()));
+
+        // last visit per unique patient
+        Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
+        for (Appointment a : docAppointments) {
+            UUID pid = a.getPatient().getId();
+            Appointment current = lastVisitByPatient.get(pid);
+            if (current == null) {
+                lastVisitByPatient.put(pid, a);
+            } else {
+                if (a.getAppointmentDate().isAfter(current.getAppointmentDate())
+                        || (a.getAppointmentDate().isEqual(current.getAppointmentDate())
+                        && a.getAppointmentTime().compareTo(current.getAppointmentTime()) > 0)) {
+                    lastVisitByPatient.put(pid, a);
+                }
+            }
+        }
+
+        List<Map<String, Object>> patientsList = lastVisitByPatient.values().stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    Patient p = a.getPatient();
+                    long visitCount = visitCountByPatientId.getOrDefault(p.getId(), 0L);
+
+                    m.put("patientId", p.getId());
+                    m.put("patientName", p.getFullName());
+                    m.put("age", p.getAge());
+                    m.put("gender", p.getGender());
+                    m.put("phone", p.getPhone());
+                    m.put("lastVisitDate", a.getAppointmentDate());
+                    m.put("lastVisitTime", a.getAppointmentTime());
+                    m.put("visitCount", visitCount);
+                    return m;
+                })
+                .sorted((m1, m2) -> {
+                    LocalDate d1 = (LocalDate) m1.get("lastVisitDate");
+                    LocalDate d2 = (LocalDate) m2.get("lastVisitDate");
+                    if (d1 != null && d2 != null) {
+                        return d2.compareTo(d1);
+                    }
+                    return 0;
+                })
+                .collect(Collectors.toList());
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("startDate", startDate.toString());
+        result.put("endDate", endDate.toString());
+        result.put("doctor", doctor);
+        result.put("patientsList", patientsList);
+
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
 
     @GetMapping("/patients/download")
+
     @Operation(summary = "Download patient visit report between dates (CSV)")
     public ResponseEntity<byte[]> downloadPatientsReport(
 
