@@ -18,6 +18,15 @@ const Reports = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
+  const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [departmentPatients, setDepartmentPatients] = useState(null);
+  const [departmentLoading, setDepartmentLoading] = useState(false);
+
+  const resetDepartmentDrilldown = useCallback(() => {
+    setSelectedDepartment('');
+    setDepartmentPatients(null);
+  }, []);
+
   const fetchReports = useCallback(async () => {
     if (!startDate || !endDate) {
       setError('Please select both start and end dates.');
@@ -28,11 +37,32 @@ const Reports = () => {
     try {
       const result = await api.get(`/reports/patients?startDate=${startDate}&endDate=${endDate}`);
       setData(result);
+      resetDepartmentDrilldown();
     } catch (err) {
       setError(err.message || 'Failed to fetch reports');
       setData(null);
+      resetDepartmentDrilldown();
     } finally {
       setLoading(false);
+    }
+  }, [startDate, endDate, resetDepartmentDrilldown]);
+
+  const fetchDepartmentPatients = useCallback(async (departmentName) => {
+
+    if (!startDate || !endDate || !departmentName) return;
+
+    setDepartmentLoading(true);
+    setDepartmentPatients(null);
+    try {
+      const result = await api.get(
+        `/reports/patients/by-department?startDate=${startDate}&endDate=${endDate}&department=${encodeURIComponent(departmentName)}`
+      );
+      setDepartmentPatients(result);
+      setSelectedDepartment(departmentName);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch department patient records');
+    } finally {
+      setDepartmentLoading(false);
     }
   }, [startDate, endDate]);
 
@@ -40,6 +70,7 @@ const Reports = () => {
     if (!data) return null;
 
     switch (activeTab) {
+
       case 'all':
         return (
           <div className="report-section">
@@ -110,19 +141,81 @@ const Reports = () => {
                   {(data.departmentWise || []).length === 0 ? (
                     <tr><td colSpan={3} className="empty-cell">No data available</td></tr>
                   ) : (
-                    (data.departmentWise || []).map((item, idx) => (
-                      <tr key={idx}>
-                        <td>{idx + 1}</td>
-                        <td><strong>{item.department}</strong></td>
-                        <td>{item.patientCount}</td>
-                      </tr>
-                    ))
+                    (data.departmentWise || []).map((item, idx) => {
+                      const isActive = selectedDepartment === item.department;
+                      return (
+                        <tr key={idx}>
+                          <td>{idx + 1}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className={`btn-linkish ${isActive ? 'active' : ''}`}
+                              style={{ padding: 0, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                              onClick={() => fetchDepartmentPatients(item.department)}
+                            >
+                              <strong>{item.department}</strong>
+                            </button>
+                          </td>
+                          <td>{item.patientCount}</td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
+
+            <div style={{ marginTop: 16 }}>
+              {departmentLoading && <LoadingSpinner />}
+
+              {!departmentLoading && selectedDepartment && (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Patient</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Phone</th>
+                        <th>Last Visit</th>
+                        <th>Visits</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(departmentPatients?.patientsList || []).length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="empty-cell">No patient data available for {selectedDepartment}</td>
+                        </tr>
+                      ) : (
+                        (departmentPatients?.patientsList || []).map((p, idx) => (
+                          <tr key={p.patientId || idx}>
+                            <td>{idx + 1}</td>
+                            <td><strong>{p.patientName || '—'}</strong></td>
+                            <td>{p.age ?? '—'}</td>
+                            <td>{p.gender || '—'}</td>
+                            <td>{p.phone || '—'}</td>
+                            <td>
+                              {p.lastVisitDate || '—'}{p.lastVisitTime ? ` · ${p.lastVisitTime}` : ''}
+                            </td>
+                            <td>{p.visitCount ?? 0}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {!departmentLoading && !selectedDepartment && (
+                <div className="empty-hint" style={{ opacity: 0.8, padding: '12px 0' }}>
+                  Click a department name to view its patient records.
+                </div>
+              )}
+            </div>
           </div>
         );
+
       case 'doctor':
         return (
           <div className="report-section">
