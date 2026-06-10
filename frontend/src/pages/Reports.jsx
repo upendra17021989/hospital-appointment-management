@@ -408,7 +408,35 @@ const Reports = () => {
               setError('Please select both start and end dates to download.');
               return;
             }
-            window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5173/api'}/reports/patients/download?startDate=${startDate}&endDate=${endDate}`;
+            const token = localStorage.getItem('hms_token');
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5173/api';
+            const url = `${baseUrl}/reports/patients/download?startDate=${startDate}&endDate=${endDate}`;
+
+            if (!token) {
+              setError('Missing auth token. Please login again.');
+              return;
+            }
+
+            fetch(url, {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            })
+              .then(async (res) => {
+                if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+                const blob = await res.blob();
+                const cd = res.headers.get('Content-Disposition');
+                const match = cd && cd.match(/filename="?([^\"]+)"?/);
+                const filename = match ? match[1] : `patient-report-${startDate}-${endDate}.csv`;
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+              })
+              .catch((e) => setError(e.message || 'Failed to download CSV'));
           }}
         >
           ⬇️ Download CSV
@@ -423,38 +451,61 @@ const Reports = () => {
 
             const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5173/api';
 
-            if (activeTab === 'all') {
-              window.location.href = `${baseUrl}/reports/patients/download/pdf?startDate=${startDate}&endDate=${endDate}`;
+            const token = localStorage.getItem('hms_token');
+            if (!token) {
+              setError('Missing auth token. Please login again.');
               return;
             }
 
-            if (activeTab === 'department') {
+            let url = null;
+            if (activeTab === 'all') {
+              url = `${baseUrl}/reports/patients/download/pdf?startDate=${startDate}&endDate=${endDate}`;
+            } else if (activeTab === 'department') {
               if (!selectedDepartment) {
                 setError('Select a department to download Department-wise PDF.');
                 return;
               }
-              window.location.href = `${baseUrl}/reports/patients/by-department/download/pdf?startDate=${startDate}&endDate=${endDate}&department=${encodeURIComponent(selectedDepartment)}`;
-              return;
-            }
-
-            if (activeTab === 'doctor') {
+              url = `${baseUrl}/reports/patients/by-department/download/pdf?startDate=${startDate}&endDate=${endDate}&department=${encodeURIComponent(selectedDepartment)}`;
+            } else if (activeTab === 'doctor') {
               if (!selectedDoctor) {
                 setError('Select a doctor to download Doctor-wise PDF.');
                 return;
               }
-              window.location.href = `${baseUrl}/reports/patients/by-doctor/download/pdf?startDate=${startDate}&endDate=${endDate}&doctor=${encodeURIComponent(selectedDoctor)}`;
+              url = `${baseUrl}/reports/patients/by-doctor/download/pdf?startDate=${startDate}&endDate=${endDate}&doctor=${encodeURIComponent(selectedDoctor)}`;
+            } else if (activeTab === 'opd') {
+              setError('OPD PDF download is not implemented in the backend.');
+              return;
+            } else if (activeTab === 'ipd') {
+              setError('IPD PDF download is not implemented in the backend.');
+              return;
+            } else {
+              setError('Invalid tab selection for PDF download.');
               return;
             }
 
-            if (activeTab === 'opd') {
-              window.location.href = `${baseUrl}/reports/patients/download/opd/pdf?startDate=${startDate}&endDate=${endDate}`;
-              return;
-            }
+            fetch(url, {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            })
+              .then(async (res) => {
+                if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+                const blob = await res.blob();
+                const cd = res.headers.get('Content-Disposition');
+                const match = cd && cd.match(/filename="?([^\"]+)"?/);
+                const filename = match ? match[1] : `patient-report-${startDate}-${endDate}.pdf`;
 
-            if (activeTab === 'ipd') {
-              window.location.href = `${baseUrl}/reports/patients/download/ipd/pdf?startDate=${startDate}&endDate=${endDate}`;
-              return;
-            }
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+              })
+              .catch((e) => setError(e.message || 'Failed to download PDF'));
+
+            return;
 
             setError('Invalid tab selection for PDF download.');
           }}

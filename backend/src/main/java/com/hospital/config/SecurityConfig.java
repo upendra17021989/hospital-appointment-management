@@ -45,7 +45,6 @@ public class SecurityConfig {
         "/swagger-ui/**",
         "/swagger-ui.html",
         "/payments/webhook",
-        "/reports/**",
     };
 
     private static final String[] HOSPITAL_ADMIN_ENDPOINTS = {
