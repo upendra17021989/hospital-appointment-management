@@ -8,6 +8,15 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Cell;
+
+
+
+
+
+
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -251,6 +260,7 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam String doctor) {
 
+
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
@@ -314,7 +324,6 @@ public class ReportsController {
     }
 
     @GetMapping("/patients/download")
-
     @Operation(summary = "Download patient visit report between dates (CSV)")
     public ResponseEntity<byte[]> downloadPatientsReport(
 
@@ -464,9 +473,22 @@ public class ReportsController {
         document.add(new Paragraph("Start Date: " + startDate));
         document.add(new Paragraph("End Date: " + endDate));
         document.add(new Paragraph(" "));
+        Table table = new Table(new float[]{1.2f, 3f, 1.2f, 1.6f, 2f, 2.2f, 1.2f});
 
-        document.add(new Paragraph("Patients:"));
-        for (Map<String, Object> row : patientsList) {
+
+
+
+        table.addHeaderCell(new Cell().add(new Paragraph("#")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Patient")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Age")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Gender")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Phone")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Last Visit")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Visits")));
+
+        for (int i = 0; i < patientsList.size(); i++) {
+            Map<String, Object> row = patientsList.get(i);
+
             UUID pid = (UUID) row.get("patientId");
             String patientName = String.valueOf(row.get("patientName"));
             Integer age = (Integer) row.get("age");
@@ -476,18 +498,26 @@ public class ReportsController {
             Object lastVisitTime = row.get("lastVisitTime");
             Long visitCount = (Long) row.get("visitCount");
 
-            document.add(new Paragraph(
-                    "- " + patientName + " (ID: " + pid + ")" +
-                            " | Age: " + (age == null ? "" : age) +
-                            " | Gender: " + (gender == null ? "" : gender) +
-                            " | Phone: " + (phone == null ? "" : phone) +
-                            " | Last Visit: " + (lastVisitDate == null ? "" : lastVisitDate) +
-                            (lastVisitTime == null ? "" : (" " + lastVisitTime)) +
-                            " | Visits: " + (visitCount == null ? "" : visitCount)
-            ));
+            String lastVisit = "";
+            if (lastVisitDate != null) {
+                lastVisit = lastVisitDate.toString();
+            }
+            if (lastVisitTime != null) {
+                lastVisit = lastVisit + (lastVisit.isEmpty() ? "" : " · ") + String.valueOf(lastVisitTime);
+            }
+
+            table.addCell(new Cell().add(new Paragraph(String.valueOf(i + 1))));
+            table.addCell(new Cell().add(new Paragraph(patientName + (pid != null ? " (ID: " + pid + ")" : ""))));
+            table.addCell(new Cell().add(new Paragraph(age == null ? "—" : String.valueOf(age))));
+            table.addCell(new Cell().add(new Paragraph(gender == null ? "—" : gender)));
+            table.addCell(new Cell().add(new Paragraph(phone == null ? "—" : phone)));
+            table.addCell(new Cell().add(new Paragraph(lastVisit.isEmpty() ? "—" : lastVisit)));
+            table.addCell(new Cell().add(new Paragraph(visitCount == null ? "0" : String.valueOf(visitCount))));
         }
 
+        document.add(table);
         document.close();
+
         byte[] bytes = out.toByteArray();
         String filename = "patient-report-" + startDate + "-" + endDate + ".pdf";
 
@@ -496,6 +526,7 @@ public class ReportsController {
                 .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
                 .body(bytes);
     }
+
 
 
     private List<Appointment> getAppointmentsInRange(UUID hospitalId, LocalDate start, LocalDate end) {
@@ -507,4 +538,343 @@ public class ReportsController {
         }
         return appointmentRepo.findByDateRange(start, end);
     }
+
+    private static String formatLastVisit(LocalDate d, Object time) {
+        if (d == null && time == null) return "—";
+        String datePart = d == null ? "" : d.toString();
+        String timePart = time == null ? "" : String.valueOf(time);
+        if (datePart.isEmpty()) return timePart;
+        if (timePart.isEmpty()) return datePart;
+        return datePart + " · " + timePart;
+    }
+
+    private List<Map<String, Object>> buildPatientsList(List<Appointment> appointments) {
+        Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
+        for (Appointment a : appointments) {
+            UUID pid = a.getPatient().getId();
+            Appointment current = lastVisitByPatient.get(pid);
+            if (current == null) {
+                lastVisitByPatient.put(pid, a);
+            } else {
+                if (a.getAppointmentDate().isAfter(current.getAppointmentDate())
+                        || (a.getAppointmentDate().isEqual(current.getAppointmentDate())
+                        && a.getAppointmentTime().compareTo(current.getAppointmentTime()) > 0)) {
+                    lastVisitByPatient.put(pid, a);
+                }
+            }
+        }
+
+        Map<UUID, Long> visitCountByPatientId = appointments.stream()
+                .collect(Collectors.groupingBy(a -> a.getPatient().getId(), Collectors.counting()));
+
+        return lastVisitByPatient.values().stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    Patient p = a.getPatient();
+                    m.put("patientId", p.getId());
+                    m.put("patientName", p.getFullName());
+                    m.put("age", p.getAge());
+                    m.put("gender", p.getGender());
+                    m.put("phone", p.getPhone());
+                    m.put("lastVisitDate", a.getAppointmentDate());
+                    m.put("lastVisitTime", a.getAppointmentTime());
+                    m.put("visitCount", visitCountByPatientId.getOrDefault(p.getId(), 0L));
+                    return m;
+                })
+                .sorted((m1, m2) -> {
+                    LocalDate d1 = (LocalDate) m1.get("lastVisitDate");
+                    LocalDate d2 = (LocalDate) m2.get("lastVisitDate");
+                    if (d1 != null && d2 != null) return d2.compareTo(d1);
+                    return 0;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private void fillPatientsTable(Table table, List<Map<String, Object>> patientsList) {
+        for (int i = 0; i < patientsList.size(); i++) {
+            Map<String, Object> row = patientsList.get(i);
+
+            UUID pid = (UUID) row.get("patientId");
+            String patientName = String.valueOf(row.get("patientName"));
+            Integer age = (Integer) row.get("age");
+            String gender = String.valueOf(row.get("gender"));
+            String phone = String.valueOf(row.get("phone"));
+            LocalDate lastVisitDate = (LocalDate) row.get("lastVisitDate");
+            Object lastVisitTime = row.get("lastVisitTime");
+            Long visitCount = (Long) row.get("visitCount");
+
+            table.addCell(new Cell().add(new Paragraph(String.valueOf(i + 1))));
+            table.addCell(new Cell().add(new Paragraph(patientName + (pid != null ? " (ID: " + pid + ")" : ""))));
+            table.addCell(new Cell().add(new Paragraph(age == null ? "—" : String.valueOf(age))));
+            table.addCell(new Cell().add(new Paragraph(gender == null ? "—" : gender)));
+            table.addCell(new Cell().add(new Paragraph(phone == null ? "—" : phone)));
+            table.addCell(new Cell().add(new Paragraph(formatLastVisit(lastVisitDate, lastVisitTime))));
+
+            table.addCell(new Cell().add(new Paragraph(visitCount == null ? "0" : String.valueOf(visitCount))));
+        }
+    }
+
+    // ===== Department Wise PDF Download =====
+    @GetMapping("/patients/by-department/download/pdf")
+    @Operation(summary = "Download patient visit report between dates for a specific department (PDF)")
+    public ResponseEntity<byte[]> downloadDepartmentPatientsReportPdf(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam String department) {
+
+        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
+        List<Appointment> deptAppointments = appointments.stream()
+                .filter(a -> a.getDepartment() != null && department.equals(a.getDepartment().getName()))
+                .collect(Collectors.toList());
+
+        Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
+        for (Appointment a : deptAppointments) {
+            UUID pid = a.getPatient().getId();
+            Appointment current = lastVisitByPatient.get(pid);
+            if (current == null) {
+                lastVisitByPatient.put(pid, a);
+            } else {
+                if (a.getAppointmentDate().isAfter(current.getAppointmentDate())
+                        || (a.getAppointmentDate().isEqual(current.getAppointmentDate())
+                        && a.getAppointmentTime().compareTo(current.getAppointmentTime()) > 0)) {
+                    lastVisitByPatient.put(pid, a);
+                }
+            }
+        }
+
+        Map<UUID, Long> visitCountByPatientId = deptAppointments.stream()
+                .collect(Collectors.groupingBy(a -> a.getPatient().getId(), Collectors.counting()));
+
+        List<Map<String, Object>> patientsList = lastVisitByPatient.values().stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    Patient p = a.getPatient();
+                    m.put("patientId", p.getId());
+                    m.put("patientName", p.getFullName());
+                    m.put("age", p.getAge());
+                    m.put("gender", p.getGender());
+                    m.put("phone", p.getPhone());
+                    m.put("lastVisitDate", a.getAppointmentDate());
+                    m.put("lastVisitTime", a.getAppointmentTime());
+                    m.put("visitCount", visitCountByPatientId.getOrDefault(p.getId(), 0L));
+                    return m;
+                })
+                .sorted((m1, m2) -> {
+                    LocalDate d1 = (LocalDate) m1.get("lastVisitDate");
+                    LocalDate d2 = (LocalDate) m2.get("lastVisitDate");
+                    if (d1 != null && d2 != null) return d2.compareTo(d1);
+                    return 0;
+                })
+                .toList();
+
+        String title = "Patient Visit Report - " + department;
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(out);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document document = new Document(pdf);
+
+        document.add(new Paragraph(title));
+        document.add(new Paragraph("Start Date: " + startDate));
+        document.add(new Paragraph("End Date: " + endDate));
+        document.add(new Paragraph(" "));
+
+        Table table = new Table(new float[]{1.2f, 3f, 1.2f, 1.6f, 2f, 2.2f, 1.2f});
+        table.addHeaderCell(new Cell().add(new Paragraph("#")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Patient")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Age")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Gender")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Phone")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Last Visit")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Visits")));
+
+        for (int i = 0; i < patientsList.size(); i++) {
+            Map<String, Object> row = patientsList.get(i);
+
+            UUID pid = (UUID) row.get("patientId");
+            String patientName = String.valueOf(row.get("patientName"));
+            Integer age = (Integer) row.get("age");
+            String gender = String.valueOf(row.get("gender"));
+            String phone = String.valueOf(row.get("phone"));
+            LocalDate lastVisitDate = (LocalDate) row.get("lastVisitDate");
+            Object lastVisitTime = row.get("lastVisitTime");
+            Long visitCount = (Long) row.get("visitCount");
+
+            String lastVisit = formatLastVisit(lastVisitDate, lastVisitTime);
+
+            table.addCell(new Cell().add(new Paragraph(String.valueOf(i + 1))));
+            table.addCell(new Cell().add(new Paragraph(patientName + (pid != null ? " (ID: " + pid + ")" : ""))));
+            table.addCell(new Cell().add(new Paragraph(age == null ? "—" : String.valueOf(age))));
+            table.addCell(new Cell().add(new Paragraph(gender == null ? "—" : gender)));
+            table.addCell(new Cell().add(new Paragraph(phone == null ? "—" : phone)));
+            table.addCell(new Cell().add(new Paragraph(lastVisit)));
+            table.addCell(new Cell().add(new Paragraph(visitCount == null ? "0" : String.valueOf(visitCount))));
+        }
+
+        document.add(table);
+        document.close();
+
+        byte[] bytes = out.toByteArray();
+        String filename = "department-patient-report-" + startDate + "-" + endDate + ".pdf";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(bytes);
+    }
+
+    // ===== Doctor Wise PDF Download =====
+    @GetMapping("/patients/by-doctor/download/pdf")
+    @Operation(summary = "Download patient visit report between dates for a specific doctor (PDF)")
+    public ResponseEntity<byte[]> downloadDoctorPatientsReportPdf(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam String doctor) {
+
+        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
+        List<Appointment> docAppointments = appointments.stream()
+                .filter(a -> a.getDoctor() != null && doctor.equals(a.getDoctor().getFullName()))
+                .collect(Collectors.toList());
+
+        Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
+        for (Appointment a : docAppointments) {
+            UUID pid = a.getPatient().getId();
+            Appointment current = lastVisitByPatient.get(pid);
+            if (current == null) {
+                lastVisitByPatient.put(pid, a);
+            } else {
+                if (a.getAppointmentDate().isAfter(current.getAppointmentDate())
+                        || (a.getAppointmentDate().isEqual(current.getAppointmentDate())
+                        && a.getAppointmentTime().compareTo(current.getAppointmentTime()) > 0)) {
+                    lastVisitByPatient.put(pid, a);
+                }
+            }
+        }
+
+        Map<UUID, Long> visitCountByPatientId = docAppointments.stream()
+                .collect(Collectors.groupingBy(a -> a.getPatient().getId(), Collectors.counting()));
+
+        List<Map<String, Object>> patientsList = lastVisitByPatient.values().stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    Patient p = a.getPatient();
+                    m.put("patientId", p.getId());
+                    m.put("patientName", p.getFullName());
+                    m.put("age", p.getAge());
+                    m.put("gender", p.getGender());
+                    m.put("phone", p.getPhone());
+                    m.put("lastVisitDate", a.getAppointmentDate());
+                    m.put("lastVisitTime", a.getAppointmentTime());
+                    m.put("visitCount", visitCountByPatientId.getOrDefault(p.getId(), 0L));
+                    return m;
+                })
+                .sorted((m1, m2) -> {
+                    LocalDate d1 = (LocalDate) m1.get("lastVisitDate");
+                    LocalDate d2 = (LocalDate) m2.get("lastVisitDate");
+                    if (d1 != null && d2 != null) return d2.compareTo(d1);
+                    return 0;
+                })
+                .toList();
+
+        String title = "Patient Visit Report - " + doctor;
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(out);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document document = new Document(pdf);
+
+        document.add(new Paragraph(title));
+        document.add(new Paragraph("Start Date: " + startDate));
+        document.add(new Paragraph("End Date: " + endDate));
+        document.add(new Paragraph(" "));
+
+        Table table = new Table(new float[]{1.2f, 3f, 1.2f, 1.6f, 2f, 2.2f, 1.2f});
+        table.addHeaderCell(new Cell().add(new Paragraph("#")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Patient")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Age")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Gender")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Phone")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Last Visit")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Visits")));
+
+        for (int i = 0; i < patientsList.size(); i++) {
+            Map<String, Object> row = patientsList.get(i);
+
+            UUID pid = (UUID) row.get("patientId");
+            String patientName = String.valueOf(row.get("patientName"));
+            Integer age = (Integer) row.get("age");
+            String gender = String.valueOf(row.get("gender"));
+            String phone = String.valueOf(row.get("phone"));
+            LocalDate lastVisitDate = (LocalDate) row.get("lastVisitDate");
+            Object lastVisitTime = row.get("lastVisitTime");
+            Long visitCount = (Long) row.get("visitCount");
+
+            String lastVisit = formatLastVisit(lastVisitDate, lastVisitTime);
+
+            table.addCell(new Cell().add(new Paragraph(String.valueOf(i + 1))));
+            table.addCell(new Cell().add(new Paragraph(patientName + (pid != null ? " (ID: " + pid + ")" : ""))));
+            table.addCell(new Cell().add(new Paragraph(age == null ? "—" : String.valueOf(age))));
+            table.addCell(new Cell().add(new Paragraph(gender == null ? "—" : gender)));
+            table.addCell(new Cell().add(new Paragraph(phone == null ? "—" : phone)));
+            table.addCell(new Cell().add(new Paragraph(lastVisit)));
+            table.addCell(new Cell().add(new Paragraph(visitCount == null ? "0" : String.valueOf(visitCount))));
+        }
+
+        document.add(table);
+        document.close();
+
+        byte[] bytes = out.toByteArray();
+        String filename = "doctor-patient-report-" + startDate + "-" + endDate + ".pdf";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(bytes);
+    }
+
+    private ResponseEntity<byte[]> exportPatientsTablePdf(
+
+            LocalDate startDate,
+            LocalDate endDate,
+            String title,
+            List<Map<String, Object>> patientsList) {
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(out);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document document = new Document(pdf);
+
+        document.add(new Paragraph(title));
+        document.add(new Paragraph("Start Date: " + startDate));
+        document.add(new Paragraph("End Date: " + endDate));
+        document.add(new Paragraph(" "));
+        Table table = new Table(new float[]{1.2f, 3f, 1.2f, 1.6f, 2f, 2.2f, 1.2f});
+
+
+        table.addHeaderCell(new Cell().add(new Paragraph("#")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Patient")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Age")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Gender")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Phone")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Last Visit")));
+        table.addHeaderCell(new Cell().add(new Paragraph("Visits")));
+
+        fillPatientsTable(table, patientsList);
+
+        document.add(table);
+        document.close();
+
+        byte[] bytes = out.toByteArray();
+        String filename = title.toLowerCase().replaceAll("[^a-z0-9]+", "-") + "-" + startDate + "-" + endDate + ".pdf";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(bytes);
+    }
+
 }

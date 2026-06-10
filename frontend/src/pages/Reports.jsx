@@ -420,7 +420,43 @@ const Reports = () => {
               setError('Please select both start and end dates to download.');
               return;
             }
-            window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5173/api'}/reports/patients/download/pdf?startDate=${startDate}&endDate=${endDate}`;
+
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5173/api';
+
+            if (activeTab === 'all') {
+              window.location.href = `${baseUrl}/reports/patients/download/pdf?startDate=${startDate}&endDate=${endDate}`;
+              return;
+            }
+
+            if (activeTab === 'department') {
+              if (!selectedDepartment) {
+                setError('Select a department to download Department-wise PDF.');
+                return;
+              }
+              window.location.href = `${baseUrl}/reports/patients/by-department/download/pdf?startDate=${startDate}&endDate=${endDate}&department=${encodeURIComponent(selectedDepartment)}`;
+              return;
+            }
+
+            if (activeTab === 'doctor') {
+              if (!selectedDoctor) {
+                setError('Select a doctor to download Doctor-wise PDF.');
+                return;
+              }
+              window.location.href = `${baseUrl}/reports/patients/by-doctor/download/pdf?startDate=${startDate}&endDate=${endDate}&doctor=${encodeURIComponent(selectedDoctor)}`;
+              return;
+            }
+
+            if (activeTab === 'opd') {
+              window.location.href = `${baseUrl}/reports/patients/download/opd/pdf?startDate=${startDate}&endDate=${endDate}`;
+              return;
+            }
+
+            if (activeTab === 'ipd') {
+              window.location.href = `${baseUrl}/reports/patients/download/ipd/pdf?startDate=${startDate}&endDate=${endDate}`;
+              return;
+            }
+
+            setError('Invalid tab selection for PDF download.');
           }}
         >
           ⬇️ Download PDF
