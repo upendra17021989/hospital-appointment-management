@@ -348,6 +348,45 @@ const Reports = () => {
                 <div className="report-stat-desc">{data.totalOPD?.description}</div>
               </div>
             </div>
+
+            <div className="table-wrap" style={{ marginTop: 16 }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Patient</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Phone</th>
+                    <th>Last Visit</th>
+                    <th>Visits</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data.totalOPD?.patientsList || []).length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="empty-cell">No patient data available for OPD</td>
+                    </tr>
+                  ) : (
+                    (data.totalOPD?.patientsList || []).map((p, idx) => (
+                      <tr key={p.patientId || idx}>
+                        <td>{idx + 1}</td>
+                        <td>
+                          <strong>{p.patientName || '—'}</strong>
+                        </td>
+                        <td>{p.age ?? '—'}</td>
+                        <td>{p.gender || '—'}</td>
+                        <td>{p.phone || '—'}</td>
+                        <td>
+                          {p.lastVisitDate || '—'}{p.lastVisitTime ? ` · ${p.lastVisitTime}` : ''}
+                        </td>
+                        <td>{p.visitCount ?? 0}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
       case 'ipd':
@@ -359,6 +398,45 @@ const Reports = () => {
                 <div className="report-stat-label">IPD Patients</div>
                 <div className="report-stat-desc">{data.totalIPD?.description}</div>
               </div>
+            </div>
+
+            <div className="table-wrap" style={{ marginTop: 16 }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Patient</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Phone</th>
+                    <th>Last Visit</th>
+                    <th>Visits</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data.totalIPD?.patientsList || []).length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="empty-cell">No patient data available for IPD</td>
+                    </tr>
+                  ) : (
+                    (data.totalIPD?.patientsList || []).map((p, idx) => (
+                      <tr key={p.patientId || idx}>
+                        <td>{idx + 1}</td>
+                        <td>
+                          <strong>{p.patientName || '—'}</strong>
+                        </td>
+                        <td>{p.age ?? '—'}</td>
+                        <td>{p.gender || '—'}</td>
+                        <td>{p.phone || '—'}</td>
+                        <td>
+                          {p.lastVisitDate || '—'}{p.lastVisitTime ? ` · ${p.lastVisitTime}` : ''}
+                        </td>
+                        <td>{p.visitCount ?? 0}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         );
@@ -473,11 +551,9 @@ const Reports = () => {
               }
               url = `${baseUrl}/reports/patients/by-doctor/download/pdf?startDate=${startDate}&endDate=${endDate}&doctor=${encodeURIComponent(selectedDoctor)}`;
             } else if (activeTab === 'opd') {
-              setError('OPD PDF download is not implemented in the backend.');
-              return;
+              url = `${baseUrl}/reports/patients/opd/download/pdf?startDate=${startDate}&endDate=${endDate}`;
             } else if (activeTab === 'ipd') {
-              setError('IPD PDF download is not implemented in the backend.');
-              return;
+              url = `${baseUrl}/reports/patients/ipd/download/pdf?startDate=${startDate}&endDate=${endDate}`;
             } else {
               setError('Invalid tab selection for PDF download.');
               return;

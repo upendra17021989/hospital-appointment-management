@@ -154,26 +154,33 @@ public class ReportsController {
         result.put("doctorWise", docReport);
 
         // OPD Patients (in_person + follow_up + virtual)
-        long opdCount = appointments.stream()
+        List<Appointment> opdAppointments = appointments.stream()
                 .filter(a -> a.getAppointmentType() != Appointment.AppointmentType.emergency)
-                .count();
+                .collect(Collectors.toList());
+
+        long opdCount = opdAppointments.size();
 
         Map<String, Object> opdReport = new LinkedHashMap<>();
         opdReport.put("type", "OPD");
         opdReport.put("totalPatients", opdCount);
         opdReport.put("description", "Out-patient department visits (in-person, virtual, follow-up)");
+        opdReport.put("patientsList", buildPatientsList(opdAppointments));
         result.put("totalOPD", opdReport);
 
         // IPD Patients (emergency - treated as in-patient / admission indicator)
-        long ipdCount = appointments.stream()
+        List<Appointment> ipdAppointments = appointments.stream()
                 .filter(a -> a.getAppointmentType() == Appointment.AppointmentType.emergency)
-                .count();
+                .collect(Collectors.toList());
+
+        long ipdCount = ipdAppointments.size();
 
         Map<String, Object> ipdReport = new LinkedHashMap<>();
         ipdReport.put("type", "IPD");
         ipdReport.put("totalPatients", ipdCount);
         ipdReport.put("description", "In-patient department visits (emergency admissions)");
+        ipdReport.put("patientsList", buildPatientsList(ipdAppointments));
         result.put("totalIPD", ipdReport);
+
 
         return ResponseEntity.ok(ApiResponse.success(result));
     }
@@ -584,7 +591,45 @@ public class ReportsController {
                 .collect(Collectors.toList());
     }
 
-    private void fillPatientsTable(Table table, List<Map<String, Object>> patientsList) {
+    @GetMapping("/patients/opd/download/pdf")
+    @Operation(summary = "Download OPD patient visit report between dates (PDF)")
+    public ResponseEntity<byte[]> downloadOpdPatientsReportPdf(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
+        List<Appointment> opdAppointments = appointments.stream()
+                .filter(a -> a.getAppointmentType() != Appointment.AppointmentType.emergency)
+                .collect(Collectors.toList());
+
+        String title = "OPD Patient Visit Report";
+        List<Map<String, Object>> patientsList = buildPatientsList(opdAppointments);
+
+        return exportPatientsTablePdf(startDate, endDate, title, patientsList);
+    }
+
+    @GetMapping("/patients/ipd/download/pdf")
+    @Operation(summary = "Download IPD patient visit report between dates (PDF)")
+    public ResponseEntity<byte[]> downloadIpdPatientsReportPdf(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
+        List<Appointment> ipdAppointments = appointments.stream()
+                .filter(a -> a.getAppointmentType() == Appointment.AppointmentType.emergency)
+                .collect(Collectors.toList());
+
+        String title = "IPD Patient Visit Report";
+        List<Map<String, Object>> patientsList = buildPatientsList(ipdAppointments);
+
+        return exportPatientsTablePdf(startDate, endDate, title, patientsList);
+    }
+
+     private void fillPatientsTable(Table table, List<Map<String, Object>> patientsList) {
         for (int i = 0; i < patientsList.size(); i++) {
             Map<String, Object> row = patientsList.get(i);
 

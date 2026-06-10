@@ -525,6 +525,7 @@ const Step4PatientInfo = ({
             <option value="in_person">In Person</option>
             <option value="virtual">Virtual</option>
             <option value="follow_up">Follow Up</option>
+            <option value="emergency">Emergency (IPD)</option>
           </select>
         </div>
       </div>
