@@ -631,8 +631,12 @@ const BookAppointment = () => {
   const [selectedDept, setSelectedDept] = useState(null);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [selectedDate, setSelectedDate] = useState('');
+
+  const todayISO = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(todayISO);
+
   const [patientData, setPatientData] = useState({ firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '', age: '' });
+
   const [visitData, setVisitData] = useState({ reasonForVisit: '', symptoms: '', appointmentType: 'in_person' });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
@@ -737,10 +741,12 @@ const BookAppointment = () => {
   }, [prefillPatient]);
 
 
+
   const handleReset = () => {
     setSuccess(null); setStep(1); setSelectedDept(null);
-    setSelectedDoctor(null); setSelectedSlot(null); setSelectedDate('');
+    setSelectedDoctor(null); setSelectedSlot(null); setSelectedDate(todayISO);
     setPatientData(prefillPatient || { firstName: '', lastName: '', phone: '', email: '', gender: '', dateOfBirth: '', age: '' });
+
     setVisitData({ reasonForVisit: '', symptoms: '', appointmentType: 'in_person' });
     setIsNewPatient(true);
     setSelectedExistingPatient(null);

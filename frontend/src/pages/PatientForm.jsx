@@ -248,10 +248,10 @@ const PatientForm = ({ prefillData, onSaved }) => {
     }
   };
 
-  if (success) {
+  if (success?.success) {
     return (
       <SuccessScreen
-        patient={success}
+        patient={success?.data}
         onNew={() => {
           setSuccess(null);
           setStep(1);
