@@ -217,6 +217,24 @@ const Step4PatientInfo = ({
     setPatientData(p => ({ ...p, phone: raw }));
   };
 
+  const computeAgeFromDob = (dob) => {
+    // dob expected as YYYY-MM-DD
+    if (!dob) return '';
+    const dobDate = new Date(dob);
+    if (Number.isNaN(dobDate.getTime())) return '';
+
+    const today = new Date();
+    let age = today.getFullYear() - dobDate.getFullYear();
+
+    const m = today.getMonth() - dobDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+      age -= 1;
+    }
+
+    if (age < 0) return '';
+    return String(age);
+  };
+
   const handlePatientSelect = (patient) => {
     setSelectedExistingPatient(patient);
     setPatientData({
@@ -467,7 +485,14 @@ const Step4PatientInfo = ({
             <input
               type="date"
               value={patientData.dateOfBirth}
-              onChange={e => setPatientData(p => ({ ...p, dateOfBirth: e.target.value }))}
+              onChange={e => {
+                const dob = e.target.value;
+                setPatientData(p => ({
+                  ...p,
+                  dateOfBirth: dob,
+                  age: computeAgeFromDob(dob),
+                }));
+              }}
             />
           </div>
 
@@ -481,6 +506,8 @@ const Step4PatientInfo = ({
               value={patientData.age}
               onChange={e => setPatientData(p => ({ ...p, age: e.target.value }))}
               placeholder="e.g. 30"
+              disabled={!!patientData.dateOfBirth}
+              title={patientData.dateOfBirth ? 'Age is auto-calculated from Date of Birth' : ''}
             />
           </div>
         </div>
