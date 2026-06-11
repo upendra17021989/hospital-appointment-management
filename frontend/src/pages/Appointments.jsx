@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { LoadingSpinner, Badge, EmptyState, Tabs } from '../components/Common';
+import { consultationPaymentApi } from '../services/consultationPaymentApi';
+import { consultationReceiptApi } from '../services/receiptApi';
+import { Modal } from '../components/Common';
+
+
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -56,6 +61,79 @@ const Appointments = () => {
       setUpdating(null);
     }
   };
+
+  const [paymentModal, setPaymentModal] = useState({
+    open: false,
+    appointment: null,
+  });
+
+  const [paymentForm, setPaymentForm] = useState({
+    paymentMode: 'CASH',
+    amountPaid: '',
+    paymentReference: '',
+  });
+
+  const openPaymentModal = (appt) => {
+    const consultationFee = appt?.doctor?.consultationFee;
+    setPaymentModal({ open: true, appointment: appt });
+    setPaymentForm({
+      paymentMode: 'CASH',
+      amountPaid: consultationFee != null ? String(Number(consultationFee)) : '',
+      paymentReference: '',
+    });
+  };
+
+  const closePaymentModal = () => {
+    setPaymentModal({ open: false, appointment: null });
+  };
+
+  const submitPaymentAndPrintPdf = async (opts) => {
+    const appt = paymentModal.appointment;
+
+    if (!appt?.id) throw new Error('Missing appointment id');
+
+    const consultationFee = appt?.doctor?.consultationFee;
+    if (!consultationFee || Number(consultationFee) <= 0) {
+      throw new Error('Consultation fee not available');
+    }
+
+    const amountPaid = Number(paymentForm.amountPaid);
+    if (Number.isNaN(amountPaid) || amountPaid <= 0) {
+      throw new Error('Invalid amount paid');
+    }
+
+    const payload = {
+      appointmentId: appt.id,
+      consultationFee: Number(consultationFee),
+      amountPaid,
+      paymentMode: String(paymentForm.paymentMode).toUpperCase(),
+      paymentReference: paymentForm.paymentReference?.trim() ? paymentForm.paymentReference.trim() : null,
+      receivedByName: null,
+    };
+
+    const resp = await consultationPaymentApi.createPayment(payload);
+    const consultationPaymentId = resp?.consultationPaymentId;
+    if (!consultationPaymentId) throw new Error('No consultationPaymentId returned');
+
+    // Always “Save & Print” = download receipt immediately (for now, to avoid changing backend snapshot behavior)
+    const blob = await consultationReceiptApi.saveAndPrintByPaymentId(consultationPaymentId);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'consultation-receipt.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    if (opts?.markCompleted) {
+      await api.patch(`/appointments/hospital/${appt.id}/status`, { status: 'completed' });
+      fetchAppointments();
+    }
+  };
+
+
+
 
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < totalPages) {
@@ -122,7 +200,90 @@ const Appointments = () => {
 
       <Tabs tabs={tabs} active={statusFilter} onChange={(val) => { setStatusFilter(val); setPage(0); }} />
 
+      {paymentModal.open && (
+        <Modal
+          title="Collect Consultation Payment & Print"
+          onClose={closePaymentModal}
+        >
+          <div style={{ display: 'grid', gap: 12, minWidth: 320 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              Consultation fee: <strong>₹{paymentForm.amountPaid ? paymentForm.amountPaid : (paymentModal.appointment?.doctor?.consultationFee ?? 0)}</strong>
+            </div>
+
+            <div className="form-group">
+              <label>Payment Mode</label>
+              <select
+                value={paymentForm.paymentMode}
+                onChange={(e) => setPaymentForm((f) => ({ ...f, paymentMode: e.target.value }))}
+                className="form-control"
+              >
+                <option value="CASH">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="CARD">Card</option>
+                <option value="NET_BANKING">Net Banking</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Amount Paid</label>
+              <input
+                value={paymentForm.amountPaid}
+                onChange={(e) => setPaymentForm((f) => ({ ...f, amountPaid: e.target.value }))}
+                className="form-control"
+                placeholder="Enter amount"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Payment Reference (optional)</label>
+              <input
+                value={paymentForm.paymentReference}
+                onChange={(e) => setPaymentForm((f) => ({ ...f, paymentReference: e.target.value }))}
+                className="form-control"
+                placeholder="UTR / Txn ID / etc."
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 6, flexWrap: 'wrap' }}>
+              <button className="btn btn-secondary" onClick={closePaymentModal}>
+                Cancel
+              </button>
+
+              <button
+                className="btn btn-secondary"
+                onClick={async () => {
+                  try {
+                    await submitPaymentAndPrintPdf({ markCompleted: false });
+                    closePaymentModal();
+                  } catch (e) {
+                    alert(e.message || String(e));
+                  }
+                }}
+              >
+                Print Receipt (PDF)
+              </button>
+
+              <button
+                className="btn btn-primary"
+                onClick={async () => {
+                  try {
+                    await submitPaymentAndPrintPdf({ markCompleted: true });
+                    closePaymentModal();
+                  } catch (e) {
+                    alert(e.message || String(e));
+                  }
+                }}
+              >
+                Save & Print Receipt (PDF)
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Table Controls */}
+
       <div style={{ marginBottom: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <label style={{ fontSize: 14, color: 'var(--text-muted)' }}>Show:</label>
@@ -147,6 +308,7 @@ const Appointments = () => {
           <>
             {/* Desktop Table */}
             <table className="appointments-table-desktop">
+
               <thead>
                 <tr>
                   <th onClick={() => handleSort('tokenNumber')} style={{ cursor: 'pointer' }}>
@@ -199,11 +361,29 @@ const Appointments = () => {
                           <button className="btn btn-accent btn-sm" disabled={updating === a.id}
                             onClick={() => updateStatus(a.id, 'confirmed')}>Confirm</button>
                         )}
-                        {a.status === 'confirmed' && (
-                          <button className="btn btn-secondary btn-sm" disabled={updating === a.id}
-                            onClick={() => updateStatus(a.id, 'completed')}>Complete</button>
+                    {a.status === 'confirmed' && (
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            <button className="btn btn-secondary btn-sm" disabled={updating === a.id}
+                              onClick={() => updateStatus(a.id, 'completed')}>Complete</button>
+                            <button
+                              className="btn btn-primary btn-sm"
+                              disabled={updating === a.id}
+                              onClick={() => openPaymentModal(a)}
+                            >
+                              Save & Print
+                            </button>
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              disabled={updating === a.id}
+                              onClick={() => openPaymentModal(a)}
+                            >
+                              Print Receipt
+                            </button>
+                          </div>
                         )}
+
                         {(a.status === 'pending' || a.status === 'confirmed') && (
+
                           <button className="btn btn-danger btn-sm" disabled={updating === a.id}
                             onClick={() => updateStatus(a.id, 'cancelled')}>Cancel</button>
                         )}
@@ -317,3 +497,4 @@ const Appointments = () => {
 };
 
 export default Appointments;
+
