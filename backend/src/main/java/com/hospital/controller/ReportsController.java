@@ -416,11 +416,120 @@ public class ReportsController {
                 .body(bytes);
     }
 
+    @GetMapping("/patients/excel")
+    @Operation(summary = "Download patient visit report between dates (Excel .xlsx)")
+    public ResponseEntity<byte[]> downloadPatientsReportExcel(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
+        Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
+        for (Appointment a : appointments) {
+            UUID pid = a.getPatient().getId();
+            Appointment current = lastVisitByPatient.get(pid);
+            if (current == null) {
+                lastVisitByPatient.put(pid, a);
+            } else {
+                if (a.getAppointmentDate().isAfter(current.getAppointmentDate())
+                        || (a.getAppointmentDate().isEqual(current.getAppointmentDate())
+                        && a.getAppointmentTime().compareTo(current.getAppointmentTime()) > 0)) {
+                    lastVisitByPatient.put(pid, a);
+                }
+            }
+        }
+
+        Map<UUID, Long> visitCountByPatientId = appointments.stream()
+                .collect(Collectors.groupingBy(a -> a.getPatient().getId(), Collectors.counting()));
+
+        List<Map<String, Object>> patientsList = lastVisitByPatient.values().stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    Patient p = a.getPatient();
+                    m.put("patientId", p.getId());
+                    m.put("patientName", p.getFullName());
+                    m.put("age", p.getAge());
+                    m.put("gender", p.getGender());
+                    m.put("phone", p.getPhone());
+                    m.put("lastVisitDate", a.getAppointmentDate());
+                    m.put("lastVisitTime", a.getAppointmentTime());
+                    m.put("visitCount", visitCountByPatientId.getOrDefault(p.getId(), 0L));
+                    return m;
+                })
+                .sorted((m1, m2) -> {
+                    LocalDate d1 = (LocalDate) m1.get("lastVisitDate");
+                    LocalDate d2 = (LocalDate) m2.get("lastVisitDate");
+                    if (d1 != null && d2 != null) return d2.compareTo(d1);
+                    return 0;
+                })
+                .collect(Collectors.toList());
+
+        try {
+            org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
+            org.apache.poi.xssf.usermodel.XSSFSheet sheet = workbook.createSheet("Patient Report");
+
+            int rowIdx = 0;
+            org.apache.poi.ss.usermodel.Row header = sheet.createRow(rowIdx++);
+            String[] headers = new String[]{
+                    "PatientId", "PatientName", "Age", "Gender", "Phone",
+                    "LastVisitDate", "LastVisitTime", "VisitCount"
+            };
+            for (int i = 0; i < headers.length; i++) {
+                header.createCell(i).setCellValue(headers[i]);
+            }
+
+            for (Map<String, Object> row : patientsList) {
+                org.apache.poi.ss.usermodel.Row xlsRow = sheet.createRow(rowIdx++);
+                xlsRow.createCell(0).setCellValue(String.valueOf(row.get("patientId")));
+                xlsRow.createCell(1).setCellValue(String.valueOf(row.get("patientName")));
+                Object age = row.get("age");
+                if (age instanceof Number) {
+                    xlsRow.createCell(2).setCellValue(((Number) age).doubleValue());
+                } else {
+                    xlsRow.createCell(2).setCellValue(age == null ? "" : String.valueOf(age));
+                }
+                xlsRow.createCell(3).setCellValue(row.get("gender") == null ? "" : String.valueOf(row.get("gender")));
+                xlsRow.createCell(4).setCellValue(row.get("phone") == null ? "" : String.valueOf(row.get("phone")));
+
+                LocalDate lastVisitDate = (LocalDate) row.get("lastVisitDate");
+                Object lastVisitTime = row.get("lastVisitTime");
+                xlsRow.createCell(5).setCellValue(lastVisitDate == null ? "" : lastVisitDate.toString());
+                xlsRow.createCell(6).setCellValue(lastVisitTime == null ? "" : String.valueOf(lastVisitTime));
+
+                Object visitCount = row.get("visitCount");
+                if (visitCount instanceof Number) {
+                    xlsRow.createCell(7).setCellValue(((Number) visitCount).longValue());
+                } else {
+                    xlsRow.createCell(7).setCellValue(visitCount == null ? "" : String.valueOf(visitCount));
+                }
+            }
+
+            for (int c = 0; c < headers.length; c++) {
+                sheet.autoSizeColumn(c);
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            workbook.close();
+
+            String filename = "patient-report-" + startDate + "-" + endDate + ".xlsx";
+
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                    .body(out.toByteArray());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(new byte[0]);
+        }
+    }
+
     @GetMapping("/patients/download/pdf")
     @Operation(summary = "Download patient visit report between dates (PDF)")
     public ResponseEntity<byte[]> downloadPatientsReportPdf(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
 
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
