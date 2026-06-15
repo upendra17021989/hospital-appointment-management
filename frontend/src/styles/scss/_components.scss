@@ -453,12 +453,140 @@
 }
 
 // ── Reports ───────────────────────────────────────────────────
+.analytics-row {
+  margin: 0 0 18px;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.analytics-card {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  border: 1.5px solid $border;
+  box-shadow: $shadow;
+  padding: 14px 16px;
+}
+
+.analytics-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: $text-muted;
+  margin-bottom: 10px;
+}
+
+.analytics-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.analytics-grid {
+  --analytics-primary: #6366f1;
+}
+
+.analytics-grid {
+  .analytics-grid {
+    stroke: rgba(148, 163, 184, 0.25);
+    stroke-width: 1;
+  }
+}
+
+.analytics-x-label {
+  font-size: 10px;
+  fill: rgba(107, 114, 128, 0.95);
+}
+
+.analytics-empty {
+  padding: 22px;
+  color: $text-muted;
+  font-weight: 600;
+  text-align: center;
+}
+
+.analytics-gender {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.analytics-svg--gender {
+  margin: 0 auto;
+}
+
+.analytics-gender-center {
+  font-size: 18px;
+  font-weight: 900;
+  fill: $text;
+}
+
+.analytics-gender-center-sub {
+  font-size: 11px;
+  fill: $text-muted;
+  font-weight: 700;
+}
+
+.analytics-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analytics-legend-item {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.analytics-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.analytics-legend-label {
+  font-size: 13px;
+  color: $text-muted;
+  font-weight: 700;
+}
+
+.analytics-legend-value {
+  font-size: 12px;
+  color: $text;
+  font-weight: 900;
+}
+
+.export-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.export-dropdown__btn {
+  white-space: nowrap;
+}
+
+.export-dropdown__select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .report-filters {
   display: flex;
   gap: 16px;
   align-items: flex-end;
   margin-bottom: 24px;
   flex-wrap: wrap;
+
 
   @include responsive-mobile {
     flex-direction: column;

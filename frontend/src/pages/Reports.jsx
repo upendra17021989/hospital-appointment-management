@@ -9,6 +9,7 @@ import ReportFiltersAndActions from '../components/reports/ReportFiltersAndActio
 import ReportTabs from '../components/reports/ReportTabs';
 import ReportKPICards from '../components/reports/ReportKPICards';
 import ReportTable from '../components/reports/ReportTable';
+import AnalyticsCharts from '../components/reports/AnalyticsCharts';
 
 
 
@@ -289,6 +290,9 @@ const Reports = () => {
 
           {/* KPI Cards (only for patient-centric tabs in Phase 1) */}
           <ReportKPICards data={data} activeTab={activeTab} />
+
+          {/* Phase 4 — Analytics charts */}
+          <AnalyticsCharts data={data} />
 
           <div className="report-tab-content">
             <ReportTable
