@@ -31,6 +31,22 @@ import java.util.stream.Collectors;
 @Tag(name = "Reports", description = "Patient visit reports APIs")
 public class ReportsController {
 
+    // Prevent resource exhaustion via unbounded date ranges in report generation
+    private static final long MAX_REPORT_DAYS = 180;
+
+    private void validateReportRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("startDate and endDate are required");
+        }
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("endDate must be on/after startDate");
+        }
+        long days = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate);
+        if (days > MAX_REPORT_DAYS) {
+            throw new IllegalArgumentException("Date range too large. Maximum allowed is " + MAX_REPORT_DAYS + " days");
+        }
+    }
+
     private final AppointmentRepo appointmentRepo;
     private final DepartmentRepo departmentRepo;
     private final DoctorRepo doctorRepo;
@@ -43,9 +59,11 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-
+        validateReportRange(startDate, endDate);
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
+
 
         // 1. All Patients (unique patients who visited)
         Set<UUID> uniquePatientIds = appointments.stream()
@@ -188,12 +206,15 @@ public class ReportsController {
     @GetMapping("/patients/by-department")
     @Operation(summary = "Get patient visit records between dates for a specific department")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDepartmentPatients(
+
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam String department) {
 
+        validateReportRange(startDate, endDate);
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
+
 
         List<Appointment> deptAppointments = appointments.stream()
                 .filter(a -> a.getDepartment() != null && department.equals(a.getDepartment().getName()))
@@ -261,8 +282,9 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam String doctor) {
 
-
+        validateReportRange(startDate, endDate);
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
         List<Appointment> docAppointments = appointments.stream()
@@ -328,8 +350,12 @@ public class ReportsController {
     @Operation(summary = "Download patient visit report between dates (CSV)")
     public ResponseEntity<byte[]> downloadPatientsReport(
 
+
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        validateReportRange(startDate, endDate);
+
 
         // returns CSV
 
@@ -421,6 +447,9 @@ public class ReportsController {
     public ResponseEntity<byte[]> downloadPatientsReportExcel(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        validateReportRange(startDate, endDate);
+
 
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
@@ -529,6 +558,9 @@ public class ReportsController {
     public ResponseEntity<byte[]> downloadPatientsReportPdf(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        validateReportRange(startDate, endDate);
+
 
 
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
@@ -706,6 +738,9 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
+        validateReportRange(startDate, endDate);
+
+
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
@@ -724,6 +759,9 @@ public class ReportsController {
     public ResponseEntity<byte[]> downloadIpdPatientsReportPdf(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        validateReportRange(startDate, endDate);
+
 
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
@@ -769,6 +807,9 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam String department) {
+
+        validateReportRange(startDate, endDate);
+
 
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
@@ -880,6 +921,9 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam String doctor) {
+
+        validateReportRange(startDate, endDate);
+
 
         UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);

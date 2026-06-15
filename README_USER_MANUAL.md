@@ -17,6 +17,18 @@ MediCare+ is a hospital management system that supports:
 
 Open the frontend in a browser (the app redirects you to the appropriate route).
 
+## 2.1 How to view this manual in the website
+This manual is stored in the repository as a Markdown file: `README_USER_MANUAL.md`.
+
+### Option A (recommended): Open in your code editor
+1. Open `README_USER_MANUAL.md` in VS Code.
+2. Use the Markdown preview to read it.
+
+### Option B: Serve it from the frontend (UI page)
+To show it inside the live website (like `/manual`), you must add a small frontend route and render the Markdown content.
+
+> The current codebase does not include an in-app/manual route yet—so the website can’t automatically display `README_USER_MANUAL.md` as-is.
+
 ## 3. Authentication
 ### 3.1 Hospital Registration (Signup)
 Route: **`/signup`**
