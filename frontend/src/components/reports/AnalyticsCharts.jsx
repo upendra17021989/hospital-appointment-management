@@ -154,7 +154,7 @@ const GenderSplitChart = ({ counts }) => {
   );
 };
 
-const AnalyticsCharts = ({ data }) => {
+const AnalyticsCharts = ({ data, loading }) => {
   const patientsList = data?.patientsList || [];
 
   const analytics = useMemo(() => {
@@ -187,15 +187,41 @@ const AnalyticsCharts = ({ data }) => {
     return { genderCounts, points };
   }, [patientsList]);
 
+  if (loading) {
+    return (
+      <div className="analytics-row">
+        <div className="analytics-grid">
+          <div className="analytics-skeleton-card">
+            <div className="analytics-skeleton-title" />
+            <div className="analytics-skeleton-chart" />
+          </div>
+          <div className="analytics-skeleton-card">
+            <div className="analytics-skeleton-title" />
+            <div className="analytics-skeleton-chart analytics-skeleton-chart--gender" />
+            <div className="analytics-skeleton-legend" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const hasAnyData = (data?.patientsList || []).length > 0;
+
   return (
     <div className="analytics-row">
       <div className="analytics-grid">
         <VisitsTrendChart points={analytics.points} />
         <GenderSplitChart counts={analytics.genderCounts} />
       </div>
+      {!hasAnyData && (
+        <div className="analytics-empty" style={{ marginTop: 10 }}>
+          No analytics available for the selected range.
+        </div>
+      )}
     </div>
   );
 };
+
 
 export default AnalyticsCharts;
 

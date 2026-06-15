@@ -10,7 +10,7 @@ import ReportTabs from '../components/reports/ReportTabs';
 import ReportKPICards from '../components/reports/ReportKPICards';
 import ReportTable from '../components/reports/ReportTable';
 import AnalyticsCharts from '../components/reports/AnalyticsCharts';
-
+import InsightsPanel from '../components/reports/InsightsPanel';
 
 
 const TAB_LABELS = {
@@ -20,6 +20,7 @@ const TAB_LABELS = {
   opd: 'Total OPD',
   ipd: 'Total IPD',
 };
+
 
 const Reports = () => {
   const [startDate, setStartDate] = useState('');
@@ -291,11 +292,16 @@ const Reports = () => {
           {/* KPI Cards (only for patient-centric tabs in Phase 1) */}
           <ReportKPICards data={data} activeTab={activeTab} />
 
-          {/* Phase 4 — Analytics charts */}
-          <AnalyticsCharts data={data} />
+          {/* Phase 6 — Insights panel */}
+          <InsightsPanel data={data} activeTab={activeTab} />
+
+          {/* Phase 4 — Analytics charts (Phase 7 skeleton handled inside) */}
+          <AnalyticsCharts data={data} loading={loading} />
+
 
           <div className="report-tab-content">
             <ReportTable
+
               data={data}
               activeTab={activeTab}
               selectedDepartment={selectedDepartment}
