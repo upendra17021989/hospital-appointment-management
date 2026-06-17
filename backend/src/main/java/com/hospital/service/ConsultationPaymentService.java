@@ -4,6 +4,7 @@ import com.hospital.dto.ConsultationPaymentDtos;
 import com.hospital.model.*;
 import com.hospital.repository.*;
 import com.hospital.security.TenantContext;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,9 @@ public class ConsultationPaymentService {
 
     private final ConsultationPaymentRepo paymentRepo;
     private final AppointmentRepo appointmentRepo;
+    private final ConsultationPaymentLineItemRepo consultationPaymentLineItemRepo;
     private final TenantContext tenantContext;
+
 
     @Transactional
     public ConsultationPaymentDtos.CreateConsultationPaymentResponse createPayment(ConsultationPaymentDtos.CreateConsultationPaymentRequest req) {
@@ -48,6 +51,20 @@ public class ConsultationPaymentService {
             throw new IllegalArgumentException("consultationFee must be > 0");
         }
 
+        if (req.getLineItems() == null || req.getLineItems().isEmpty()) {
+            throw new IllegalArgumentException("lineItems must be provided (at least 1 row)");
+        }
+
+        java.math.BigDecimal sum = req.getLineItems().stream()
+                .map(ConsultationPaymentDtos.ReceiptLineItemDto::getAmount)
+                .filter(java.util.Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+
+        if (sum.compareTo(req.getAmountPaid()) != 0) {
+            throw new IllegalArgumentException("Sum of lineItems.amount must equal amountPaid");
+        }
+
+
         // Received by
         String receivedByName = req.getReceivedByName();
         if (receivedByName == null || receivedByName.isBlank()) {
@@ -71,8 +88,24 @@ public class ConsultationPaymentService {
                 .receivedByName(receivedByName)
                 .build();
 
-        // Persist
+        // Persist payment + its receipt line items snapshot
         ConsultationPayment saved = paymentRepo.save(payment);
+
+        if (req.getLineItems() != null) {
+            for (int i = 0; i < req.getLineItems().size(); i++) {
+                var li = req.getLineItems().get(i);
+                ConsultationPaymentLineItem pli = ConsultationPaymentLineItem.builder()
+                        .payment(saved)
+                        .srNo(i + 1)
+                        .particulars(li.getParticulars())
+                        .amount(li.getAmount())
+                        .build();
+                // repo is included via wildcard import
+                // (Spring will autowire it because we reference it here)
+                consultationPaymentLineItemRepo.save(pli);
+            }
+        }
+
 
         log.info("Created consultation payment id={} for appointmentId={} hospitalId={}",
                 saved.getId(), appt.getId(), hospitalId);

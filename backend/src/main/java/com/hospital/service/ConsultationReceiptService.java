@@ -1,8 +1,12 @@
 package com.hospital.service;
 
 import com.hospital.model.*;
+import com.hospital.repository.ConsultationPaymentLineItemRepo;
 import com.hospital.repository.ConsultationPaymentRepo;
 import com.hospital.repository.ConsultationReceiptRepo;
+
+
+
 import com.hospital.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +23,10 @@ public class ConsultationReceiptService {
 
     private final ConsultationReceiptRepo receiptRepo;
     private final ConsultationPaymentRepo paymentRepo;
+    private final ConsultationPaymentLineItemRepo receiptLineItemRepo;
     private final ConsultationReceiptNumberService numberService;
     private final TenantContext tenantContext;
+
 
     /**
      * Creates a new receipt for a consultation payment.
@@ -67,9 +73,40 @@ public class ConsultationReceiptService {
                 .amountPaid(payment.getAmountPaid())
                 .receivedByName(payment.getReceivedByName())
                 .stampPlaceholder(numberService.defaultStampPlaceholder())
+                .lineItems(new java.util.ArrayList<>())
                 .build();
 
+        // Snapshot of receptionist-entered line items.
+        // We persist these at payment creation time into consultation_payment_line_items,
+        // so we can safely snapshot them into the receipt later (PDF/reprint).
+
+        var paymentLineItems = receiptLineItemRepo.findByPaymentIdOrderBySrNoAsc(consultationPaymentId);
+
+        java.util.List<ConsultationReceiptLineItem> snapshot = new java.util.ArrayList<>();
+        if (paymentLineItems != null && !paymentLineItems.isEmpty()) {
+            for (var pli : paymentLineItems) {
+                snapshot.add(ConsultationReceiptLineItem.builder()
+                        .receipt(receipt)
+                        .srNo(pli.getSrNo())
+                        .particulars(pli.getParticulars())
+                        .amount(pli.getAmount())
+                        .build());
+            }
+        } else {
+            // Backward compatibility for previously created payments/receipts.
+            snapshot.add(ConsultationReceiptLineItem.builder()
+                    .srNo(1)
+                    .particulars("Consultation Fee")
+                    .amount(payment.getConsultationFee())
+                    .receipt(receipt)
+                    .build());
+        }
+
+        receipt.setLineItems(snapshot);
+
+
         return receiptRepo.save(receipt);
+
     }
 }
 

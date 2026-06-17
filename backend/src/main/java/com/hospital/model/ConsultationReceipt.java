@@ -7,7 +7,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+
 
 @Entity
 @Table(
@@ -86,8 +88,13 @@ public class ConsultationReceipt {
     @Column(name = "stamp_placeholder", length = 200)
     private String stampPlaceholder;
 
+    @OneToMany(mappedBy = "receipt", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("srNo ASC")
+    private List<ConsultationReceiptLineItem> lineItems;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }
+
 

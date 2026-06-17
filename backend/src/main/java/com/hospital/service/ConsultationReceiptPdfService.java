@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -59,10 +61,71 @@ public class ConsultationReceiptPdfService {
 
             doc.add(keyVals);
 
+            // Narrative (staff custom scan-like text)
+            // For now we render a look-alike fixed narrative.
+            // You can later store this in ConsultationReceipt and replace this text.
+            doc.add(new Paragraph(
+                            "An amount of ₹" + money(receipt.getAmountPaid()) + " received with thanks from "
+                            + safe(receipt.getPatientName()) + " towards consultation."));
+
+
+
+            doc.add(new Paragraph("\n"));
+
+            // ===== Sr. No. | Particulars | Amount table (staff-entered) =====
+            List<ReceiptLineItem> items = new ArrayList<>();
+            if (receipt.getLineItems() != null && !receipt.getLineItems().isEmpty()) {
+                for (var li : receipt.getLineItems()) {
+                    items.add(ReceiptLineItem.builder()
+                            .srNo(li.getSrNo())
+                            .particulars(li.getParticulars())
+                            .amount(li.getAmount())
+                            .build());
+                }
+            } else {
+                // Backward compatible fallback
+                items.add(ReceiptLineItem.builder()
+                        .srNo(1)
+                        .particulars("Consultation Fee")
+                        .amount(receipt.getConsultationFee())
+                        .build());
+            }
+
+            Table linesTable = new Table(new float[]{0.6f, 3.0f, 1.4f});
+
+            linesTable.addHeaderCell(new com.itextpdf.layout.element.Cell()
+
+                    .add(new Paragraph("Sr. No").setFontSize(10).setBold()));
+            linesTable.addHeaderCell(new com.itextpdf.layout.element.Cell()
+                    .add(new Paragraph("Particulars").setFontSize(10).setBold()));
+            linesTable.addHeaderCell(new com.itextpdf.layout.element.Cell()
+                    .add(new Paragraph("Amount").setFontSize(10).setBold()));
+
+            for (ReceiptLineItem li : items) {
+                linesTable.addCell(new com.itextpdf.layout.element.Cell()
+                        .add(new Paragraph(String.valueOf(li.getSrNo())).setFontSize(10)));
+                linesTable.addCell(new com.itextpdf.layout.element.Cell()
+                        .add(new Paragraph(safe(li.getParticulars())).setFontSize(10)));
+                linesTable.addCell(new com.itextpdf.layout.element.Cell()
+                        .add(new Paragraph(money(li.getAmount())).setFontSize(10)));
+            }
+
+            // Total row
+            linesTable.addCell(new com.itextpdf.layout.element.Cell(1, 2)
+                    .add(new Paragraph("Grand Total").setFontSize(10).setBold()));
+            linesTable.addCell(new com.itextpdf.layout.element.Cell()
+                    .add(new Paragraph(money(receipt.getAmountPaid())).setFontSize(10).setBold()));
+
+
+            doc.add(linesTable);
+
             doc.add(new Paragraph("\n"));
             doc.add(new Paragraph("------------------------------------------------------------"));
             doc.add(new Paragraph("\n"));
 
+            // Stamp / signature area (custom scan/placeholder)
+            // If stampPlaceholder is configured with a custom scan label, show it here.
+            // For image-based stamp, we'd need a new field for stamp image bytes/URL.
             String stamp = (receipt.getStampPlaceholder() != null && !receipt.getStampPlaceholder().isBlank())
                     ? receipt.getStampPlaceholder()
                     : "Hospital Stamp/Signature";
