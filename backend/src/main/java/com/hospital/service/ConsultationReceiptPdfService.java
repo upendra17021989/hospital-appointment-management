@@ -20,8 +20,6 @@ import com.itextpdf.layout.borders.SolidBorder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.itextpdf.layout.properties.HorizontalAlignment;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.BorderRadius;
 
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.io.image.ImageDataFactory;
@@ -45,20 +43,16 @@ public class ConsultationReceiptPdfService {
 
     public byte[] generatePdf(ConsultationReceipt receipt) {
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-            PdfWriter writer = new PdfWriter(out);
-            PdfDocument pdf = new PdfDocument(writer);
-            Document doc = new Document(pdf);
-
-            //PdfFont regular = PdfFontFactory.createFont(StandardFonts.HELVETICA);
-            // PdfFont bold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
-            // PdfFont italic = PdfFontFactory.createFont(StandardFonts.HELVETICA_OBLIQUE);
             PdfFont regular = PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN);
             PdfFont bold = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD);
             PdfFont italic = PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC);
             PdfFont boldItalic = PdfFontFactory.createFont(StandardFonts.TIMES_BOLDITALIC);
 
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            PdfWriter writer = new PdfWriter(out);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document doc = new Document(pdf);
+            doc.setMargins(20, 20, 20, 20);
             float pageWidth = pdf.getDefaultPageSize().getWidth();
             float contentWidth = pageWidth - 40; // approx to match margins in template
 
@@ -72,6 +66,7 @@ public class ConsultationReceiptPdfService {
             // --- Receipt info: Receipt No / Receipt Date ---
             Table receiptInfo = new Table(new float[]{1, 1});
             receiptInfo.setWidth(contentWidth);
+            receiptInfo.setHorizontalAlignment(HorizontalAlignment.CENTER);
             receiptInfo.setMarginTop(12);
 
             receiptInfo.addCell(infoCell("Receipt No.", receipt.getReceiptNumber(), italic, bold));
@@ -126,6 +121,9 @@ public class ConsultationReceiptPdfService {
 
                 .setFontSize(14)
                 .setMultipliedLeading(1.2f)
+                .setMarginTop(16)
+                .setWidth(contentWidth)
+                .setTextAlignment(TextAlignment.CENTER)
                 .setMarginTop(16);
 
             doc.add(receiptParagraph);
@@ -140,6 +138,7 @@ public class ConsultationReceiptPdfService {
             // --- Table: Sr. No / Particulars / Amount (with borders) ---
             Table lines = new Table(new float[]{0.25f, 0.55f, 0.2f});
             lines.setWidth(contentWidth);
+            lines.setHorizontalAlignment(HorizontalAlignment.CENTER);
             lines.setMarginTop(14);
 
             lines.addHeaderCell(borderedHeaderCell("Sr. No."));
@@ -179,14 +178,15 @@ public class ConsultationReceiptPdfService {
             // --- Footer: QR section placeholder + Signature ---
             Table footer = new Table(new float[]{1, 1});
             footer.setWidth(contentWidth);
+            footer.setHorizontalAlignment(HorizontalAlignment.CENTER);
             footer.setMarginTop(30);
 
             Cell qrCell = new Cell()
-                    .setBorder(Border.NO_BORDER)
-                    .setTextAlignment(TextAlignment.CENTER);
+                .setBorder(Border.NO_BORDER)
+                .setTextAlignment(TextAlignment.CENTER);
             URL qrUrl = getClass()
-                    .getClassLoader()
-                    .getResource("images/qr-code.png");
+                .getClassLoader()
+                .getResource("images/qr-code.png");
 
             if (qrUrl != null) {
 
@@ -219,50 +219,53 @@ public class ConsultationReceiptPdfService {
                 );
             }
 
-        footer.addCell(qrCell);
-        
-        Cell sigCell = new Cell()
-                .setBorder(Border.NO_BORDER)
-                .setTextAlignment(TextAlignment.CENTER);
+                footer.addCell(qrCell);
+                
+                Cell sigCell = new Cell()
+                        .setBorder(Border.NO_BORDER)
+                        .setTextAlignment(TextAlignment.CENTER);
 
-        // Rounded rectangle box
-        Div signBox = new Div()
-                .setWidth(150)
-                .setHeight(100)
-                .setBorder(new SolidBorder(2))
-                .setBorderRadius(new BorderRadius(15))
-                .setHorizontalAlignment(HorizontalAlignment.CENTER);
+                // Rounded rectangle box
+                Div signBox = new Div()
+                        .setWidth(150)
+                        .setHeight(100)
+                        .setBorder(new SolidBorder(2))
+                        .setBorderRadius(new BorderRadius(15));
 
-        sigCell.add(signBox);
+                signBox.setHorizontalAlignment(HorizontalAlignment.CENTER);
 
-        sigCell.add(
-            new Paragraph("Authorized Signatory")
-                .setFont(italic)
-                .setFontSize(12)
-                .setItalic()
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginTop(5)
-        );
+                sigCell.add(signBox);
 
-        footer.addCell(sigCell);
+                sigCell.add(
+                new Paragraph("Authorized Signatory")
+                        .setFont(italic)
+                        .setFontSize(12)
+                        .setItalic()
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setMarginTop(5)
+                );
 
-        doc.add(footer);
+                footer.addCell(sigCell);
 
-        // Horizontal line below footer
-        LineSeparator line = new LineSeparator(new SolidLine());
-        line.setMarginTop(10);
-        line.setMarginBottom(10);
+                doc.add(footer);
 
-        doc.add(line);
+                // Horizontal line below footer
+                LineSeparator line = new LineSeparator(new SolidLine());
+                line.setHorizontalAlignment(HorizontalAlignment.CENTER);
+                line.setMarginTop(10);
+                line.setMarginBottom(10);
 
-            // --- Note ---
-            doc.add(new Paragraph("N.B.: This receipt is not for the medico legal purpose.")
-                    .setFontSize(12)
-                    .setMarginTop(20)
-                    .setFont(italic)
-                    .setBold());
-            doc.close();
-            return out.toByteArray();
+                doc.add(line);
+
+                // --- Note ---
+                doc.add(new Paragraph("N.B.: This receipt is not for the medico legal purpose.")
+                        .setFontSize(12)
+                        .setMarginTop(20)
+                        .setFont(italic)
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setBold());
+                doc.close();
+                return out.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate consultation receipt PDF: " + e.getMessage(), e);
         }
@@ -273,13 +276,36 @@ public class ConsultationReceiptPdfService {
         return receipt.getReceiptDateTime().toLocalDate().format(RECEIPT_DATE);
     }
 
-    private Cell infoCell(String label, String value, PdfFont regular, PdfFont bold) {
-        Cell cell = new Cell();
-        cell.setBorder(Border.NO_BORDER);
-        cell.add(new Paragraph(label + " : ").setFont(bold).setFontSize(14));
-        cell.add(new Paragraph(value != null ? value : "").setFont(regular).setFontSize(14));
+//     private Cell infoCell(String label, String value, PdfFont regular, PdfFont bold) {
+//         Cell cell = new Cell();
+//         cell.setBorder(Border.NO_BORDER);
+//         cell.add(new Paragraph(label + " : ").setFont(bold).setFontSize(14));
+//         cell.add(new Paragraph(value != null ? value : "").setFont(regular).setFontSize(14));
+//         return cell;
+//     }
+        private Cell infoCell(String label, String value,
+                        PdfFont regular, PdfFont bold) {
+
+        Cell cell = new Cell()
+                .setBorder(Border.NO_BORDER)
+                .setTextAlignment(TextAlignment.CENTER);
+
+        cell.add(
+                new Paragraph(label)
+                        .setFont(bold)
+                        .setFontSize(14)
+                        .setMarginBottom(0)
+        );
+
+        cell.add(
+                new Paragraph(value != null ? value : "")
+                        .setFont(regular)
+                        .setFontSize(14)
+                        .setMarginTop(0)
+        );
+
         return cell;
-    }
+        }
 
     private Cell borderedHeaderCell(String text) {
         Cell cell = new Cell();
