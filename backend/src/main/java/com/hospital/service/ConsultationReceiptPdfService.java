@@ -12,10 +12,24 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.element.Div;
+import com.itextpdf.layout.properties.BorderRadius;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.SolidBorder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.itextpdf.layout.properties.HorizontalAlignment;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.BorderRadius;
+
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.io.image.ImageDataFactory;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
+import com.itextpdf.layout.element.LineSeparator;
 
 import java.io.ByteArrayOutputStream;
 import java.math.RoundingMode;
@@ -50,8 +64,9 @@ public class ConsultationReceiptPdfService {
 
             // --- Header: Invoice | Receipt ---
             doc.add(new Paragraph("Invoice | Receipt")
-                    .setFont(bold)
-                    .setFontSize(28)
+                    .setFont(italic)
+                    .setFontSize(26)
+                    .setUnderline()
                     .setTextAlignment(TextAlignment.CENTER));
 
             // --- Receipt info: Receipt No / Receipt Date ---
@@ -59,83 +74,69 @@ public class ConsultationReceiptPdfService {
             receiptInfo.setWidth(contentWidth);
             receiptInfo.setMarginTop(12);
 
-            receiptInfo.addCell(infoCell("Receipt No.", receipt.getReceiptNumber(), regular, bold));
-            receiptInfo.addCell(infoCell("Receipt Date", formatReceiptDate(receipt), regular, bold));
+            receiptInfo.addCell(infoCell("Receipt No.", receipt.getReceiptNumber(), italic, bold));
+            receiptInfo.addCell(infoCell("Receipt Date", formatReceiptDate(receipt), italic, bold));
+            receiptInfo.setTextAlignment(TextAlignment.CENTER);
 
             doc.add(receiptInfo);
 
             // --- Description narrative (template text) ---
             String patient = safe(receipt.getPatientName());
             String hospitalName = safe(receipt.getHospitalName());
-            // doc.add(new Paragraph(
-            //         "An amount of " + money(receipt.getAmountPaid()) + " received with thanks from " +
-            //                 "Mr. / Ms. / Mrs. " + patient + " " +
-            //                 "towards the treatment / examination / health check-up of " +
-            //                 "Mr. / Ms. / Mrs. " + patient + " " +
-            //                 "at " + hospitalName + ".")
-            //             .setFont(regular)
-            //             .setFontSize(14)
-            //             .setMultipliedLeading(1.2f)
-            //             .setMarginTop(16));
-            //     doc.add(new Paragraph("Particulars of the payment are as below.")
-            //     .setFont(italic)
-            //     .setFontSize(14)
-            //     .setMultipliedLeading(1.2f)
-            //     .setMarginTop(16));
             Paragraph receiptParagraph = new Paragraph()
-    // Static text - Roman Italic
-    .add(new Text("An amount of ")
-            .setFont(italic))
+                // Static text - Roman Italic
+                .add(new Text("An amount of ")
+                        .setFont(italic))
 
-    // Dynamic amount - Bold + Underline
-    .add(new Text(money(receipt.getAmountPaid()))
-            .setFont(bold)
-            .setUnderline())
+                // Dynamic amount - Bold + Underline
+                .add(new Text(money(receipt.getAmountPaid()))
+                        .setFont(bold)
+                        .setUnderline())
 
-    // Static text - Roman Italic
-    .add(new Text(" received with thanks from Mr. / Ms. / Mrs. ")
-            .setFont(italic))
+                // Static text - Roman Italic
+                .add(new Text(" received with thanks from Mr. / Ms. / Mrs. ")
+                        .setFont(italic))
 
-    // Dynamic patient name - Bold + Underline
-    .add(new Text(patient)
-            .setFont(bold)
-            .setUnderline())
+                // Dynamic patient name - Bold + Underline
+                .add(new Text(patient)
+                        .setFont(bold)
+                        .setUnderline())
 
-    // Static text - Roman Italic
-    .add(new Text(" towards the treatment / examination / health check-up of Mr. / Ms. / Mrs. ")
-            .setFont(italic))
+                // Static text - Roman Italic
+                .add(new Text(" towards the treatment / examination / health check-up of Mr. / Ms. / Mrs. ")
+                        .setFont(italic))
 
-    // Dynamic patient name - Bold + Underline
-    .add(new Text(patient)
-            .setFont(bold)
-            .setUnderline())
+                // Dynamic patient name - Bold + Underline
+                .add(new Text(patient)
+                        .setFont(bold)
+                        .setUnderline())
 
-    // Static text - Roman Italic
-    .add(new Text(" at ")
-            .setFont(italic))
+                // Static text - Roman Italic
+                .add(new Text(" at ")
+                        .setFont(italic))
 
-    // Dynamic hospital name - Bold + Underline
-    .add(new Text(hospitalName)
-            .setFont(bold)
-            .setUnderline())
+                // Dynamic hospital name - Bold + Underline
+                .add(new Text(hospitalName)
+                        .setFont(bold)
+                        .setUnderline())
 
-    // Static text - Roman Italic
-    .add(new Text(".")
-            .setFont(italic))
+                // Static text - Roman Italic
+                .add(new Text(".")
+                        .setFont(italic))
 
-    .setFontSize(14)
-    .setMultipliedLeading(1.2f)
-    .setMarginTop(16);
+                .setFontSize(14)
+                .setMultipliedLeading(1.2f)
+                .setMarginTop(16);
 
-doc.add(receiptParagraph);
+            doc.add(receiptParagraph);
 
-doc.add(
-    new Paragraph("Particulars of the payment are as below.")
-        .setFont(italic)
-        .setFontSize(14)
-        .setMultipliedLeading(1.2f)
-        .setMarginTop(10)
-);
+            doc.add(
+                new Paragraph("Particulars of the payment are as below.")
+                    .setFont(italic)
+                    .setFontSize(14)
+                    .setMultipliedLeading(1.2f)
+                    .setMarginTop(10)
+            );
             // --- Table: Sr. No / Particulars / Amount (with borders) ---
             Table lines = new Table(new float[]{0.25f, 0.55f, 0.2f});
             lines.setWidth(contentWidth);
@@ -180,27 +181,86 @@ doc.add(
             footer.setWidth(contentWidth);
             footer.setMarginTop(30);
 
-            Cell qrCell = new Cell();
-            qrCell.setBorder(Border.NO_BORDER);
-            qrCell.setTextAlignment(TextAlignment.CENTER);
-            qrCell.add(new Paragraph("QR Code").setFont(bold).setFontSize(13));
-            qrCell.add(new Paragraph("(QR placeholder)"));
-            footer.addCell(qrCell);
+            Cell qrCell = new Cell()
+                    .setBorder(Border.NO_BORDER)
+                    .setTextAlignment(TextAlignment.CENTER);
+            URL qrUrl = getClass()
+                    .getClassLoader()
+                    .getResource("images/qr-code.png");
 
-            Cell sigCell = new Cell();
-            sigCell.setBorder(Border.NO_BORDER);
-            sigCell.setTextAlignment(TextAlignment.CENTER);
-            sigCell.add(new Paragraph("Authorized Signatory").setMarginBottom(20));
-            sigCell.add(new Paragraph("__________________________"));
-            footer.addCell(sigCell);
+            if (qrUrl != null) {
 
-            doc.add(footer);
+                Image qrImage = new Image(ImageDataFactory.create(qrUrl))
+                        .setWidth(100)
+                        .setHeight(100)
+                        .setHorizontalAlignment(HorizontalAlignment.CENTER);
+
+                qrCell.add(qrImage);
+
+                qrCell.add(
+                    new Paragraph("Scan the QR Code to pay online")
+                            .setFont(italic)
+                            .setFontSize(12)
+                            .setTextAlignment(TextAlignment.CENTER)
+                            .setMarginTop(5)
+                );
+
+            } else {
+
+                qrCell.add(
+                    new Paragraph("QR Code")
+                            .setFont(bold)
+                            .setFontSize(13)
+                );
+
+                qrCell.add(
+                    new Paragraph("(QR placeholder)")
+                            .setFont(regular)
+                );
+            }
+
+        footer.addCell(qrCell);
+        
+        Cell sigCell = new Cell()
+                .setBorder(Border.NO_BORDER)
+                .setTextAlignment(TextAlignment.CENTER);
+
+        // Rounded rectangle box
+        Div signBox = new Div()
+                .setWidth(150)
+                .setHeight(100)
+                .setBorder(new SolidBorder(2))
+                .setBorderRadius(new BorderRadius(15))
+                .setHorizontalAlignment(HorizontalAlignment.CENTER);
+
+        sigCell.add(signBox);
+
+        sigCell.add(
+            new Paragraph("Authorized Signatory")
+                .setFont(italic)
+                .setFontSize(12)
+                .setItalic()
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(5)
+        );
+
+        footer.addCell(sigCell);
+
+        doc.add(footer);
+
+        // Horizontal line below footer
+        LineSeparator line = new LineSeparator(new SolidLine());
+        line.setMarginTop(10);
+        line.setMarginBottom(10);
+
+        doc.add(line);
 
             // --- Note ---
             doc.add(new Paragraph("N.B.: This receipt is not for the medico legal purpose.")
                     .setFontSize(12)
-                    .setMarginTop(20));
-
+                    .setMarginTop(20)
+                    .setFont(italic)
+                    .setBold());
             doc.close();
             return out.toByteArray();
         } catch (Exception e) {
