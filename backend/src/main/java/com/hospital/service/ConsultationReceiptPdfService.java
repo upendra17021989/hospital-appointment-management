@@ -213,7 +213,7 @@ public class ConsultationReceiptPdfService {
                     .setFontSize(12)
                     .setMarginTop(20)
                     .setFont(italic)
-                    .setTextAlignment(TextAlignment.CENTER)
+                    .setTextAlignment(TextAlignment.LEFT)
                     .setBold());
 
             doc.close();
