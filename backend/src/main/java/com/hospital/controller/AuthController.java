@@ -105,10 +105,15 @@ public class AuthController {
         private UUID id;
         private String name;
         private String slug;
+        private String address;
         private String city;
+        private String state;
+        private String pincode;
         private String phone;
         private String email;
+        private String website;
         private String logoUrl;
+        private String licenseNumber;
     }
 
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
@@ -295,10 +300,15 @@ public class AuthController {
                     .id(hospital.getId())
                     .name(hospital.getName())
                     .slug(hospital.getSlug())
+                    .address(hospital.getAddress())
                     .city(hospital.getCity())
+                    .state(hospital.getState())
+                    .pincode(hospital.getPincode())
                     .phone(hospital.getPhone())
                     .email(hospital.getEmail())
+                    .website(hospital.getWebsite())
                     .logoUrl(hospital.getLogoUrl())
+                    .licenseNumber(hospital.getLicenseNumber())
                     .build();
         }
 

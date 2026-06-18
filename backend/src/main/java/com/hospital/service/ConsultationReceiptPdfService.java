@@ -2,6 +2,7 @@ package com.hospital.service;
 
 import com.hospital.model.ConsultationReceipt;
 import com.hospital.model.ConsultationReceiptLineItem;
+import com.hospital.model.Hospital;
 import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
@@ -77,7 +78,7 @@ public class ConsultationReceiptPdfService {
             Document doc = new Document(pdf, RECEIPT_PAGE);
             doc.setMargins(16, PAGE_MARGIN_X, 10, PAGE_MARGIN_X);
 
-            addHeader(doc, pdf, helveticaBold, helveticaBoldOblique);
+            addHeader(doc, pdf, receipt, helveticaBold, helveticaBoldOblique);
             addTitle(doc, timesItalic);
             addReceiptMeta(doc, receipt, timesItalic, timesBold);
             addNarration(doc, receipt, timesItalic, timesBoldItalic);
@@ -92,7 +93,7 @@ public class ConsultationReceiptPdfService {
         }
     }
 
-    private void addHeader(Document doc, PdfDocument pdf, PdfFont bold, PdfFont boldOblique) throws Exception {
+    private void addHeader(Document doc, PdfDocument pdf, ConsultationReceipt receipt, PdfFont bold, PdfFont boldOblique) throws Exception {
         Table header = new Table(UnitValue.createPointArray(new float[]{330, 320}))
                 .setWidth(CONTENT_WIDTH)
                 .setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -103,15 +104,13 @@ public class ConsultationReceiptPdfService {
                 .setPaddingLeft(78)
                 .setPaddingTop(0);
 
-        URL logoUrl = resource("images/swastik-logo.png");
-        if (logoUrl != null) {
-            logoCell.add(new Image(ImageDataFactory.create(logoUrl))
-                    .setWidth(185)
-                    .setAutoScaleHeight(false));
+        Image logo = loadLogo(receipt);
+        if (logo != null) {
+            logoCell.add(logo.setWidth(185).setAutoScaleHeight(false));
         } else {
-            logoCell.add(new Paragraph("SWASTIK CLINIC")
+            logoCell.add(new Paragraph(hospitalName(receipt))
                     .setFont(bold)
-                    .setFontSize(25)
+                    .setFontSize(24)
                     .setFontColor(BRAND_RED)
                     .setMargin(0));
         }
@@ -129,20 +128,29 @@ public class ConsultationReceiptPdfService {
                 .setFontColor(BRAND_RED)
                 .setMarginTop(0)
                 .setMarginBottom(4));
-        contact.add(contactLine(pdf, ContactIcon.PHONE, "9727777569", boldOblique));
-        contact.add(contactLine(pdf, ContactIcon.EMAIL, "swastikclinic.rajula@gmail.com", boldOblique));
-        contact.add(contactLine(pdf, ContactIcon.LOCATION, "Behind Gayatrimata Temple, Near Old Court", boldOblique));
-        contact.add(new Paragraph("Building, Krishnanagar Society, Rajula. 365560")
-                .setFont(boldOblique)
-                .setFontSize(12.5f)
-                .setFontColor(BRAND_BLUE)
-                .setMarginTop(0)
-                .setMarginBottom(0)
-                .setMarginLeft(29));
+        contact.add(contactLine(pdf, ContactIcon.PHONE, firstPresent(hospital(receipt).getPhone(), receipt.getHospitalPhone(), "9727777569"), boldOblique));
+        contact.add(contactLine(pdf, ContactIcon.EMAIL, firstPresent(hospital(receipt).getEmail(), "swastikclinic.rajula@gmail.com"), boldOblique));
+        addAddressLines(contact, pdf, boldOblique, receipt);
         header.addCell(contact);
 
         doc.add(header);
         doc.add(rule(CONTENT_WIDTH, 1.5f).setMarginTop(0).setMarginBottom(8));
+    }
+
+    private void addAddressLines(Cell contact, PdfDocument pdf, PdfFont font, ConsultationReceipt receipt) {
+        List<String> lines = splitAddress(addressText(receipt), 44);
+        if (lines.isEmpty()) return;
+
+        contact.add(contactLine(pdf, ContactIcon.LOCATION, lines.get(0), font));
+        for (int i = 1; i < Math.min(lines.size(), 3); i++) {
+            contact.add(new Paragraph(lines.get(i))
+                    .setFont(font)
+                    .setFontSize(12.5f)
+                    .setFontColor(BRAND_BLUE)
+                    .setMarginTop(0)
+                    .setMarginBottom(0)
+                    .setMarginLeft(29));
+        }
     }
 
     private void addTitle(Document doc, PdfFont italic) {
@@ -328,6 +336,68 @@ public class ConsultationReceiptPdfService {
 
         canvas.restoreState();
         return new Image(xObject).setWidth(18).setHeight(18);
+    }
+
+    private Image loadLogo(ConsultationReceipt receipt) throws Exception {
+        String logoUrl = hospital(receipt).getLogoUrl();
+        if (logoUrl != null && !logoUrl.isBlank()) {
+            try {
+                return new Image(ImageDataFactory.create(logoUrl.trim()));
+            } catch (Exception ignored) {
+                // Fall back to bundled logo when a configured URL/path cannot be loaded.
+            }
+        }
+
+        URL bundledLogo = resource("images/swastik-logo.png");
+        return bundledLogo != null ? new Image(ImageDataFactory.create(bundledLogo)) : null;
+    }
+
+    private String hospitalName(ConsultationReceipt receipt) {
+        return firstPresent(hospital(receipt).getName(), receipt.getHospitalName(), "SWASTIK CLINIC");
+    }
+
+    private String addressText(ConsultationReceipt receipt) {
+        Hospital hospital = hospital(receipt);
+        String address = firstPresent(hospital.getAddress(), receipt.getHospitalAddress());
+        String cityStatePin = joinNonBlank(", ", hospital.getCity(), hospital.getState(), hospital.getPincode());
+        String full = joinNonBlank(", ", address, cityStatePin);
+        return firstPresent(full, "Behind Gayatrimata Temple, Near Old Court Building, Krishnanagar Society, Rajula. 365560");
+    }
+
+    private Hospital hospital(ConsultationReceipt receipt) {
+        return receipt != null && receipt.getHospital() != null ? receipt.getHospital() : new Hospital();
+    }
+
+    private List<String> splitAddress(String value, int maxChars) {
+        List<String> lines = new ArrayList<>();
+        if (value == null || value.isBlank()) return lines;
+
+        StringBuilder current = new StringBuilder();
+        for (String word : value.trim().split("\\s+")) {
+            if (current.length() > 0 && current.length() + 1 + word.length() > maxChars) {
+                lines.add(current.toString());
+                current = new StringBuilder();
+            }
+            if (current.length() > 0) current.append(' ');
+            current.append(word);
+        }
+        if (current.length() > 0) lines.add(current.toString());
+        return lines;
+    }
+
+    private String joinNonBlank(String separator, String... values) {
+        List<String> parts = new ArrayList<>();
+        for (String value : values) {
+            if (value != null && !value.isBlank()) parts.add(value.trim());
+        }
+        return String.join(separator, parts);
+    }
+
+    private String firstPresent(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) return value.trim();
+        }
+        return "";
     }
 
     private void drawPhoneIcon(PdfCanvas canvas) {

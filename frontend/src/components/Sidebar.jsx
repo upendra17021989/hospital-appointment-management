@@ -34,6 +34,7 @@ const getNavGroups = (role) => {
       items: [
         { id: 'doctor-management', label: 'Manage Doctors', icon: 'doctor' },
         { id: 'user-management',   label: 'Manage Users',   icon: 'user' },
+        { id: 'hospital-settings', label: 'Hospital Settings', icon: 'department' },
         { id: 'departments',       label: 'Departments',    icon: 'department' },
       ],
     });

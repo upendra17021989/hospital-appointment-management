@@ -198,6 +198,11 @@ public class ConsultationReceiptService {
         if (receipt.getHospital() == null || !hospitalId.equals(receipt.getHospital().getId())) {
             throw new IllegalArgumentException("Receipt not found for current hospital");
         }
+        receipt.getHospital().getEmail();
+        receipt.getHospital().getLogoUrl();
+        receipt.getHospital().getCity();
+        receipt.getHospital().getState();
+        receipt.getHospital().getPincode();
         receipt.getLineItems().size();
         return receipt;
     }

@@ -17,6 +17,7 @@ import Patients         from './pages/Patients';
 import PatientDetail    from './pages/PatientDetail';
 import PrescriptionForm from './pages/PrescriptionForm';
 import UserManagement   from './pages/UserManagement';
+import HospitalSettings from './pages/HospitalSettings';
 import SubscriptionPlans from './pages/SubscriptionPlans';
 import BillingHistory   from './pages/BillingHistory';
 import Reports          from './pages/Reports';
@@ -59,6 +60,7 @@ const ROUTE_CONFIG = [
   { path: '/doctors', component: Doctors, roles: [], authRequired: true },
   { path: '/doctor-management', component: DoctorManagement, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/user-management', component: UserManagement, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/hospital-settings', component: HospitalSettings, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/departments', component: Departments, roles: [], authRequired: true },
   { path: '/patient-form', component: PatientForm, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/patients', component: Patients, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
