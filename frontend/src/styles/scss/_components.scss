@@ -117,6 +117,8 @@
   &-high       { background: #fff0e6; color: #c05000; }
   &-normal     { background: #f0f0f0; color: #555; }
   &-low        { background: #e6f4ee; color: #1a7a4a; }
+  &-active     { background: #e6f4ee; color: #1a7a4a; }
+  &-voided     { background: #fcecea; color: #c0220a; }
 }
 
 // ── Buttons ───────────────────────────────────────────────────
@@ -170,6 +172,20 @@
   &-sm {
     padding: 6px 14px;
     font-size: 12px;
+  }
+}
+
+.link-btn {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+
+  &:hover {
+    color: $primary;
   }
 }
 
@@ -1025,4 +1041,3 @@
   font-size: 13px;
   font-weight: 700;
 }
-

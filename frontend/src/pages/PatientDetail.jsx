@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { consultationReceiptApi, saveBlob } from '../services/receiptApi';
 import { LoadingSpinner, Badge, EmptyState } from '../components/Common';
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -241,6 +242,7 @@ const PatientDetail = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [appointments, setAppointments] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
+  const [receiptHistory, setReceiptHistory] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
@@ -249,15 +251,17 @@ const PatientDetail = () => {
   useEffect(() => {
     const fetchPatient = async () => {
       try {
-        const [p, apts, prescs] = await Promise.all([
+        const [p, apts, prescs, receipts] = await Promise.all([
           api.get(`/patients/hospital/${id}`).catch(() => null),
           api.get(`/appointments/hospital?patientId=${id}`).catch(() => []),
-          api.get(`/prescriptions/hospital/patient/${id}`).catch(() => [])
+          api.get(`/prescriptions/hospital/patient/${id}`).catch(() => []),
+          consultationReceiptApi.patientHistory(id).catch(() => [])
         ]);
         if (!p) throw new Error('Patient not found');
         setPatient(p);
         setAppointments(apts);
         setPrescriptions(prescs);
+        setReceiptHistory(receipts || []);
         setEditForm(p);
       } catch (e) {
         setError(e.message);
@@ -312,6 +316,9 @@ const PatientDetail = () => {
   const completedAppts  = appointments.filter(a => a.status === 'completed').length;
   const upcomingAppts   = appointments.filter(a => ['pending', 'confirmed'].includes(a.status)).length;
   const cancelledAppts  = appointments.filter(a => a.status === 'cancelled').length;
+  const receiptTotal = receiptHistory
+    .filter(r => r.receiptStatus !== 'VOIDED')
+    .reduce((sum, r) => sum + Number(r.amountPaid || 0), 0);
 
   if (loading) return <LoadingSpinner />;
   if (error || !patient) return <div className="alert alert-error">Patient not found</div>;
@@ -398,6 +405,7 @@ const PatientDetail = () => {
         <StatPill label="Upcoming"         value={upcomingAppts}       color="var(--gold)"    />
         <StatPill label="Cancelled"        value={cancelledAppts}      color="#c0220a"        />
         <StatPill label="Prescriptions"    value={prescriptions.length} color="#6a4a8a"      />
+        <StatPill label="Receipts"         value={receiptHistory.length} color="#1a7a4a"      />
       </div>
 
       {/* Tabs */}
@@ -406,6 +414,7 @@ const PatientDetail = () => {
           { key: 'overview',      label: 'Overview' },
           { key: 'appointments',  label: 'Appointments',  count: appointments.length  },
           { key: 'prescriptions', label: 'Prescriptions', count: prescriptions.length },
+          { key: 'receipts',      label: 'Receipt History', count: receiptHistory.length },
           { key: 'edit',          label: 'Edit Details' },
         ].map(t => (
           <Tab
@@ -536,6 +545,62 @@ const PatientDetail = () => {
         </div>
       )}
 
+      {activeTab === 'receipts' && (
+        <div className="pd-tab-content">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700 }}>
+              Receipt History ({receiptHistory.length})
+            </h3>
+            <div style={{ fontWeight: 700, color: 'var(--accent)' }}>
+              Total: Rs {receiptTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </div>
+          {receiptHistory.length === 0 ? (
+            <EmptyState icon="RC" title="No receipts" subtitle="Consultation receipts for this patient will appear here" />
+          ) : (
+            <div className="table-wrap table-wrap--scrollable">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Receipt Number</th>
+                    <th>Date</th>
+                    <th>Doctor</th>
+                    <th>Amount</th>
+                    <th>Payment Mode</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {receiptHistory.map(r => (
+                    <tr key={r.id}>
+                      <td><strong>{r.receiptNumber}</strong></td>
+                      <td>{formatDate(r.receiptDateTime)}</td>
+                      <td>{r.doctorName || '---'}</td>
+                      <td>Rs {Number(r.amountPaid || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td>{r.paymentMode?.replace('_', ' ')}</td>
+                      <td><Badge status={(r.receiptStatus || 'ACTIVE').toLowerCase()} /></td>
+                      <td>
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          disabled={r.receiptStatus === 'VOIDED'}
+                          onClick={async () => {
+                            const blob = await consultationReceiptApi.downloadById(r.id);
+                            saveBlob(blob, `${r.receiptNumber}.pdf`);
+                          }}
+                        >
+                          PDF
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── EDIT TAB ── */}
       {activeTab === 'edit' && (
         <div className="pd-tab-content">
@@ -630,4 +695,3 @@ const PatientDetail = () => {
 };
 
 export default PatientDetail;
-

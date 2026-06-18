@@ -17,6 +17,7 @@ export const useRole = () => {
   const isHospitalAdmin = () => hasRole('HOSPITAL_ADMIN');
   const isStaff = () => hasRole('STAFF');
   const isReceptionist = () => hasRole('RECEPTIONIST');
+  const isAccountant = () => hasRole('ACCOUNTANT');
 
   const canManageDoctors = () => hasAnyRole(['HOSPITAL_ADMIN', 'SUPER_ADMIN']);
   const canManageUsers = () => hasAnyRole(['HOSPITAL_ADMIN', 'SUPER_ADMIN']);
@@ -33,6 +34,7 @@ export const useRole = () => {
     isHospitalAdmin,
     isStaff,
     isReceptionist,
+    isAccountant,
     canManageDoctors,
     canManageUsers,
     canViewAllData,

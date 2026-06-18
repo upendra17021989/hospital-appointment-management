@@ -71,7 +71,7 @@ const getNavGroups = (role) => {
     });
   }
 
-  if (['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+  if (['STAFF', 'RECEPTIONIST', 'ACCOUNTANT', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
     roleBasedGroups.push({
       key: 'consultation-receipts',
       label: 'Consultation',
