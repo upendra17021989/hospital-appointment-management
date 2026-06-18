@@ -4,217 +4,77 @@ import com.hospital.model.ConsultationReceipt;
 import com.hospital.model.ConsultationReceiptLineItem;
 import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageDataFactory;
-import com.itextpdf.io.image.ImageData;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
-import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Div;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.LineSeparator;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.properties.BorderRadius;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URL;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
 public class ConsultationReceiptPdfService {
 
-    private static final DateTimeFormatter RECEIPT_DATE = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
-    
-    // Brand colors from the logo
-    private static final DeviceRgb BRAND_RED = new DeviceRgb(220, 53, 69);
-    private static final DeviceRgb BRAND_BLUE = new DeviceRgb(0, 123, 255);
+    private static final DateTimeFormatter RECEIPT_DATE = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+    private static final PageSize RECEIPT_PAGE = new PageSize(794, 628);
+    private static final float PAGE_MARGIN_X = 48;
+    private static final float CONTENT_WIDTH = 698;
+    private static final float FORM_WIDTH = 606;
+    private static final float TABLE_WIDTH = 559;
 
+    private static final DeviceRgb BRAND_RED = new DeviceRgb(219, 30, 37);
+    private static final DeviceRgb BRAND_BLUE = new DeviceRgb(26, 82, 142);
     public byte[] generatePdf(ConsultationReceipt receipt) {
         try {
-            PdfFont regular = PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN);
-            PdfFont bold = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD);
-            PdfFont italic = PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC);
-            PdfFont boldItalic = PdfFontFactory.createFont(StandardFonts.TIMES_BOLDITALIC);
+            PdfFont times = PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN);
+            PdfFont timesBold = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD);
+            PdfFont timesItalic = PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC);
+            PdfFont timesBoldItalic = PdfFontFactory.createFont(StandardFonts.TIMES_BOLDITALIC);
+            PdfFont helveticaBold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont helveticaBoldOblique = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLDOBLIQUE);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            PdfWriter writer = new PdfWriter(out);
-            PdfDocument pdf = new PdfDocument(writer);
-            Document doc = new Document(pdf);
-            doc.setMargins(20, 20, 20, 20);
-            float pageWidth = pdf.getDefaultPageSize().getWidth();
-            float contentWidth = pageWidth - 40;
+            PdfDocument pdf = new PdfDocument(new PdfWriter(out));
+            pdf.setDefaultPageSize(RECEIPT_PAGE);
 
-            // ============================================================
-            // HEADER SECTION - Logo + Clinic Name | Contact Info
-            // ============================================================
-            addClinicHeader(doc, contentWidth, bold, regular);
+            Document doc = new Document(pdf, RECEIPT_PAGE);
+            doc.setMargins(16, PAGE_MARGIN_X, 10, PAGE_MARGIN_X);
 
-            // --- Header: Invoice | Receipt ---
-            doc.add(new Paragraph("Invoice | Receipt")
-                    .setFont(italic)
-                    .setFontSize(26)
-                    .setUnderline()
-                    .setTextAlignment(TextAlignment.CENTER)
-                    .setMarginTop(15));
-
-            // --- Receipt info: Receipt No / Receipt Date ---
-            Table receiptInfo = new Table(new float[]{1, 1});
-            receiptInfo.setWidth(contentWidth);
-            receiptInfo.setHorizontalAlignment(HorizontalAlignment.CENTER);
-            receiptInfo.setMarginTop(12);
-
-            receiptInfo.addCell(infoCell("Receipt No.", receipt.getReceiptNumber(), italic, bold));
-            receiptInfo.addCell(infoCell("Receipt Date", formatReceiptDate(receipt), italic, bold));
-            receiptInfo.setTextAlignment(TextAlignment.CENTER);
-
-            doc.add(receiptInfo);
-
-            // --- Description narrative (template text) ---
-            String patient = safe(receipt.getPatientName());
-            String hospitalName = safe(receipt.getHospitalName());
-            Paragraph receiptParagraph = new Paragraph()
-                    .add(new Text("An amount of ").setFont(italic))
-                    .add(new Text(money(receipt.getAmountPaid())).setFont(bold).setUnderline())
-                    .add(new Text(" received with thanks from Mr. / Ms. / Mrs. ").setFont(italic))
-                    .add(new Text(patient).setFont(bold).setUnderline())
-                    .add(new Text(" towards the treatment / examination / health check-up of Mr. / Ms. / Mrs. ").setFont(italic))
-                    .add(new Text(patient).setFont(bold).setUnderline())
-                    .add(new Text(" at ").setFont(italic))
-                    .add(new Text(hospitalName).setFont(bold).setUnderline())
-                    .add(new Text(".").setFont(italic))
-                    .setFontSize(14)
-                    .setMultipliedLeading(1.2f)
-                    .setMarginTop(16)
-                    .setWidth(contentWidth)
-                    .setTextAlignment(TextAlignment.CENTER);
-
-            doc.add(receiptParagraph);
-
-            doc.add(new Paragraph("Particulars of the payment are as below.")
-                    .setFont(italic)
-                    .setFontSize(14)
-                    .setMultipliedLeading(1.2f)
-                    .setMarginTop(10));
-
-            // --- Table: Sr. No / Particulars / Amount ---
-            Table lines = new Table(new float[]{0.25f, 0.55f, 0.2f});
-            lines.setWidth(contentWidth);
-            lines.setHorizontalAlignment(HorizontalAlignment.CENTER);
-            lines.setMarginTop(14);
-
-            lines.addHeaderCell(borderedHeaderCell("Sr. No."));
-            lines.addHeaderCell(borderedHeaderCell("Particulars"));
-            lines.addHeaderCell(borderedHeaderCell("Amount"));
-
-            List<ConsultationReceiptLineItem> items = receipt.getLineItems() != null 
-                    ? receipt.getLineItems() 
-                    : new ArrayList<>();
-            
-            if (items.isEmpty()) {
-                ConsultationReceiptLineItem li = ConsultationReceiptLineItem.builder()
-                        .srNo(1)
-                        .particulars("Consultation Fee")
-                        .amount(receipt.getConsultationFee())
-                        .build();
-                items = List.of(li);
-            }
-
-            for (ConsultationReceiptLineItem li : items) {
-                lines.addCell(borderedBodyCell(String.valueOf(li.getSrNo())));
-                lines.addCell(borderedBodyCell(safe(li.getParticulars())));
-                Cell amt = borderedBodyCell(money(li.getAmount()));
-                amt.setTextAlignment(TextAlignment.RIGHT);
-                lines.addCell(amt);
-            }
-
-            doc.add(lines);
-
-            // --- Grand total ---
-            doc.add(new Paragraph("Grand Total : " + money(receipt.getAmountPaid()) + " INR")
-                    .setFontSize(20)
-                    .setBold()
-                    .setTextAlignment(TextAlignment.RIGHT)
-                    .setMarginTop(10));
-
-            // --- Footer: QR + Signature ---
-            Table footer = new Table(new float[]{1, 1});
-            footer.setWidth(contentWidth);
-            footer.setHorizontalAlignment(HorizontalAlignment.CENTER);
-            footer.setMarginTop(30);
-
-            Cell qrCell = new Cell()
-                    .setBorder(Border.NO_BORDER)
-                    .setTextAlignment(TextAlignment.CENTER);
-            
-            URL qrUrl = getClass().getClassLoader().getResource("images/qr-code.png");
-
-            if (qrUrl != null) {
-                Image qrImage = new Image(ImageDataFactory.create(qrUrl))
-                        .setWidth(100)
-                        .setHeight(100)
-                        .setHorizontalAlignment(HorizontalAlignment.CENTER);
-                qrCell.add(qrImage);
-                qrCell.add(new Paragraph("Scan the QR Code to pay online")
-                        .setFont(italic)
-                        .setFontSize(12)
-                        .setTextAlignment(TextAlignment.CENTER)
-                        .setMarginTop(5));
-            } else {
-                qrCell.add(new Paragraph("QR Code").setFont(bold).setFontSize(13));
-                qrCell.add(new Paragraph("(QR placeholder)").setFont(regular));
-            }
-
-            footer.addCell(qrCell);
-
-            Cell sigCell = new Cell()
-                    .setBorder(Border.NO_BORDER)
-                    .setTextAlignment(TextAlignment.CENTER);
-
-            Div signBox = new Div()
-                    .setWidth(150)
-                    .setHeight(100)
-                    .setBorder(new SolidBorder(2))
-                    .setBorderRadius(new BorderRadius(15));
-            signBox.setHorizontalAlignment(HorizontalAlignment.CENTER);
-
-            sigCell.add(signBox);
-            sigCell.add(new Paragraph("Authorized Signatory")
-                    .setFont(italic)
-                    .setFontSize(12)
-                    .setItalic()
-                    .setTextAlignment(TextAlignment.CENTER)
-                    .setMarginTop(5));
-
-            footer.addCell(sigCell);
-            doc.add(footer);
-
-            // Horizontal line
-            LineSeparator line = new LineSeparator(new SolidLine());
-            line.setHorizontalAlignment(HorizontalAlignment.CENTER);
-            line.setMarginTop(10);
-            line.setMarginBottom(10);
-            doc.add(line);
-
-            // --- Note ---
-            doc.add(new Paragraph("N.B.: This receipt is not for the medico legal purpose.")
-                    .setFontSize(12)
-                    .setMarginTop(20)
-                    .setFont(italic)
-                    .setTextAlignment(TextAlignment.LEFT)
-                    .setBold());
+            addHeader(doc, helveticaBold, helveticaBoldOblique);
+            addTitle(doc, timesItalic);
+            addReceiptMeta(doc, receipt, timesItalic, timesBold);
+            addNarration(doc, receipt, timesItalic, timesBoldItalic);
+            addParticulars(doc, receipt, times, timesItalic);
+            addQrAndSignature(doc, timesItalic);
+            addFooterNote(doc, timesBoldItalic);
 
             doc.close();
             return out.toByteArray();
@@ -223,146 +83,285 @@ public class ConsultationReceiptPdfService {
         }
     }
 
-    /**
-     * Adds the clinic header with logo and contact information.
-     */
-    private void addClinicHeader(Document doc, float contentWidth, PdfFont bold, PdfFont regular) {
-        try {
-            // Main header table: Logo+Name | Contact Info
-            Table headerTable = new Table(new float[]{0.45f, 0.55f});
-            headerTable.setWidth(contentWidth);
-            headerTable.setHorizontalAlignment(HorizontalAlignment.CENTER);
+    private void addHeader(Document doc, PdfFont bold, PdfFont boldOblique) throws Exception {
+        Table header = new Table(UnitValue.createPointArray(new float[]{330, 320}))
+                .setWidth(CONTENT_WIDTH)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER);
 
-            // --- LEFT CELL: Logo + Clinic Name ---
-            Cell leftCell = new Cell()
-                    .setBorder(Border.NO_BORDER)
-                    .setVerticalAlignment(VerticalAlignment.MIDDLE);
+        Cell logoCell = noBorderCell()
+                .setHeight(113)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPaddingLeft(78)
+                .setPaddingTop(0);
 
-            // Try to load the clinic logo
-            URL logoUrl = getClass().getClassLoader().getResource("images/swastik-logo.png");
-            
-            if (logoUrl != null) {
-                Image logo = new Image(ImageDataFactory.create(logoUrl))
-                        .setWidth(180)
-                        .setHeight(100);
-                
-                // Create a table for logo and text side by side
-                Table logoTextTable = new Table(new float[]{180, 150});
-                logoTextTable.setBorder(Border.NO_BORDER);
-                
-                Cell logoCell = new Cell()
-                        .setBorder(Border.NO_BORDER)
-                        .add(logo)
-                        .setVerticalAlignment(VerticalAlignment.MIDDLE);
-                logoTextTable.addCell(logoCell);
-                
-                // // Clinic name and tagline
-                // Cell nameCell = new Cell()
-                //         .setBorder(Border.NO_BORDER)
-                //         .setVerticalAlignment(VerticalAlignment.MIDDLE)
-                //         .setPaddingLeft(5);
-                
-                // nameCell.add(new Paragraph("SWASTIK CLINIC")
-                //         .setFont(bold)
-                //         .setFontSize(18)
-                //         .setFontColor(BRAND_BLUE)
-                //         .setMarginBottom(0));
-                
-                // nameCell.add(new Paragraph("Curing Humanity...")
-                //         .setFont(regular)
-                //         .setFontSize(10)
-                //         .setFontColor(BRAND_RED)
-                //         .setItalic()
-                //         .setMarginTop(0));
-                
-                // logoTextTable.addCell(nameCell);
-                leftCell.add(logoTextTable);
-            } else {
-                // Fallback: text only
-                leftCell.add(new Paragraph("SWASTIK CLINIC")
-                        .setFont(bold)
-                        .setFontSize(18)
-                        .setFontColor(BRAND_BLUE));
-                leftCell.add(new Paragraph("Curing Humanity...")
-                        .setFont(regular)
-                        .setFontSize(10)
-                        .setFontColor(BRAND_RED)
-                        .setItalic());
-            }
-
-            headerTable.addCell(leftCell);
-
-            // --- RIGHT CELL: Contact Information ---
-            Cell rightCell = new Cell()
-                    .setBorder(Border.NO_BORDER)
-                    .setTextAlignment(TextAlignment.LEFT)
-                    .setVerticalAlignment(VerticalAlignment.MIDDLE)
-                    .setPaddingLeft(20);
-
-            // "CONTACT US ON" header
-            rightCell.add(new Paragraph("CONTACT US ON")
+        URL logoUrl = resource("images/swastik-logo.png");
+        if (logoUrl != null) {
+            logoCell.add(new Image(ImageDataFactory.create(logoUrl))
+                    .setWidth(185)
+                    .setAutoScaleHeight(false));
+        } else {
+            logoCell.add(new Paragraph("SWASTIK CLINIC")
                     .setFont(bold)
-                    .setFontSize(14)
+                    .setFontSize(25)
                     .setFontColor(BRAND_RED)
-                    .setMarginBottom(5));
-
-
-            // Phone
-                URL phoneUrl = getClass().getClassLoader().getResource("images/phone.png");
-                if (phoneUrl != null) {
-                Image phoneImg = new Image(ImageDataFactory.create(phoneUrl)).scaleToFit(12, 12);
-                rightCell.add(new Paragraph()
-                        .add(phoneImg)
-                        .add(new Text(" 9727777569").setFont(regular).setFontColor(BRAND_BLUE))
-                        .setBold().setItalic());
-                }
-
-                // Email
-                URL emailUrl = getClass().getClassLoader().getResource("images/email.png");
-                if (emailUrl != null) {
-                Image emailImg = new Image(ImageDataFactory.create(emailUrl)).scaleToFit(12, 12);
-                rightCell.add(new Paragraph()
-                        .add(emailImg)
-                        .add(new Text(" swastikclinic.rajula@gmail.com").setFont(regular).setFontColor(BRAND_BLUE))
-                        .setBold().setItalic());
-                }
-
-                // Address
-                URL addressUrl = getClass().getClassLoader().getResource("images/address.png");
-                if (addressUrl != null) {
-                Image addressImg = new Image(ImageDataFactory.create(addressUrl)).scaleToFit(12, 12);
-                rightCell.add(new Paragraph()
-                        .add(addressImg)
-                        .add(new Text(" Behind Gayatrimata Temple, Near Old Court Building, Krishnanagar Society, Rajula. 365560")
-                        .setFont(regular).setFontColor(BRAND_BLUE))
-                        .setBold().setItalic());
-                }
-
-            headerTable.addCell(rightCell);
-
-            doc.add(headerTable);
-
-            // Add a separator line below header
-            LineSeparator headerLine = new LineSeparator(new SolidLine(1));
-            headerLine.setMarginTop(10);
-            headerLine.setMarginBottom(5);
-            doc.add(headerLine);
-
-        } catch (Exception e) {
-            // If header fails, continue without it
-            System.err.println("Warning: Could not add clinic header: " + e.getMessage());
+                    .setMargin(0));
         }
+        header.addCell(logoCell);
+
+        Cell contact = noBorderCell()
+                .setHeight(113)
+                .setPaddingLeft(32)
+                .setPaddingTop(0)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE);
+
+        contact.add(new Paragraph("CONTACT US ON")
+                .setFont(bold)
+                .setFontSize(20)
+                .setFontColor(BRAND_RED)
+                .setMarginTop(0)
+                .setMarginBottom(4));
+        contact.add(contactLine("images/phone.png", "9727777569", boldOblique));
+        contact.add(contactLine("images/email.png", "swastikclinic.rajula@gmail.com", boldOblique));
+        contact.add(contactLine("images/address.png", "Behind Gayatrimata Temple, Near Old Court", boldOblique));
+        contact.add(new Paragraph("Building, Krishnanagar Society, Rajula. 365560")
+                .setFont(boldOblique)
+                .setFontSize(12.5f)
+                .setFontColor(BRAND_BLUE)
+                .setMarginTop(0)
+                .setMarginBottom(0)
+                .setMarginLeft(29));
+        header.addCell(contact);
+
+        doc.add(header);
+        doc.add(rule(CONTENT_WIDTH, 1.5f).setMarginTop(0).setMarginBottom(8));
     }
 
-    /**
-     * Creates a contact information line with icon.
-     */
-    private Paragraph createContactLine(String icon, String text, PdfFont font) {
-        return new Paragraph()
-                .add(new Text(icon + " ").setFontColor(BRAND_BLUE))
-                .add(new Text(text).setFont(font).setFontSize(10))
+    private void addTitle(Document doc, PdfFont italic) {
+        Paragraph title = new Paragraph()
+                .add(new Text("Invoice").setUnderline(0.5f, -2))
+                .add(new Text("  |  "))
+                .add(new Text("Receipt").setUnderline(0.5f, -2))
+                .setFont(italic)
+                .setFontSize(26)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setWidth(CONTENT_WIDTH)
+                .setMarginTop(0)
+                .setMarginBottom(13);
+        doc.add(title);
+        doc.add(rule(FORM_WIDTH, 0.75f).setMarginTop(0).setMarginBottom(14));
+    }
+
+    private void addReceiptMeta(Document doc, ConsultationReceipt receipt, PdfFont italic, PdfFont bold) {
+        Table meta = new Table(UnitValue.createPointArray(new float[]{303, 303}))
+                .setWidth(FORM_WIDTH)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER)
+                .setMarginBottom(12);
+        meta.addCell(metaCell("Receipt No. : ", safe(receipt.getReceiptNumber()), italic, bold, TextAlignment.CENTER));
+        meta.addCell(metaCell("Receipt Date : ", formatReceiptDate(receipt), italic, bold, TextAlignment.CENTER));
+        doc.add(meta);
+    }
+
+    private void addNarration(Document doc, ConsultationReceipt receipt, PdfFont italic, PdfFont boldItalic) {
+        String patient = safe(receipt.getPatientName());
+        String hospital = safe(receipt.getHospitalName()).isBlank() ? "Swastik Clinic" : safe(receipt.getHospitalName());
+
+        Paragraph line = new Paragraph()
+                .add(new Text("An amount of ").setFont(italic))
+                .add(new Text(amountInWords(receipt.getAmountPaid())).setFont(boldItalic).setUnderline(0.5f, -1))
+                .add(new Text(" received with thanks from Mr. / Ms. / Mrs. ").setFont(italic))
+                .add(new Text(patient).setFont(boldItalic).setUnderline(0.5f, -1))
+                .add(new Text(" towards the").setFont(italic))
+                .setFontSize(12)
+                .setMarginTop(0)
+                .setMarginBottom(0)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setWidth(FORM_WIDTH)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER)
+                .setMultipliedLeading(1.1f);
+        doc.add(line);
+
+        Paragraph line2 = new Paragraph()
+                .add(new Text("treatment / examination / health check-up of Mr. / Ms. / Mrs. ").setFont(italic))
+                .add(new Text(patient).setFont(boldItalic).setUnderline(0.5f, -1))
+                .add(new Text(" at ").setFont(italic))
+                .add(new Text(hospital).setFont(boldItalic).setUnderline(0.5f, -1))
+                .add(new Text(".").setFont(italic))
+                .setFontSize(12)
+                .setMarginTop(0)
+                .setMarginBottom(14)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setWidth(FORM_WIDTH)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER)
+                .setMultipliedLeading(1.1f);
+        doc.add(line2);
+    }
+
+    private void addParticulars(Document doc,
+                                ConsultationReceipt receipt,
+                                PdfFont times,
+                                PdfFont italic) {
+        doc.add(new Paragraph("Particulars of the payment are as below.")
+                .setFont(italic)
+                .setFontSize(12)
+                .setWidth(FORM_WIDTH)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER)
+                .setMarginTop(0)
+                .setMarginBottom(16));
+
+        Table table = new Table(UnitValue.createPointArray(new float[]{57, 378, 124}))
+                .setWidth(TABLE_WIDTH)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER)
+                .setMarginTop(0)
+                .setMarginBottom(12);
+
+        table.addHeaderCell(tableCell("Sr. No.", italic, 11, TextAlignment.CENTER, true));
+        table.addHeaderCell(tableCell("Particulars", italic, 11, TextAlignment.CENTER, true));
+        table.addHeaderCell(tableCell("Amount", italic, 11, TextAlignment.CENTER, true));
+
+        List<ConsultationReceiptLineItem> items = lineItems(receipt);
+        for (int i = 0; i < 5; i++) {
+            ConsultationReceiptLineItem item = i < items.size() ? items.get(i) : null;
+            table.addCell(tableCell(item == null ? "" : String.valueOf(item.getSrNo()), times, 10, TextAlignment.CENTER, false));
+            table.addCell(tableCell(item == null ? "" : safe(item.getParticulars()), times, 10, TextAlignment.LEFT, false));
+            table.addCell(tableCell(item == null ? "" : money(item.getAmount()), times, 10, TextAlignment.CENTER, false));
+        }
+
+        table.addCell(tableCell("", times, 10, TextAlignment.CENTER, false));
+        table.addCell(tableCell("Grand Total", italic, 11, TextAlignment.RIGHT, false));
+        table.addCell(tableCell(money(receipt.getAmountPaid()) + " INR", times, 10, TextAlignment.CENTER, false));
+        doc.add(table);
+    }
+
+    private void addQrAndSignature(Document doc, PdfFont italic) throws Exception {
+        Table bottom = new Table(UnitValue.createPointArray(new float[]{330, 330}))
+                .setWidth(660)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER)
+                .setMarginTop(0)
+                .setMarginBottom(11);
+
+        Cell qrCell = noBorderCell()
+                .setTextAlignment(TextAlignment.CENTER)
+                .setPaddingLeft(84)
+                .setPaddingTop(0);
+        URL qrUrl = resource("images/qr-code.png");
+        if (qrUrl != null) {
+            qrCell.add(new Image(ImageDataFactory.create(qrUrl))
+                    .setWidth(84)
+                    .setHeight(84)
+                    .setHorizontalAlignment(HorizontalAlignment.CENTER));
+        } else {
+            qrCell.add(new Paragraph("QR").setFont(italic).setFontSize(18).setMarginBottom(42));
+        }
+        qrCell.add(new Paragraph("Scan the QR Code to pay online")
+                .setFont(italic)
+                .setFontSize(12)
                 .setMarginTop(2)
-                .setMarginBottom(2);
+                .setMarginBottom(0));
+        bottom.addCell(qrCell);
+
+        Cell signCell = noBorderCell()
+                .setTextAlignment(TextAlignment.CENTER)
+                .setPaddingLeft(74)
+                .setPaddingTop(0);
+        Div signBox = new Div()
+                .setWidth(122)
+                .setHeight(82)
+                .setBorder(new SolidBorder(ColorConstants.BLACK, 1.7f))
+                .setBorderRadius(new BorderRadius(14))
+                .setHorizontalAlignment(HorizontalAlignment.CENTER);
+        signCell.add(signBox);
+        signCell.add(new Paragraph("Authorized Signatory")
+                .setFont(italic)
+                .setFontSize(12)
+                .setMarginTop(2)
+                .setMarginBottom(0));
+        bottom.addCell(signCell);
+
+        doc.add(bottom);
+        doc.add(rule(FORM_WIDTH, 0.75f).setMarginTop(0).setMarginBottom(17));
+    }
+
+    private void addFooterNote(Document doc, PdfFont boldItalic) {
+        doc.add(new Paragraph("N.B.: This receipt is not for the medico legal purpose.")
+                .setFont(boldItalic)
+                .setFontSize(11)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setWidth(FORM_WIDTH)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER)
+                .setMargin(0));
+    }
+
+    private Paragraph contactLine(String iconPath, String text, PdfFont font) throws Exception {
+        Paragraph paragraph = new Paragraph()
+                .setFont(font)
+                .setFontSize(12.5f)
+                .setFontColor(BRAND_BLUE)
+                .setMarginTop(0)
+                .setMarginBottom(2)
+                .setMultipliedLeading(1);
+        URL iconUrl = resource(iconPath);
+        if (iconUrl != null) {
+            paragraph.add(new Image(ImageDataFactory.create(iconUrl)).setWidth(18).setHeight(18));
+            paragraph.add(new Text("  "));
+        }
+        paragraph.add(new Text(text));
+        return paragraph;
+    }
+
+    private Cell metaCell(String label, String value, PdfFont labelFont, PdfFont valueFont, TextAlignment align) {
+        Paragraph p = new Paragraph()
+                .add(new Text(label).setFont(labelFont))
+                .add(new Text(value).setFont(valueFont).setUnderline(0.5f, -1))
+                .setFontSize(12)
+                .setTextAlignment(align)
+                .setMargin(0);
+        return noBorderCell().add(p).setPadding(0);
+    }
+
+    private Cell tableCell(String text, PdfFont font, float size, TextAlignment align, boolean header) {
+        Cell cell = new Cell()
+                .setBorder(new SolidBorder(ColorConstants.BLACK, 0.8f))
+                .setHeight(17)
+                .setPaddingTop(1)
+                .setPaddingBottom(0)
+                .setPaddingLeft(7)
+                .setPaddingRight(7)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE);
+        if (header) {
+            cell.setPaddingLeft(3).setPaddingRight(3);
+        }
+        cell.add(new Paragraph(text == null ? "" : text)
+                .setFont(font)
+                .setFontSize(size)
+                .setTextAlignment(align)
+                .setMargin(0)
+                .setMultipliedLeading(1));
+        return cell;
+    }
+
+    private LineSeparator rule(float width, float lineWidth) {
+        LineSeparator line = new LineSeparator(new SolidLine(lineWidth));
+        line.setWidth(width);
+        line.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        return line;
+    }
+
+    private Cell noBorderCell() {
+        return new Cell().setBorder(Border.NO_BORDER);
+    }
+
+    private List<ConsultationReceiptLineItem> lineItems(ConsultationReceipt receipt) {
+        List<ConsultationReceiptLineItem> items = receipt.getLineItems() != null
+                ? new ArrayList<>(receipt.getLineItems())
+                : new ArrayList<>();
+        if (items.isEmpty()) {
+            items.add(ConsultationReceiptLineItem.builder()
+                    .srNo(1)
+                    .particulars("Consultation Fee")
+                    .amount(receipt.getConsultationFee())
+                    .build());
+        }
+        return items;
     }
 
     private String formatReceiptDate(ConsultationReceipt receipt) {
@@ -370,40 +369,38 @@ public class ConsultationReceiptPdfService {
         return receipt.getReceiptDateTime().toLocalDate().format(RECEIPT_DATE);
     }
 
-    private Cell infoCell(String label, String value, PdfFont regular, PdfFont bold) {
-        Cell cell = new Cell()
-                .setBorder(Border.NO_BORDER)
-                .setTextAlignment(TextAlignment.CENTER);
-
-        cell.add(new Paragraph(label)
-                .setFont(bold)
-                .setFontSize(14)
-                .setMarginBottom(0));
-
-        cell.add(new Paragraph(value != null ? value : "")
-                .setFont(regular)
-                .setFontSize(14)
-                .setMarginTop(0));
-
-        return cell;
+    private String amountInWords(BigDecimal amount) {
+        if (amount == null) return "";
+        long rupees = amount.setScale(0, RoundingMode.DOWN).longValue();
+        String words = numberToWords(rupees);
+        return words.isBlank() ? money(amount) + " Rupees" : words + " Rupees";
     }
 
-    private Cell borderedHeaderCell(String text) {
-        Cell cell = new Cell();
-        cell.add(new Paragraph(text).setFontSize(12).setBold());
-        cell.setBorder(new SolidBorder(1));
-        cell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
-        return cell;
+    private String numberToWords(long number) {
+        if (number == 0) return "Zero";
+        if (number < 0) return "Minus " + numberToWords(Math.abs(number));
+
+        String[] units = {
+                "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+                "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+                "Seventeen", "Eighteen", "Nineteen"
+        };
+        String[] tens = {
+                "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+        };
+        if (number < 20) return units[(int) number];
+        if (number < 100) return tens[(int) number / 10] + (number % 10 == 0 ? "" : " " + units[(int) number % 10]);
+        if (number < 1_000) return units[(int) number / 100] + " Hundred" + (number % 100 == 0 ? "" : " " + numberToWords(number % 100));
+        if (number < 100_000) return numberToWords(number / 1_000) + " Thousand" + (number % 1_000 == 0 ? "" : " " + numberToWords(number % 1_000));
+        if (number < 10_000_000) return numberToWords(number / 100_000) + " Lakh" + (number % 100_000 == 0 ? "" : " " + numberToWords(number % 100_000));
+        return numberToWords(number / 10_000_000) + " Crore" + (number % 10_000_000 == 0 ? "" : " " + numberToWords(number % 10_000_000));
     }
 
-    private Cell borderedBodyCell(String text) {
-        Cell cell = new Cell();
-        cell.add(new Paragraph(text != null ? text : "").setFontSize(12));
-        cell.setBorder(new SolidBorder(1));
-        return cell;
+    private URL resource(String path) {
+        return getClass().getClassLoader().getResource(path);
     }
 
-    private String money(java.math.BigDecimal amt) {
+    private String money(BigDecimal amt) {
         if (amt == null) return "";
         return amt.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
