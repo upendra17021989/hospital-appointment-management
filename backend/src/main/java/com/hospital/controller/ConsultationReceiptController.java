@@ -58,6 +58,11 @@ public class ConsultationReceiptController {
         ConsultationReceipt receipt = receiptRepo.findByHospitalIdAndReceiptNumber(hospitalId, receiptNumber)
                 .orElseThrow(() -> new RuntimeException("Receipt not found"));
 
+        // Prevent printing voided receipts
+        if ("VOIDED".equalsIgnoreCase(receipt.getReceiptStatus())) {
+            throw new RuntimeException("Receipt is voided and cannot be reprinted");
+        }
+
         byte[] pdf = pdfService.generatePdf(receipt);
 
         String filename = receipt.getReceiptNumber() + ".pdf";
@@ -67,4 +72,6 @@ public class ConsultationReceiptController {
                 .body(pdf);
     }
 }
+
+
 

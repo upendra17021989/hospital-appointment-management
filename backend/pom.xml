@@ -116,6 +116,9 @@
             <version>5.2.5</version>
         </dependency>
 
+        <!-- Needed for compiling JPA projections and exports (no extra deps beyond POI) -->
+
+
         <!-- Stripe -->
         <dependency>
             <groupId>com.stripe</groupId>

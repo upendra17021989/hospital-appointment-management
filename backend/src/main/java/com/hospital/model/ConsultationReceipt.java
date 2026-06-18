@@ -95,6 +95,18 @@ public class ConsultationReceipt {
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "receipt_status", nullable = false, length = 30)
+    private String receiptStatus;
+
+    @Column(name = "voided_at")
+    private LocalDateTime voidedAt;
+
+    @Column(name = "voided_by")
+    private UUID voidedBy;
 }
+
+
+
 
 

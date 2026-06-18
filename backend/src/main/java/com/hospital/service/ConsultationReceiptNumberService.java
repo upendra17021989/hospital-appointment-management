@@ -20,27 +20,28 @@ public class ConsultationReceiptNumberService {
     private final ConsultationReceiptRepo receiptRepo;
     private final TenantContext tenantContext;
 
-    private static final DateTimeFormatter D = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter YEAR = DateTimeFormatter.ofPattern("yyyy");
 
     /**
      * Generates a unique receipt number scoped by hospital.
      *
-     * Strategy:
-     * - Try to generate RCPT-{yyyyMMdd}-{random8}
-     * - Rely on DB unique constraint (hospital_id + receipt_number)
-     * - Retry on constraint violations up to a limit.
+     * Format: CR-YYYY-000001
+     * Notes:
+     * - Sequence resets every year.
+     * - Uses database uniqueness constraint (hospital_id + receipt_number) and a small retry window.
      */
     @Transactional
     public String generateUniqueReceiptNumber(int maxAttempts) {
         UUID hospitalId = tenantContext.requireHospitalId();
+        String year = LocalDate.now().format(YEAR);
 
         for (int i = 1; i <= maxAttempts; i++) {
-            String candidate = buildCandidate();
+            long next = receiptRepo.countByHospitalIdAndReceiptNumberStartingWith(hospitalId, "CR-" + year + "-") + 1;
+
+            String candidate = "CR-" + year + "-" + String.format("%06d", next);
 
             boolean exists = receiptRepo.findByHospitalIdAndReceiptNumber(hospitalId, candidate).isPresent();
-            if (!exists) {
-                return candidate;
-            }
+            if (!exists) return candidate;
 
             log.debug("Receipt number collision for hospital {}, candidate={}, attempt={}", hospitalId, candidate, i);
         }
@@ -48,14 +49,14 @@ public class ConsultationReceiptNumberService {
         throw new IllegalStateException("Failed to generate unique receipt number after " + maxAttempts + " attempts");
     }
 
+    @SuppressWarnings("unused")
     private String buildCandidate() {
-        // Example: RCPT-20260611-1A2B3C4D
-        String date = LocalDate.now().format(D);
-        String random8 = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
-        return "RCPT-" + date + "-" + random8;
+        throw new UnsupportedOperationException("buildCandidate() is not used. Receipt number generation is sequence-based.");
     }
 
+
     /**
+
      * Utility for building a receipt placeholder string.
      */
     public String defaultStampPlaceholder() {

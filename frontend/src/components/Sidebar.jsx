@@ -71,6 +71,16 @@ const getNavGroups = (role) => {
     });
   }
 
+  if (['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'consultation-receipts',
+      label: 'Consultation',
+      items: [
+        { id: 'consultation-receipts', label: 'Consultation Receipts', icon: 'receipt' },
+      ],
+    });
+  }
+
   if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
     roleBasedGroups.push({
       key: 'reports',
@@ -80,6 +90,7 @@ const getNavGroups = (role) => {
       ],
     });
   }
+
 
   roleBasedGroups.push({
     key: 'directory',

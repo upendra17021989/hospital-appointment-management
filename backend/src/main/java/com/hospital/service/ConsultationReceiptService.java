@@ -33,8 +33,10 @@ public class ConsultationReceiptService {
      *
      * This method is intentionally snapshot-based so later reprints remain consistent.
      */
-    @Transactional
+@Transactional
     public ConsultationReceipt createReceiptForPayment(UUID consultationPaymentId) {
+
+
         UUID hospitalId = tenantContext.requireHospitalId();
 
         ConsultationPayment payment = paymentRepo.findById(consultationPaymentId)
@@ -73,8 +75,12 @@ public class ConsultationReceiptService {
                 .amountPaid(payment.getAmountPaid())
                 .receivedByName(payment.getReceivedByName())
                 .stampPlaceholder(numberService.defaultStampPlaceholder())
+                .receiptStatus("ACTIVE")
+                .voidedAt(null)
+                .voidedBy(null)
                 .lineItems(new java.util.ArrayList<>())
                 .build();
+
 
         // Snapshot of receptionist-entered line items.
         // We persist these at payment creation time into consultation_payment_line_items,

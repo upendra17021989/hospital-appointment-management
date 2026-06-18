@@ -68,6 +68,7 @@ const ROUTE_CONFIG = [
   { path: '/billing-history', component: BillingHistory, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/payment-receipt', component: BillingReceiptViewer, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/reports', component: Reports, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/consultation-receipts', component: React.lazy(() => import('./pages/ConsultationReceipts')), roles: ['STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN'], authRequired: true },
 ];
 
 
