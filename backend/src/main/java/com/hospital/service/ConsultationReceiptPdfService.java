@@ -9,9 +9,12 @@ import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
+import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -43,6 +46,12 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class ConsultationReceiptPdfService {
 
+    private enum ContactIcon {
+        PHONE,
+        EMAIL,
+        LOCATION
+    }
+
     private static final DateTimeFormatter RECEIPT_DATE = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
     private static final PageSize RECEIPT_PAGE = new PageSize(794, 628);
     private static final float PAGE_MARGIN_X = 48;
@@ -68,7 +77,7 @@ public class ConsultationReceiptPdfService {
             Document doc = new Document(pdf, RECEIPT_PAGE);
             doc.setMargins(16, PAGE_MARGIN_X, 10, PAGE_MARGIN_X);
 
-            addHeader(doc, helveticaBold, helveticaBoldOblique);
+            addHeader(doc, pdf, helveticaBold, helveticaBoldOblique);
             addTitle(doc, timesItalic);
             addReceiptMeta(doc, receipt, timesItalic, timesBold);
             addNarration(doc, receipt, timesItalic, timesBoldItalic);
@@ -83,7 +92,7 @@ public class ConsultationReceiptPdfService {
         }
     }
 
-    private void addHeader(Document doc, PdfFont bold, PdfFont boldOblique) throws Exception {
+    private void addHeader(Document doc, PdfDocument pdf, PdfFont bold, PdfFont boldOblique) throws Exception {
         Table header = new Table(UnitValue.createPointArray(new float[]{330, 320}))
                 .setWidth(CONTENT_WIDTH)
                 .setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -120,9 +129,9 @@ public class ConsultationReceiptPdfService {
                 .setFontColor(BRAND_RED)
                 .setMarginTop(0)
                 .setMarginBottom(4));
-        contact.add(contactLine("images/phone.png", "9727777569", boldOblique));
-        contact.add(contactLine("images/email.png", "swastikclinic.rajula@gmail.com", boldOblique));
-        contact.add(contactLine("images/address.png", "Behind Gayatrimata Temple, Near Old Court", boldOblique));
+        contact.add(contactLine(pdf, ContactIcon.PHONE, "9727777569", boldOblique));
+        contact.add(contactLine(pdf, ContactIcon.EMAIL, "swastikclinic.rajula@gmail.com", boldOblique));
+        contact.add(contactLine(pdf, ContactIcon.LOCATION, "Behind Gayatrimata Temple, Near Old Court", boldOblique));
         contact.add(new Paragraph("Building, Krishnanagar Society, Rajula. 365560")
                 .setFont(boldOblique)
                 .setFontSize(12.5f)
@@ -170,7 +179,12 @@ public class ConsultationReceiptPdfService {
                 .add(new Text(amountInWords(receipt.getAmountPaid())).setFont(boldItalic).setUnderline(0.5f, -1))
                 .add(new Text(" received with thanks from Mr. / Ms. / Mrs. ").setFont(italic))
                 .add(new Text(patient).setFont(boldItalic).setUnderline(0.5f, -1))
-                .add(new Text(" towards the").setFont(italic))
+                .add(new Text(" towards the ").setFont(italic))
+                .add(new Text("treatment / examination / health check-up of Mr. / Ms. / Mrs. ").setFont(italic))
+                .add(new Text(patient).setFont(boldItalic).setUnderline(0.5f, -1))
+                .add(new Text(" at ").setFont(italic))
+                .add(new Text(hospital).setFont(boldItalic).setUnderline(0.5f, -1))
+                .add(new Text(".").setFont(italic))
                 .setFontSize(12)
                 .setMarginTop(0)
                 .setMarginBottom(0)
@@ -179,21 +193,6 @@ public class ConsultationReceiptPdfService {
                 .setHorizontalAlignment(HorizontalAlignment.CENTER)
                 .setMultipliedLeading(1.1f);
         doc.add(line);
-
-        Paragraph line2 = new Paragraph()
-                .add(new Text("treatment / examination / health check-up of Mr. / Ms. / Mrs. ").setFont(italic))
-                .add(new Text(patient).setFont(boldItalic).setUnderline(0.5f, -1))
-                .add(new Text(" at ").setFont(italic))
-                .add(new Text(hospital).setFont(boldItalic).setUnderline(0.5f, -1))
-                .add(new Text(".").setFont(italic))
-                .setFontSize(12)
-                .setMarginTop(0)
-                .setMarginBottom(14)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setWidth(FORM_WIDTH)
-                .setHorizontalAlignment(HorizontalAlignment.CENTER)
-                .setMultipliedLeading(1.1f);
-        doc.add(line2);
     }
 
     private void addParticulars(Document doc,
@@ -291,7 +290,7 @@ public class ConsultationReceiptPdfService {
                 .setMargin(0));
     }
 
-    private Paragraph contactLine(String iconPath, String text, PdfFont font) throws Exception {
+    private Paragraph contactLine(PdfDocument pdf, ContactIcon icon, String text, PdfFont font) {
         Paragraph paragraph = new Paragraph()
                 .setFont(font)
                 .setFontSize(12.5f)
@@ -299,13 +298,67 @@ public class ConsultationReceiptPdfService {
                 .setMarginTop(0)
                 .setMarginBottom(2)
                 .setMultipliedLeading(1);
-        URL iconUrl = resource(iconPath);
-        if (iconUrl != null) {
-            paragraph.add(new Image(ImageDataFactory.create(iconUrl)).setWidth(18).setHeight(18));
-            paragraph.add(new Text("  "));
-        }
+        paragraph.add(createContactIcon(pdf, icon));
+        paragraph.add(new Text("  "));
         paragraph.add(new Text(text));
         return paragraph;
+    }
+
+    private Image createContactIcon(PdfDocument pdf, ContactIcon icon) {
+        PdfFormXObject xObject = new PdfFormXObject(new Rectangle(0, 0, 18, 18));
+        PdfCanvas canvas = new PdfCanvas(xObject, pdf);
+
+        canvas.saveState()
+                .setFillColor(BRAND_BLUE)
+                .circle(9, 9, 8.4f)
+                .fill()
+                .restoreState();
+
+        canvas.saveState()
+                .setStrokeColor(ColorConstants.WHITE)
+                .setLineWidth(1.45f)
+                .setLineCapStyle(1)
+                .setLineJoinStyle(1);
+
+        switch (icon) {
+            case PHONE -> drawPhoneIcon(canvas);
+            case EMAIL -> drawEmailIcon(canvas);
+            case LOCATION -> drawLocationIcon(canvas);
+        }
+
+        canvas.restoreState();
+        return new Image(xObject).setWidth(18).setHeight(18);
+    }
+
+    private void drawPhoneIcon(PdfCanvas canvas) {
+        canvas.moveTo(6.1f, 12.9f)
+                .curveTo(5.1f, 11.7f, 5.1f, 9.4f, 6.5f, 7.2f)
+                .curveTo(7.8f, 5.2f, 9.9f, 4.1f, 12.1f, 5.1f)
+                .stroke();
+        canvas.moveTo(6.2f, 12.8f)
+                .lineTo(7.9f, 11.3f)
+                .lineTo(7.0f, 9.6f)
+                .stroke();
+        canvas.moveTo(12.0f, 5.1f)
+                .lineTo(10.9f, 7.1f)
+                .lineTo(12.6f, 8.2f)
+                .stroke();
+    }
+
+    private void drawEmailIcon(PdfCanvas canvas) {
+        canvas.rectangle(4.6f, 6.1f, 8.8f, 6.2f).stroke();
+        canvas.moveTo(4.9f, 12.0f).lineTo(9.0f, 8.5f).lineTo(13.1f, 12.0f).stroke();
+        canvas.moveTo(4.9f, 6.4f).lineTo(7.8f, 9.0f).stroke();
+        canvas.moveTo(13.1f, 6.4f).lineTo(10.2f, 9.0f).stroke();
+    }
+
+    private void drawLocationIcon(PdfCanvas canvas) {
+        canvas.circle(9.0f, 10.4f, 2.8f).stroke();
+        canvas.moveTo(9.0f, 4.2f)
+                .curveTo(6.0f, 7.6f, 5.6f, 9.8f, 6.9f, 12.0f)
+                .curveTo(8.0f, 13.7f, 10.0f, 13.7f, 11.1f, 12.0f)
+                .curveTo(12.4f, 9.8f, 12.0f, 7.6f, 9.0f, 4.2f)
+                .stroke();
     }
 
     private Cell metaCell(String label, String value, PdfFont labelFont, PdfFont valueFont, TextAlignment align) {
