@@ -58,6 +58,25 @@ public class Hospital {
     @Column(name = "license_number", length = 100)
     private String licenseNumber;
 
+    @Column(name = "registration_number", length = 100)
+    private String registrationNumber;
+
+    @Column(name = "gst_number", length = 30)
+    private String gstNumber;
+
+    @Column(name = "pan_number", length = 20)
+    private String panNumber;
+
+    @Column(name = "owner_director_name", length = 150)
+    private String ownerDirectorName;
+
+    @Column(name = "verification_status", length = 30)
+    @Builder.Default
+    private String verificationStatus = "PENDING";
+
+    @Column(name = "verification_notes", columnDefinition = "TEXT")
+    private String verificationNotes;
+
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;

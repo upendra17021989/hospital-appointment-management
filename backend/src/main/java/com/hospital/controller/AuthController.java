@@ -63,6 +63,10 @@ public class AuthController {
         private String hospitalEmail;
         private String hospitalWebsite;
         private String licenseNumber;
+        private String registrationNumber;
+        private String gstNumber;
+        private String panNumber;
+        private String ownerDirectorName;
 
         // Admin user info
         @NotBlank(message = "First name is required")
@@ -114,6 +118,12 @@ public class AuthController {
         private String website;
         private String logoUrl;
         private String licenseNumber;
+        private String registrationNumber;
+        private String gstNumber;
+        private String panNumber;
+        private String ownerDirectorName;
+        private String verificationStatus;
+        private String verificationNotes;
     }
 
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
@@ -155,6 +165,11 @@ public class AuthController {
                 .email(request.getHospitalEmail())
                 .website(request.getHospitalWebsite())
                 .licenseNumber(request.getLicenseNumber())
+                .registrationNumber(firstPresent(request.getRegistrationNumber(), request.getLicenseNumber()))
+                .gstNumber(blankToNull(request.getGstNumber()))
+                .panNumber(blankToNull(request.getPanNumber()))
+                .ownerDirectorName(blankToNull(request.getOwnerDirectorName()))
+                .verificationStatus("PENDING")
                 .isActive(true)
                 .build();
 
@@ -309,6 +324,12 @@ public class AuthController {
                     .website(hospital.getWebsite())
                     .logoUrl(hospital.getLogoUrl())
                     .licenseNumber(hospital.getLicenseNumber())
+                    .registrationNumber(hospital.getRegistrationNumber())
+                    .gstNumber(hospital.getGstNumber())
+                    .panNumber(hospital.getPanNumber())
+                    .ownerDirectorName(hospital.getOwnerDirectorName())
+                    .verificationStatus(hospital.getVerificationStatus())
+                    .verificationNotes(hospital.getVerificationNotes())
                     .build();
         }
 
@@ -363,5 +384,16 @@ public class AuthController {
             slug = base + "-" + suffix++;
         }
         return slug;
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String firstPresent(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) return value.trim();
+        }
+        return null;
     }
 }

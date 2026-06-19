@@ -14,8 +14,23 @@ const emptyProfile = {
   website: '',
   logoUrl: '',
   licenseNumber: '',
+  registrationNumber: '',
+  gstNumber: '',
+  panNumber: '',
+  ownerDirectorName: '',
+  verificationStatus: 'PENDING',
+  verificationNotes: '',
   description: '',
 };
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+
+const documentTypes = [
+  ['HOSPITAL_REGISTRATION_CERTIFICATE', 'Hospital Registration Certificate'],
+  ['GST_CERTIFICATE', 'GST Certificate'],
+  ['PAN_CARD', 'PAN Card'],
+  ['OWNER_ID_PROOF', 'Owner ID Proof'],
+];
 
 const HospitalSettings = () => {
   const { token, user, saveAuth } = useAuth();
@@ -24,6 +39,8 @@ const HospitalSettings = () => {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
+  const [documents, setDocuments] = useState([]);
+  const [uploading, setUploading] = useState('');
 
   useEffect(() => {
     loadProfile();
@@ -35,6 +52,7 @@ const HospitalSettings = () => {
       setError('');
       const profile = await api.get('/hospital/me');
       setForm({ ...emptyProfile, ...profile });
+      await loadDocuments();
     } catch (err) {
       setError(err.message || 'Failed to load hospital profile.');
     } finally {
@@ -44,6 +62,15 @@ const HospitalSettings = () => {
 
   const setField = (field) => (event) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const loadDocuments = async () => {
+    try {
+      const docs = await api.get('/hospital/documents');
+      setDocuments(docs || []);
+    } catch {
+      setDocuments([]);
+    }
   };
 
   const saveProfile = async (event) => {
@@ -66,6 +93,51 @@ const HospitalSettings = () => {
     }
   };
 
+  const uploadDocument = async (documentType, file) => {
+    if (!file) return;
+    try {
+      setUploading(documentType);
+      setError('');
+      const payload = new FormData();
+      payload.append('documentType', documentType);
+      payload.append('file', file);
+      const res = await fetch(`${API_BASE}/hospital/documents`, {
+        method: 'POST',
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: payload,
+      });
+      const body = await res.json();
+      if (!body.success) throw new Error(body.message || 'Upload failed');
+      setToast('Document uploaded.');
+      setTimeout(() => setToast(''), 3000);
+      await loadDocuments();
+    } catch (err) {
+      setError(err.message || 'Failed to upload document.');
+    } finally {
+      setUploading('');
+    }
+  };
+
+  const downloadDocument = async (doc) => {
+    try {
+      const res = await fetch(`${API_BASE}/hospital/documents/${doc.id}/download`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = doc.originalFilename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message || 'Failed to download document.');
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -75,7 +147,7 @@ const HospitalSettings = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Hospital Settings</h1>
-          <p className="page-subtitle">Manage the contact details used on consultation receipt PDFs</p>
+          <p className="page-subtitle">Manage profile, business verification, and receipt header details</p>
         </div>
       </div>
 
@@ -93,7 +165,7 @@ const HospitalSettings = () => {
               <input value={form.name} onChange={setField('name')} required />
             </div>
             <div className="form-group">
-              <label>Phone</label>
+              <label>Contact Number</label>
               <input value={form.phone || ''} onChange={setField('phone')} placeholder="+91 98765 43210" />
             </div>
           </div>
@@ -145,6 +217,33 @@ const HospitalSettings = () => {
             </div>
           </div>
 
+          <div className="form-row">
+            <div className="form-group">
+              <label>Registration Number *</label>
+              <input value={form.registrationNumber || ''} onChange={setField('registrationNumber')} />
+            </div>
+            <div className="form-group">
+              <label>GST Number</label>
+              <input value={form.gstNumber || ''} onChange={setField('gstNumber')} placeholder="If applicable" />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>PAN Number *</label>
+              <input value={form.panNumber || ''} onChange={setField('panNumber')} />
+            </div>
+            <div className="form-group">
+              <label>Owner/Director Name *</label>
+              <input value={form.ownerDirectorName || ''} onChange={setField('ownerDirectorName')} />
+            </div>
+          </div>
+
+          <div className="alert alert-info" style={{ marginTop: 12 }}>
+            Verification status: <strong>{form.verificationStatus || 'PENDING'}</strong>
+            {form.verificationNotes ? ` - ${form.verificationNotes}` : ''}
+          </div>
+
           <div className="form-group">
             <label>Description</label>
             <textarea value={form.description || ''} onChange={setField('description')} rows={3} />
@@ -160,6 +259,38 @@ const HospitalSettings = () => {
           </div>
         </div>
       </form>
+
+      <div className="table-wrap" style={{ padding: 20, marginTop: 20 }}>
+        <div className="card-title">Verification Documents</div>
+        <div className="form-grid">
+          {documentTypes.map(([type, label]) => {
+            const latest = documents.find((doc) => doc.documentType === type);
+            return (
+              <div className="form-group" key={type}>
+                <label>{label}</label>
+                <input
+                  type="file"
+                  accept="application/pdf,image/png,image/jpeg,image/webp"
+                  disabled={uploading === type}
+                  onChange={(event) => uploadDocument(type, event.target.files?.[0])}
+                />
+                {latest ? (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{latest.originalFilename}</span>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => downloadDocument(latest)}>
+                      Download
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                    No file uploaded
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };

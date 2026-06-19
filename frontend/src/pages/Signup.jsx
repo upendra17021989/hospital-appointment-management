@@ -39,7 +39,8 @@ const Signup = () => {
   const [hospital, setHospital] = useState({
     hospitalName: '', hospitalAddress: '', hospitalCity: '',
     hospitalState: '', hospitalPhone: '', hospitalEmail: '',
-    hospitalWebsite: '', licenseNumber: '',
+    hospitalWebsite: '', licenseNumber: '', registrationNumber: '',
+    gstNumber: '', panNumber: '', ownerDirectorName: '',
   });
 
   const [admin, setAdmin] = useState({
@@ -52,8 +53,12 @@ const Signup = () => {
 
   const validateStep1 = () => {
     if (!hospital.hospitalName.trim()) return 'Hospital name is required.';
+    if (!hospital.registrationNumber.trim() && !hospital.licenseNumber.trim()) return 'Registration number is required.';
+    if (!hospital.ownerDirectorName.trim()) return 'Owner/Director name is required.';
     if (!hospital.hospitalCity.trim()) return 'City is required.';
     if (!hospital.hospitalPhone.trim()) return 'Phone number is required.';
+    if (!hospital.hospitalEmail.trim()) return 'Hospital email is required.';
+    if (!hospital.panNumber.trim()) return 'PAN number is required.';
     return '';
   };
 
@@ -179,11 +184,11 @@ if (!data.success) { setError(data.message || 'Registration failed.'); setStep(2
                   <input value={hospital.hospitalState} onChange={setH('hospitalState')} placeholder="e.g. Maharashtra" />
                 </div>
                 <div className="form-group">
-                  <label>Hospital Phone *</label>
+                  <label>Contact Number *</label>
                   <input value={hospital.hospitalPhone} onChange={setH('hospitalPhone')} placeholder="+91 22 1234 5678" />
                 </div>
                 <div className="form-group">
-                  <label>Hospital Email</label>
+                  <label>Email Address *</label>
                   <input type="email" value={hospital.hospitalEmail} onChange={setH('hospitalEmail')} placeholder="info@yourhospital.com" />
                 </div>
                 <div className="form-group">
@@ -191,8 +196,24 @@ if (!data.success) { setError(data.message || 'Registration failed.'); setStep(2
                   <input value={hospital.hospitalWebsite} onChange={setH('hospitalWebsite')} placeholder="https://yourhospital.com" />
                 </div>
                 <div className="form-group">
+                  <label>Registration Number *</label>
+                  <input value={hospital.registrationNumber} onChange={setH('registrationNumber')} placeholder="Hospital registration number" />
+                </div>
+                <div className="form-group">
                   <label>License Number</label>
                   <input value={hospital.licenseNumber} onChange={setH('licenseNumber')} placeholder="MH-HOSP-2024-XXXXX" />
+                </div>
+                <div className="form-group">
+                  <label>GST Number</label>
+                  <input value={hospital.gstNumber} onChange={setH('gstNumber')} placeholder="If applicable" />
+                </div>
+                <div className="form-group">
+                  <label>PAN Number *</label>
+                  <input value={hospital.panNumber} onChange={setH('panNumber')} placeholder="ABCDE1234F" />
+                </div>
+                <div className="form-group full">
+                  <label>Owner/Director Name *</label>
+                  <input value={hospital.ownerDirectorName} onChange={setH('ownerDirectorName')} placeholder="Legal owner or director name" />
                 </div>
               </div>
               <button className="btn btn-primary auth-submit-btn" onClick={goNext}>
@@ -281,7 +302,10 @@ if (!data.success) { setError(data.message || 'Registration failed.'); setStep(2
                     ['State',   hospital.hospitalState || '—'],
                     ['Phone',   hospital.hospitalPhone],
                     ['Email',   hospital.hospitalEmail || '—'],
-                    ['License', hospital.licenseNumber || '—'],
+                    ['Registration', hospital.registrationNumber || hospital.licenseNumber || '—'],
+                    ['GST', hospital.gstNumber || '—'],
+                    ['PAN', hospital.panNumber || '—'],
+                    ['Owner/Director', hospital.ownerDirectorName || '—'],
                   ].map(([k, v]) => (
                     <div key={k} className="auth-review-row">
                       <span className="auth-review-key">{k}</span>
@@ -306,7 +330,7 @@ if (!data.success) { setError(data.message || 'Registration failed.'); setStep(2
 
               <p className="auth-terms">
                 By registering, you confirm this is a legitimate healthcare facility.
-                Your hospital data is completely isolated from other hospitals on this platform.
+                Upload verification documents from Hospital Settings after registration.
               </p>
 
               <div style={{ display: 'flex', gap: 12 }}>
