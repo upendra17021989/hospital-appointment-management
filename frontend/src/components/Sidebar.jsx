@@ -52,7 +52,7 @@ const getNavGroups = (role) => {
     });
   }
 
-  if (['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+  if (['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
     roleBasedGroups.push({
       key: 'patients',
       label: 'Patients',
@@ -74,11 +74,12 @@ const getNavGroups = (role) => {
     });
   }
 
-  if (['STAFF', 'RECEPTIONIST'].includes(role)) {
+  if (['STAFF', 'RECEPTIONIST', 'DOCTOR'].includes(role)) {
     roleBasedGroups.push({
       key: 'clinical',
       label: 'Clinical',
       items: [
+        ...(role === 'DOCTOR' ? [{ id: 'prescription-form', label: 'Prescriptions', icon: 'prescription' }] : []),
         { id: 'medical-certificates', label: 'Medical Certificates', icon: 'receipt' },
       ],
     });
@@ -95,7 +96,7 @@ const getNavGroups = (role) => {
     });
   }
 
-  if (['STAFF', 'RECEPTIONIST', 'ACCOUNTANT', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+  if (['STAFF', 'RECEPTIONIST', 'DOCTOR', 'ACCOUNTANT', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
     roleBasedGroups.push({
       key: 'consultation-receipts',
       label: 'Consultation',

@@ -69,7 +69,7 @@ public class PatientController {
     }
 
 @GetMapping("/hospital")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Get hospital-scoped patients")
     public ResponseEntity<ApiResponse<List<PatientResponse>>> getHospitalPatients() {
         UUID hospitalId = tenantContext.requireHospitalId();
@@ -77,7 +77,7 @@ public class PatientController {
     }
 
 @GetMapping("/hospital/paged")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Get hospital patients with pagination and sorting")
     public ResponseEntity<ApiResponse<PagedResponse<PatientResponse>>> getHospitalPatientsPaged(
             @RequestParam(defaultValue = "0") int page,
@@ -89,7 +89,7 @@ public class PatientController {
     }
 
 @GetMapping("/hospital/search")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Search hospital patients by name, phone, address, or email")
     public ResponseEntity<ApiResponse<List<PatientResponse>>> searchHospital(
             @RequestParam(required = false) String phone,
@@ -111,7 +111,7 @@ public class PatientController {
     }
 
     @GetMapping("/hospital/{id}")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Get hospital patient by ID")
     public ResponseEntity<ApiResponse<PatientResponse>> getHospitalPatient(@PathVariable UUID id) {
         UUID hospitalId = tenantContext.requireHospitalId();
@@ -121,7 +121,7 @@ public class PatientController {
     }
 
     @PutMapping("/hospital/{id}")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Update hospital patient details")
     public ResponseEntity<ApiResponse<PatientResponse>> updateHospitalPatient(
             @PathVariable UUID id,

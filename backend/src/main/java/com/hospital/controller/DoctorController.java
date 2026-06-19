@@ -53,7 +53,7 @@ public class DoctorController {
     }
 
     @GetMapping("/hospital/list")
-    @PreAuthorize("hasRole('STAFF') or hasRole('RECEPTIONIST') or hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('STAFF') or hasRole('RECEPTIONIST') or hasRole('DOCTOR') or hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "Get available doctors for current hospital")
     public ResponseEntity<ApiResponse<List<DoctorResponse>>> getHospitalDoctors(
             @RequestParam(required = false) UUID departmentId,

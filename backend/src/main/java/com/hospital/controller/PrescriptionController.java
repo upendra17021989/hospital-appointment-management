@@ -162,7 +162,7 @@ public class PrescriptionController {
 
     @GetMapping("/common-medicines/hospital")
     @Operation(summary = "Get hospital common medicines list")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<String>>> getCommonMedicines() {
         UUID hospitalId = tenantContext.requireHospitalId();
         List<String> names = commonMedicineRepo.findByHospitalIdOrderByNameAsc(hospitalId)
@@ -186,7 +186,7 @@ public class PrescriptionController {
 
     @GetMapping("/common-tests/hospital")
     @Operation(summary = "Get hospital common tests list")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<String>>> getCommonTests() {
         UUID hospitalId = tenantContext.requireHospitalId();
         List<String> names = commonTestRepo.findByHospitalIdOrderByNameAsc(hospitalId)
@@ -212,7 +212,7 @@ public class PrescriptionController {
 
     @PostMapping
     @Operation(summary = "Create a new prescription")
-    @PreAuthorize("hasAnyRole('HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @RequireSubscription(feature = "prescriptions")
     public ResponseEntity<ApiResponse<PrescriptionResponse>> create(
             @Valid @RequestBody PrescriptionRequest req) {
@@ -338,7 +338,7 @@ public class PrescriptionController {
 
     @GetMapping("/hospital/patient/{patientId}")
     @Operation(summary = "Get hospital prescriptions for a patient")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<PrescriptionResponse>>> getHospitalByPatient(
             @PathVariable UUID patientId) {
         UUID hospitalId = tenantContext.requireHospitalId();
@@ -350,7 +350,7 @@ public class PrescriptionController {
 
     @GetMapping("/hospital/appointment/{appointmentId}")
     @Operation(summary = "Get hospital prescription for an appointment")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PrescriptionResponse>> getHospitalByAppointment(
             @PathVariable UUID appointmentId) {
         UUID hospitalId = tenantContext.requireHospitalId();
@@ -404,7 +404,7 @@ public class PrescriptionController {
 
 @PostMapping("/{id}/send")
 @Operation(summary = "Send prescription via email or whatsapp")
-@PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+@PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
 public ResponseEntity<ApiResponse<String>> sendPrescription(
         @PathVariable UUID id,
         @RequestParam String mode) {

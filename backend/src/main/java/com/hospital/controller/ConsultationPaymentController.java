@@ -23,7 +23,7 @@ public class ConsultationPaymentController {
     private final TenantContext tenantContext;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Create consultation payment")
     public ResponseEntity<ApiResponse<ConsultationPaymentDtos.CreateConsultationPaymentResponse>> createPayment(
             @Valid @RequestBody ConsultationPaymentDtos.CreateConsultationPaymentRequest req) {

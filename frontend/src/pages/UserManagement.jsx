@@ -357,6 +357,8 @@ const UserManagement = ({ onNavigate }) => {
                     >
                       <option value="STAFF">Staff</option>
                       <option value="RECEPTIONIST">Receptionist</option>
+                      <option value="DOCTOR">Doctor</option>
+                      <option value="ACCOUNTANT">Accountant</option>
                       <option value="HOSPITAL_ADMIN">Hospital Admin</option>
                     </select>
                     <small className="form-help">

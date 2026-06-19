@@ -69,16 +69,16 @@ const ROUTE_CONFIG = [
   { path: '/legal-agreements', component: LegalAgreements, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/legal-review', component: LegalReview, roles: ['SUPER_ADMIN'], authRequired: true },
   { path: '/departments', component: Departments, roles: [], authRequired: true },
-  { path: '/patient-form', component: PatientForm, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/patients', component: Patients, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/patients/:id', component: PatientDetail, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/prescription-form', component: PrescriptionForm, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/medical-certificates', component: MedicalCertificates, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/patient-form', component: PatientForm, roles: ['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/patients', component: Patients, roles: ['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/patients/:id', component: PatientDetail, roles: ['DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/prescription-form', component: PrescriptionForm, roles: ['DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/medical-certificates', component: MedicalCertificates, roles: ['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/subscription-plans', component: SubscriptionPlans, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/billing-history', component: BillingHistory, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/payment-receipt', component: BillingReceiptViewer, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/reports', component: Reports, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/consultation-receipts', component: React.lazy(() => import('./pages/ConsultationReceipts')), roles: ['STAFF','RECEPTIONIST','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN'], authRequired: true },
+  { path: '/consultation-receipts', component: React.lazy(() => import('./pages/ConsultationReceipts')), roles: ['STAFF','RECEPTIONIST','DOCTOR','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN'], authRequired: true },
 ];
 
 

@@ -29,7 +29,7 @@ public class EnquiryController {
     private final TenantContext tenantContext;
 
     @PostMapping("/hospital")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Submit a new hospital enquiry")
     public ResponseEntity<ApiResponse<EnquiryResponse>> createHospitalEnquiry(
             @Valid @RequestBody EnquiryRequest request) {
@@ -39,7 +39,7 @@ public class EnquiryController {
     }
 
     @GetMapping("/hospital")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Get hospital enquiries with optional status filter")
     public ResponseEntity<ApiResponse<List<EnquiryResponse>>> getHospitalEnquiries(
             @RequestParam(required = false) String status) {
@@ -55,7 +55,7 @@ public class EnquiryController {
     }
 
     @GetMapping("/hospital/all")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Get all hospital enquiries")
     public ResponseEntity<ApiResponse<List<EnquiryResponse>>> getAllHospitalEnquiries() {
         UUID hospitalId = tenantContext.requireHospitalId();
@@ -63,7 +63,7 @@ public class EnquiryController {
     }
 
     @PatchMapping("/hospital/{id}/status")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Update hospital enquiry status")
     public ResponseEntity<ApiResponse<EnquiryResponse>> updateHospitalStatus(
             @PathVariable UUID id,

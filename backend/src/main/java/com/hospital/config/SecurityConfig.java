@@ -71,7 +71,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                 .requestMatchers(HOSPITAL_ADMIN_ENDPOINTS).hasAnyRole("HOSPITAL_ADMIN", "SUPER_ADMIN")
-                .requestMatchers(STAFF_ENDPOINTS).hasAnyRole("STAFF", "RECEPTIONIST", "HOSPITAL_ADMIN", "SUPER_ADMIN")
+                .requestMatchers(STAFF_ENDPOINTS).hasAnyRole("STAFF", "RECEPTIONIST", "DOCTOR", "HOSPITAL_ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(s ->

@@ -29,7 +29,7 @@ public class MedicalCertificateController {
     private final MedicalCertificatePdfService pdfService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Search medical certificates")
     public ResponseEntity<ApiResponse<?>> search(
             @RequestParam(required = false) String certificateNumber,
@@ -59,7 +59,7 @@ public class MedicalCertificateController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Create medical certificate")
     public ResponseEntity<ApiResponse<MedicalCertificateDtos.MedicalCertificateResponse>> create(
             @Valid @RequestBody MedicalCertificateDtos.CreateMedicalCertificateRequest req) {
@@ -68,7 +68,7 @@ public class MedicalCertificateController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Get medical certificate")
     public ResponseEntity<ApiResponse<MedicalCertificateDtos.MedicalCertificateResponse>> get(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(certificateService.toResponse(certificateService.getCertificate(id))));
@@ -91,7 +91,7 @@ public class MedicalCertificateController {
     }
 
     @GetMapping("/{id}/pdf")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Download medical certificate PDF")
     public ResponseEntity<byte[]> downloadPdf(@PathVariable UUID id) {
         MedicalCertificate certificate = certificateService.getCertificate(id);
@@ -106,7 +106,7 @@ public class MedicalCertificateController {
     }
 
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Get certificate history for patient")
     public ResponseEntity<ApiResponse<?>> patientHistory(@PathVariable UUID patientId) {
         return ResponseEntity.ok(ApiResponse.success(certificateService.patientHistory(patientId)));

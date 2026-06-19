@@ -86,7 +86,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/hospital")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @RequireSubscription
     @Operation(summary = "Get hospital-scoped appointments with optional filters")
     public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getHospitalAppointments(
@@ -100,7 +100,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/hospital/paged")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @RequireSubscription
     @Operation(summary = "Get hospital-scoped appointments with pagination and sorting")
     public ResponseEntity<ApiResponse<PagedResponse<AppointmentResponse>>> getHospitalAppointmentsPaged(
@@ -117,7 +117,7 @@ public class AppointmentController {
     }
 
     @PatchMapping("/hospital/{id}/status")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','DOCTOR','HOSPITAL_ADMIN','SUPER_ADMIN')")
     @RequireSubscription
     @Operation(summary = "Update hospital-scoped appointment status")
     public ResponseEntity<ApiResponse<AppointmentResponse>> updateHospitalStatus(
