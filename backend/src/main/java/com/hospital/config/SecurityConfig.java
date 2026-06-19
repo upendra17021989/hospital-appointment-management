@@ -60,6 +60,7 @@ public class SecurityConfig {
         "/patients/**",
         "/appointments/**",
         "/enquiries/**",
+        "/medical-certificates/**",
     };
 
 

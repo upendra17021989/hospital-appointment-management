@@ -57,6 +57,17 @@ const getNavGroups = (role) => {
       label: 'Clinical',
       items: [
         { id: 'prescription-form', label: 'Prescriptions', icon: 'prescription' },
+        { id: 'medical-certificates', label: 'Medical Certificates', icon: 'receipt' },
+      ],
+    });
+  }
+
+  if (['STAFF', 'RECEPTIONIST'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'clinical',
+      label: 'Clinical',
+      items: [
+        { id: 'medical-certificates', label: 'Medical Certificates', icon: 'receipt' },
       ],
     });
   }
