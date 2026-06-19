@@ -9,7 +9,7 @@ const DEPT_ICONS = ['🏥', '🩺', '🫀', '🧠', '🫁', '👶', '🦴', '�
 
 const Departments = () => {
   const { user } = useAuth();
-  const { isStaff, isReceptionist } = useRole();
+  const { isStaff, isReceptionist, isDoctor } = useRole();
 
   const [departments, setDepartments] = useState([]);
 
@@ -73,7 +73,7 @@ const Departments = () => {
     setShowDeleteModal(true);
   };
 
-  const canEditDepartments = !(isStaff() || isReceptionist());
+  const canEditDepartments = !(isStaff() || isReceptionist() || isDoctor());
 
   const handleCreateDepartment = async (e) => {
     e.preventDefault();

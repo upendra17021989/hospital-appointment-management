@@ -67,7 +67,7 @@ public class DepartmentController {
     }
 
     @GetMapping("/hospital")
-    @PreAuthorize("hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN') or hasRole('STAFF') or hasRole('RECEPTIONIST')")
+    @PreAuthorize("hasRole('HOSPITAL_ADMIN') or hasRole('SUPER_ADMIN') or hasRole('STAFF') or hasRole('RECEPTIONIST') or hasRole('DOCTOR')")
     @Operation(summary = "Get active departments for current hospital")
     public ResponseEntity<ApiResponse<List<DepartmentResponse>>> getCurrentHospitalDepartments() {
         UUID hospitalId = tenantContext.requireHospitalId();

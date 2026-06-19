@@ -34,7 +34,7 @@ public class ConsultationReceiptController {
     private final TenantContext tenantContext;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN', 'DOCTOR')")
     @Operation(summary = "Search consultation receipts")
     public ResponseEntity<ApiResponse<?>> searchReceipts(
             @RequestParam(required = false) String receiptNumber,
@@ -67,7 +67,7 @@ public class ConsultationReceiptController {
     }
 
     @GetMapping("/stats")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN', 'DOCTOR')")
     @Operation(summary = "Receipt dashboard summary cards")
     public ResponseEntity<ApiResponse<ConsultationReceiptDtos.ReceiptDashboardStats>> dashboardStats() {
         return ResponseEntity.ok(ApiResponse.success(receiptService.dashboardStats()));
@@ -83,7 +83,7 @@ public class ConsultationReceiptController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN', 'DOCTOR')")
     @Operation(summary = "View consultation receipt")
     public ResponseEntity<ApiResponse<ConsultationReceiptDtos.ConsultationReceiptResponse>> getReceipt(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(receiptService.toResponse(receiptService.getReceipt(id))));
