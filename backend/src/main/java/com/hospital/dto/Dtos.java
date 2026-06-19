@@ -38,6 +38,7 @@ public class Dtos {
         private String fullName;
         private String specialization;
         private String qualification;
+        private String medicalRegistrationNumber;
         private Integer experienceYears;
         private String phone;
         private String email;

@@ -46,6 +46,9 @@ public class Doctor {
     @Column(length = 200)
     private String qualification;
 
+    @Column(name = "medical_registration_number", length = 100)
+    private String medicalRegistrationNumber;
+
     @Column(name = "experience_years")
     @Builder.Default
     private Integer experienceYears = 0;

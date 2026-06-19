@@ -19,6 +19,10 @@ public class HospitalDocument {
 
     public enum DocumentType {
         HOSPITAL_REGISTRATION_CERTIFICATE,
+        CLINICAL_ESTABLISHMENT_REGISTRATION,
+        MUNICIPAL_LICENSE,
+        PHARMACY_LICENSE,
+        LABORATORY_LICENSE,
         GST_CERTIFICATE,
         PAN_CARD,
         OWNER_ID_PROOF

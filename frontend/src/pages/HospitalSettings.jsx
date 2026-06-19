@@ -15,6 +15,10 @@ const emptyProfile = {
   logoUrl: '',
   licenseNumber: '',
   registrationNumber: '',
+  clinicalEstablishmentRegistrationNumber: '',
+  municipalLicenseNumber: '',
+  pharmacyLicenseNumber: '',
+  laboratoryLicenseNumber: '',
   gstNumber: '',
   panNumber: '',
   ownerDirectorName: '',
@@ -27,6 +31,10 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api
 
 const documentTypes = [
   ['HOSPITAL_REGISTRATION_CERTIFICATE', 'Hospital Registration Certificate'],
+  ['CLINICAL_ESTABLISHMENT_REGISTRATION', 'Clinical Establishment Registration'],
+  ['MUNICIPAL_LICENSE', 'Local Municipal License'],
+  ['PHARMACY_LICENSE', 'Pharmacy License'],
+  ['LABORATORY_LICENSE', 'Laboratory License'],
   ['GST_CERTIFICATE', 'GST Certificate'],
   ['PAN_CARD', 'PAN Card'],
   ['OWNER_ID_PROOF', 'Owner ID Proof'],
@@ -228,6 +236,27 @@ const HospitalSettings = () => {
             </div>
           </div>
 
+          <div className="form-row">
+            <div className="form-group">
+              <label>Clinical Establishment Registration</label>
+              <input value={form.clinicalEstablishmentRegistrationNumber || ''} onChange={setField('clinicalEstablishmentRegistrationNumber')} />
+            </div>
+            <div className="form-group">
+              <label>Local Municipal License</label>
+              <input value={form.municipalLicenseNumber || ''} onChange={setField('municipalLicenseNumber')} />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Pharmacy License</label>
+              <input value={form.pharmacyLicenseNumber || ''} onChange={setField('pharmacyLicenseNumber')} placeholder="If pharmacy module is used" />
+            </div>
+            <div className="form-group">
+              <label>Laboratory License</label>
+              <input value={form.laboratoryLicenseNumber || ''} onChange={setField('laboratoryLicenseNumber')} placeholder="If lab module is used" />
+            </div>
+          </div>
           <div className="form-row">
             <div className="form-group">
               <label>PAN Number *</label>

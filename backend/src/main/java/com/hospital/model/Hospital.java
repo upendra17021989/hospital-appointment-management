@@ -61,6 +61,18 @@ public class Hospital {
     @Column(name = "registration_number", length = 100)
     private String registrationNumber;
 
+    @Column(name = "clinical_establishment_registration_number", length = 100)
+    private String clinicalEstablishmentRegistrationNumber;
+
+    @Column(name = "municipal_license_number", length = 100)
+    private String municipalLicenseNumber;
+
+    @Column(name = "pharmacy_license_number", length = 100)
+    private String pharmacyLicenseNumber;
+
+    @Column(name = "laboratory_license_number", length = 100)
+    private String laboratoryLicenseNumber;
+
     @Column(name = "gst_number", length = 30)
     private String gstNumber;
 

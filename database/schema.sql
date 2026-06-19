@@ -31,6 +31,7 @@ CREATE TABLE doctors (
     last_name VARCHAR(50) NOT NULL,
     specialization VARCHAR(100) NOT NULL,
     qualification VARCHAR(200),
+    medical_registration_number VARCHAR(100),
     experience_years INTEGER DEFAULT 0,
     phone VARCHAR(20),
     email VARCHAR(100) UNIQUE,

@@ -1,4 +1,4 @@
-﻿-- Combined database SQL script
+-- Combined database SQL script
 -- Generated from database/*.sql and database/migrations/*.sql
 -- Original files are intentionally left unchanged.
 
@@ -40,6 +40,7 @@ CREATE TABLE doctors (
     last_name VARCHAR(50) NOT NULL,
     specialization VARCHAR(100) NOT NULL,
     qualification VARCHAR(200),
+    medical_registration_number VARCHAR(100),
     experience_years INTEGER DEFAULT 0,
     phone VARCHAR(20),
     email VARCHAR(100) UNIQUE,
@@ -415,6 +416,16 @@ CREATE TABLE hospitals (
     logo_url TEXT,
     description TEXT,
     license_number VARCHAR(100),
+    registration_number VARCHAR(100),
+    clinical_establishment_registration_number VARCHAR(100),
+    municipal_license_number VARCHAR(100),
+    pharmacy_license_number VARCHAR(100),
+    laboratory_license_number VARCHAR(100),
+    gst_number VARCHAR(30),
+    pan_number VARCHAR(20),
+    owner_director_name VARCHAR(150),
+    verification_status VARCHAR(30) DEFAULT 'PENDING' NOT NULL,
+    verification_notes TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

@@ -60,6 +60,10 @@ public class HospitalController {
         private String description;
         private String licenseNumber;
         private String registrationNumber;
+        private String clinicalEstablishmentRegistrationNumber;
+        private String municipalLicenseNumber;
+        private String pharmacyLicenseNumber;
+        private String laboratoryLicenseNumber;
         private String gstNumber;
         private String panNumber;
         private String ownerDirectorName;
@@ -83,6 +87,10 @@ public class HospitalController {
         private String description;
         private String licenseNumber;
         private String registrationNumber;
+        private String clinicalEstablishmentRegistrationNumber;
+        private String municipalLicenseNumber;
+        private String pharmacyLicenseNumber;
+        private String laboratoryLicenseNumber;
         private String gstNumber;
         private String panNumber;
         private String ownerDirectorName;
@@ -114,6 +122,10 @@ public class HospitalController {
         hospital.setDescription(blankToNull(request.getDescription()));
         hospital.setLicenseNumber(blankToNull(request.getLicenseNumber()));
         hospital.setRegistrationNumber(blankToNull(firstPresent(request.getRegistrationNumber(), request.getLicenseNumber())));
+        hospital.setClinicalEstablishmentRegistrationNumber(blankToNull(request.getClinicalEstablishmentRegistrationNumber()));
+        hospital.setMunicipalLicenseNumber(blankToNull(request.getMunicipalLicenseNumber()));
+        hospital.setPharmacyLicenseNumber(blankToNull(request.getPharmacyLicenseNumber()));
+        hospital.setLaboratoryLicenseNumber(blankToNull(request.getLaboratoryLicenseNumber()));
         hospital.setGstNumber(blankToNull(request.getGstNumber()));
         hospital.setPanNumber(blankToNull(request.getPanNumber()));
         hospital.setOwnerDirectorName(blankToNull(request.getOwnerDirectorName()));
@@ -174,6 +186,10 @@ public class HospitalController {
                 .description(hospital.getDescription())
                 .licenseNumber(hospital.getLicenseNumber())
                 .registrationNumber(hospital.getRegistrationNumber())
+                .clinicalEstablishmentRegistrationNumber(hospital.getClinicalEstablishmentRegistrationNumber())
+                .municipalLicenseNumber(hospital.getMunicipalLicenseNumber())
+                .pharmacyLicenseNumber(hospital.getPharmacyLicenseNumber())
+                .laboratoryLicenseNumber(hospital.getLaboratoryLicenseNumber())
                 .gstNumber(hospital.getGstNumber())
                 .panNumber(hospital.getPanNumber())
                 .ownerDirectorName(hospital.getOwnerDirectorName())

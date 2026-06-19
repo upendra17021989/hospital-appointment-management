@@ -7,7 +7,7 @@ const LANGUAGES = ['English', 'Hindi', 'Marathi', 'Gujarati', 'Malayalam', 'Tami
 
 const EMPTY_FORM = {
   firstName: '', lastName: '', specialization: '', qualification: '',
-  experienceYears: '', phone: '', email: '', bio: '',
+  medicalRegistrationNumber: '', experienceYears: '', phone: '', email: '', bio: '',
   consultationFee: '', isAvailable: true, departmentId: '',
   languagesSpoken: [],
 };
@@ -25,6 +25,7 @@ const DoctorFormModal = ({ doctor, departments, onSave, onClose }) => {
     lastName:         doctor.lastName || '',
     specialization:   doctor.specialization || '',
     qualification:    doctor.qualification || '',
+    medicalRegistrationNumber: doctor.medicalRegistrationNumber || '',
     experienceYears:  doctor.experienceYears || '',
     phone:            doctor.phone || '',
     email:            doctor.email || '',
@@ -97,6 +98,10 @@ const DoctorFormModal = ({ doctor, departments, onSave, onClose }) => {
         <div className="form-group">
           <label>Qualification</label>
           <input value={form.qualification} onChange={set('qualification')} placeholder="e.g. MBBS, MD Cardiology" />
+        </div>
+        <div className="form-group">
+          <label>Medical Registration Number</label>
+          <input value={form.medicalRegistrationNumber} onChange={set('medicalRegistrationNumber')} placeholder="e.g. MMC 123456" />
         </div>
         <div className="form-group">
           <label>Experience (Years)</label>
@@ -378,7 +383,8 @@ const DoctorManagement = () => {
     const matchSearch = !search
       || d.fullName?.toLowerCase().includes(q)
       || d.specialization?.toLowerCase().includes(q)
-      || d.email?.toLowerCase().includes(q);
+      || d.email?.toLowerCase().includes(q)
+      || d.medicalRegistrationNumber?.toLowerCase().includes(q);
     const matchDept = !deptFilter || d.department?.id === deptFilter;
     return matchSearch && matchDept;
   });
@@ -434,6 +440,7 @@ const DoctorManagement = () => {
                 <th>Doctor</th>
                 <th>Specialization</th>
                 <th>Department</th>
+                <th>Registration</th>
                 <th>Experience</th>
                 <th>Fee</th>
                 <th>Contact</th>
@@ -458,6 +465,7 @@ const DoctorManagement = () => {
                   <td>
                     <span className="dm-dept-tag">{d.department?.name || '—'}</span>
                   </td>
+                  <td>{d.medicalRegistrationNumber || '-'}</td>
                   <td>{d.experienceYears} yrs</td>
                   <td style={{ fontWeight: 700, color: 'var(--primary)' }}>₹{d.consultationFee?.toFixed(0)}</td>
                   <td style={{ fontSize: 13 }}>{d.phone || '—'}</td>
@@ -524,6 +532,10 @@ const DoctorManagement = () => {
                   <div className="doctor-list-card-row">
                     <span className="doctor-list-card-label">Department</span>
                     <span className="doctor-list-card-value">{d.department?.name || '—'}</span>
+                  </div>
+                  <div className="doctor-list-card-row">
+                    <span className="doctor-list-card-label">Registration</span>
+                    <span className="doctor-list-card-value">{d.medicalRegistrationNumber || '-'}</span>
                   </div>
                   <div className="doctor-list-card-row">
                     <span className="doctor-list-card-label">Experience</span>

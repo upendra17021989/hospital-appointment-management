@@ -11,6 +11,10 @@ const statusTabs = [
 
 const documentLabels = {
   HOSPITAL_REGISTRATION_CERTIFICATE: 'Hospital Registration Certificate',
+  CLINICAL_ESTABLISHMENT_REGISTRATION: 'Clinical Establishment Registration',
+  MUNICIPAL_LICENSE: 'Local Municipal License',
+  PHARMACY_LICENSE: 'Pharmacy License',
+  LABORATORY_LICENSE: 'Laboratory License',
   GST_CERTIFICATE: 'GST Certificate',
   PAN_CARD: 'PAN Card',
   OWNER_ID_PROOF: 'Owner ID Proof',
@@ -57,6 +61,10 @@ const HospitalVerification = () => {
       h.phone,
       h.email,
       h.registrationNumber,
+      h.clinicalEstablishmentRegistrationNumber,
+      h.municipalLicenseNumber,
+      h.pharmacyLicenseNumber,
+      h.laboratoryLicenseNumber,
       h.gstNumber,
       h.panNumber,
       h.ownerDirectorName,
@@ -119,7 +127,7 @@ const HospitalVerification = () => {
         <div className="form-grid">
           <div className="form-group">
             <label>Search</label>
-            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Name, city, GST, PAN, owner..." />
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Name, city, registration, license, GST, PAN, owner..." />
           </div>
           <div className="form-group">
             <label>&nbsp;</label>
@@ -138,6 +146,8 @@ const HospitalVerification = () => {
                 <th>Hospital</th>
                 <th>Owner</th>
                 <th>Registration</th>
+                <th>Clinical Reg.</th>
+                <th>Municipal</th>
                 <th>GST</th>
                 <th>PAN</th>
                 <th>Documents</th>
@@ -155,9 +165,11 @@ const HospitalVerification = () => {
                   </td>
                   <td>{h.ownerDirectorName || '-'}</td>
                   <td>{h.registrationNumber || h.licenseNumber || '-'}</td>
+                  <td>{h.clinicalEstablishmentRegistrationNumber || '-'}</td>
+                  <td>{h.municipalLicenseNumber || '-'}</td>
                   <td>{h.gstNumber || '-'}</td>
                   <td>{h.panNumber || '-'}</td>
-                  <td>{h.documents?.length || 0}/4</td>
+                  <td>{h.documents?.length || 0}/8</td>
                   <td><Badge status={(h.verificationStatus || 'PENDING').toLowerCase()} /></td>
                   <td>{formatDateTime(h.createdAt)}</td>
                   <td>
@@ -175,10 +187,14 @@ const HospitalVerification = () => {
           <div style={{ display: 'grid', gap: 14 }}>
             <div className="grid-3">
               <Info label="Registration" value={selected.registrationNumber || selected.licenseNumber} />
+              <Info label="Clinical Establishment" value={selected.clinicalEstablishmentRegistrationNumber} />
+              <Info label="Municipal License" value={selected.municipalLicenseNumber} />
               <Info label="GST" value={selected.gstNumber || 'Not applicable'} />
               <Info label="PAN" value={selected.panNumber} />
             </div>
             <div className="grid-3">
+              <Info label="Pharmacy License" value={selected.pharmacyLicenseNumber || 'Not applicable'} />
+              <Info label="Laboratory License" value={selected.laboratoryLicenseNumber || 'Not applicable'} />
               <Info label="Owner/Director" value={selected.ownerDirectorName} />
               <Info label="Contact" value={selected.phone} />
               <Info label="Email" value={selected.email} />

@@ -46,6 +46,10 @@ public class AdminHospitalVerificationController {
         private String website;
         private String licenseNumber;
         private String registrationNumber;
+        private String clinicalEstablishmentRegistrationNumber;
+        private String municipalLicenseNumber;
+        private String pharmacyLicenseNumber;
+        private String laboratoryLicenseNumber;
         private String gstNumber;
         private String panNumber;
         private String ownerDirectorName;
@@ -129,6 +133,10 @@ public class AdminHospitalVerificationController {
                 .website(hospital.getWebsite())
                 .licenseNumber(hospital.getLicenseNumber())
                 .registrationNumber(hospital.getRegistrationNumber())
+                .clinicalEstablishmentRegistrationNumber(hospital.getClinicalEstablishmentRegistrationNumber())
+                .municipalLicenseNumber(hospital.getMunicipalLicenseNumber())
+                .pharmacyLicenseNumber(hospital.getPharmacyLicenseNumber())
+                .laboratoryLicenseNumber(hospital.getLaboratoryLicenseNumber())
                 .gstNumber(hospital.getGstNumber())
                 .panNumber(hospital.getPanNumber())
                 .ownerDirectorName(hospital.getOwnerDirectorName())

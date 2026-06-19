@@ -64,6 +64,10 @@ public class AuthController {
         private String hospitalWebsite;
         private String licenseNumber;
         private String registrationNumber;
+        private String clinicalEstablishmentRegistrationNumber;
+        private String municipalLicenseNumber;
+        private String pharmacyLicenseNumber;
+        private String laboratoryLicenseNumber;
         private String gstNumber;
         private String panNumber;
         private String ownerDirectorName;
@@ -119,6 +123,10 @@ public class AuthController {
         private String logoUrl;
         private String licenseNumber;
         private String registrationNumber;
+        private String clinicalEstablishmentRegistrationNumber;
+        private String municipalLicenseNumber;
+        private String pharmacyLicenseNumber;
+        private String laboratoryLicenseNumber;
         private String gstNumber;
         private String panNumber;
         private String ownerDirectorName;
@@ -166,6 +174,10 @@ public class AuthController {
                 .website(request.getHospitalWebsite())
                 .licenseNumber(request.getLicenseNumber())
                 .registrationNumber(firstPresent(request.getRegistrationNumber(), request.getLicenseNumber()))
+                .clinicalEstablishmentRegistrationNumber(blankToNull(request.getClinicalEstablishmentRegistrationNumber()))
+                .municipalLicenseNumber(blankToNull(request.getMunicipalLicenseNumber()))
+                .pharmacyLicenseNumber(blankToNull(request.getPharmacyLicenseNumber()))
+                .laboratoryLicenseNumber(blankToNull(request.getLaboratoryLicenseNumber()))
                 .gstNumber(blankToNull(request.getGstNumber()))
                 .panNumber(blankToNull(request.getPanNumber()))
                 .ownerDirectorName(blankToNull(request.getOwnerDirectorName()))
@@ -325,7 +337,11 @@ public class AuthController {
                     .logoUrl(hospital.getLogoUrl())
                     .licenseNumber(hospital.getLicenseNumber())
                     .registrationNumber(hospital.getRegistrationNumber())
-                    .gstNumber(hospital.getGstNumber())
+                .clinicalEstablishmentRegistrationNumber(hospital.getClinicalEstablishmentRegistrationNumber())
+                .municipalLicenseNumber(hospital.getMunicipalLicenseNumber())
+                .pharmacyLicenseNumber(hospital.getPharmacyLicenseNumber())
+                .laboratoryLicenseNumber(hospital.getLaboratoryLicenseNumber())
+                .gstNumber(hospital.getGstNumber())
                     .panNumber(hospital.getPanNumber())
                     .ownerDirectorName(hospital.getOwnerDirectorName())
                     .verificationStatus(hospital.getVerificationStatus())
