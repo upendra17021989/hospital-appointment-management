@@ -35,6 +35,7 @@ const getNavGroups = (role) => {
         { id: 'doctor-management', label: 'Manage Doctors', icon: 'doctor' },
         { id: 'user-management',   label: 'Manage Users',   icon: 'user' },
         { id: 'hospital-settings', label: 'Hospital Settings', icon: 'department' },
+        ...(role === 'SUPER_ADMIN' ? [{ id: 'hospital-verification', label: 'Hospital Verification', icon: 'receipt' }] : []),
         { id: 'departments',       label: 'Departments',    icon: 'department' },
       ],
     });

@@ -102,6 +102,11 @@ public class HospitalDocumentService {
     @Transactional(readOnly = true)
     public DocumentDownload download(UUID documentId) {
         UUID hospitalId = tenantContext.requireHospitalId();
+        return downloadForHospital(hospitalId, documentId);
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentDownload downloadForHospital(UUID hospitalId, UUID documentId) {
         HospitalDocument document = documentRepo.findByIdAndHospitalId(documentId, hospitalId)
                 .orElseThrow(() -> new IllegalArgumentException("Document not found"));
         try {

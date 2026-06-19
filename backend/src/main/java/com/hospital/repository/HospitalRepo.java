@@ -14,4 +14,6 @@ public interface HospitalRepo extends JpaRepository<Hospital, UUID> {
     boolean existsBySlug(String slug);
     boolean existsByEmail(String email);
     List<Hospital> findByIsActiveTrue();
+    List<Hospital> findByVerificationStatusOrderByCreatedAtDesc(String verificationStatus);
+    List<Hospital> findAllByOrderByCreatedAtDesc();
 }
