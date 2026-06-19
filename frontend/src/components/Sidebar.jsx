@@ -36,7 +36,18 @@ const getNavGroups = (role) => {
         { id: 'user-management',   label: 'Manage Users',   icon: 'user' },
         { id: 'hospital-settings', label: 'Hospital Settings', icon: 'department' },
         ...(role === 'SUPER_ADMIN' ? [{ id: 'hospital-verification', label: 'Hospital Verification', icon: 'receipt' }] : []),
+        ...(role === 'SUPER_ADMIN' ? [{ id: 'legal-review', label: 'Legal Review', icon: 'receipt' }] : []),
         { id: 'departments',       label: 'Departments',    icon: 'department' },
+      ],
+    });
+  }
+
+  if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'legal',
+      label: 'Legal',
+      items: [
+        { id: 'legal-agreements', label: 'Legal & Agreements', icon: 'receipt' },
       ],
     });
   }

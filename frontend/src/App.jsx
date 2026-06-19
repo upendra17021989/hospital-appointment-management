@@ -24,6 +24,8 @@ import Reports          from './pages/Reports';
 import BillingReceiptViewer from './pages/BillingReceiptViewer';
 import MedicalCertificates from './pages/MedicalCertificates';
 import HospitalVerification from './pages/HospitalVerification';
+import LegalAgreements from './pages/LegalAgreements';
+import LegalReview from './pages/LegalReview';
 
 
 const Login  = React.lazy(() => import('./pages/Login'));
@@ -64,6 +66,8 @@ const ROUTE_CONFIG = [
   { path: '/user-management', component: UserManagement, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/hospital-settings', component: HospitalSettings, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/hospital-verification', component: HospitalVerification, roles: ['SUPER_ADMIN'], authRequired: true },
+  { path: '/legal-agreements', component: LegalAgreements, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/legal-review', component: LegalReview, roles: ['SUPER_ADMIN'], authRequired: true },
   { path: '/departments', component: Departments, roles: [], authRequired: true },
   { path: '/patient-form', component: PatientForm, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/patients', component: Patients, roles: ['STAFF', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
