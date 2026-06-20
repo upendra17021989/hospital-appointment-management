@@ -4,6 +4,14 @@ import { LoadingSpinner, EmptyState, Icon } from '../components/Common';
 import RoleGuard from '../components/RoleGuard';
 import { useAuth } from '../context/AuthContext';
 
+const passwordIssues = (password) => [
+  password.length >= 12 ? null : 'at least 12 characters',
+  /[A-Z]/.test(password) ? null : 'one uppercase letter',
+  /[a-z]/.test(password) ? null : 'one lowercase letter',
+  /\d/.test(password) ? null : 'one number',
+  /[^A-Za-z0-9]/.test(password) ? null : 'one special character',
+].filter(Boolean);
+
 const UserManagement = ({ onNavigate }) => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
@@ -58,6 +66,15 @@ const UserManagement = ({ onNavigate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const issues = formData.password ? passwordIssues(formData.password) : [];
+    if (!editingUser && !formData.password) {
+      alert('Password is required.');
+      return;
+    }
+    if (issues.length) {
+      alert(`Password must contain ${issues.join(', ')}.`);
+      return;
+    }
     try {
       const userData = {
         firstName: formData.firstName,
@@ -374,8 +391,11 @@ const UserManagement = ({ onNavigate }) => {
                         value={formData.password}
                         onChange={e => setFormData({...formData, password: e.target.value})}
                         required={!editingUser}
-                        placeholder="Enter password"
+                        placeholder="12+ chars with A-z, number, special"
                       />
+                      <small className="form-help">
+                        Use at least 12 characters with uppercase, lowercase, number and special character.
+                      </small>
                     </div>
                   )}
                 </div>

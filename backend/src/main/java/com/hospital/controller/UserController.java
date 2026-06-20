@@ -5,6 +5,7 @@ import com.hospital.model.Hospital;
 import com.hospital.model.User;
 import com.hospital.repository.HospitalRepo;
 import com.hospital.repository.UserRepo;
+import com.hospital.security.PasswordPolicy;
 import com.hospital.security.RequireHospitalContext;
 import com.hospital.security.RequireSubscription;
 import io.swagger.v3.oas.annotations.Operation;
@@ -140,6 +141,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiResponse.error("An account with this email already exists."));
         }
+        PasswordPolicy.validate(request.getPassword());
 
         Hospital hospital;
         if (tenantContext.isSuperAdmin() && request.getHospitalId() != null) {
@@ -195,6 +197,7 @@ public class UserController {
         if (request.getRole() != null) user.setRole(request.getRole());
         if (request.getIsActive() != null) user.setIsActive(request.getIsActive());
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+            PasswordPolicy.validate(request.getPassword());
             user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         }
 

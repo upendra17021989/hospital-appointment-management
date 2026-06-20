@@ -41,6 +41,7 @@ const DoctorFormModal = ({ doctor, departments, onSave, onClose }) => {
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
   const setCheck = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.checked }));
+  const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   const toggleLang = (lang) => {
     setForm(f => ({
@@ -56,10 +57,19 @@ const DoctorFormModal = ({ doctor, departments, onSave, onClose }) => {
       setError('First name, last name, specialization and department are required.');
       return;
     }
+    if (!form.email.trim()) {
+      setError('Doctor email is required.');
+      return;
+    }
+    if (!isValidEmail(form.email.trim())) {
+      setError('Enter a valid doctor email address.');
+      return;
+    }
     setSaving(true); setError('');
     try {
       const payload = {
         ...form,
+        email: form.email.trim(),
         experienceYears: Number(form.experienceYears) || 0,
         consultationFee: Number(form.consultationFee) || 0,
       };
@@ -112,8 +122,20 @@ const DoctorFormModal = ({ doctor, departments, onSave, onClose }) => {
           <input value={form.phone} onChange={set('phone')} placeholder="+91 98765 43210" />
         </div>
         <div className="form-group">
-          <label>Email</label>
-          <input type="email" value={form.email} onChange={set('email')} placeholder="dr.name@hospital.com" />
+          <label>Email *</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={set('email')}
+            placeholder="dr.name@hospital.com"
+            required
+            aria-invalid={!!form.email && !isValidEmail(form.email)}
+          />
+          {form.email && !isValidEmail(form.email) && (
+            <small className="form-help" style={{ color: 'var(--danger)' }}>
+              Enter a valid email address.
+            </small>
+          )}
         </div>
         <div className="form-group">
           <label>Consultation Fee (₹)</label>

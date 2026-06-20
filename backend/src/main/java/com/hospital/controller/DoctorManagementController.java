@@ -58,7 +58,11 @@ public class DoctorManagementController {
         private String qualification;
         private Integer experienceYears;
         private String phone;
+
+        @NotBlank(message = "Doctor email is required")
+        @Email(message = "Invalid doctor email address")
         private String email;
+
         private String bio;
         private String profileImageUrl;
         private BigDecimal consultationFee;

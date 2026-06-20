@@ -10,8 +10,11 @@ import com.hospital.repository.HospitalSubscriptionRepo;
 import com.hospital.repository.SubscriptionPlanRepo;
 import com.hospital.repository.UserRepo;
 import com.hospital.security.JwtService;
+import com.hospital.security.PasswordPolicy;
+import com.hospital.service.LoginActivityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -44,6 +47,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final LoginActivityService loginActivityService;
 
     @Value("${app.subscription.trial-days:14}")
     private int trialDays;
@@ -84,7 +88,7 @@ public class AuthController {
         private String email;
 
         @NotBlank(message = "Password is required")
-        @Size(min = 8, message = "Password must be at least 8 characters")
+        @Size(min = 12, message = "Password must be at least 12 characters")
         private String password;
     }
 
@@ -152,6 +156,7 @@ public class AuthController {
     @Operation(summary = "Register a new hospital with admin account")
     public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody RegisterRequest request) {
+        PasswordPolicy.validate(request.getPassword());
 
         // Check if email already exists
         if (userRepo.existsByEmail(request.getEmail())) {
@@ -233,20 +238,40 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "Login with email and password")
     public ResponseEntity<ApiResponse<AuthResponse>> login(
-            @Valid @RequestBody LoginRequest request) {
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest) {
+        User user = userRepo.findByEmail(request.getEmail()).orElse(null);
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (BadCredentialsException e) {
+            loginActivityService.record(
+                    request.getEmail(),
+                    user,
+                    false,
+                    "Invalid email or password",
+                    clientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("Invalid email or password."));
         }
 
-        User user = userRepo.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user == null) {
+            user = userRepo.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        }
 
         if (!user.getIsActive()) {
+            loginActivityService.record(
+                    request.getEmail(),
+                    user,
+                    false,
+                    "Account deactivated",
+                    clientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("Your account has been deactivated. Please contact support."));
         }
@@ -254,6 +279,14 @@ public class AuthController {
         // Update last login
         user.setLastLoginAt(LocalDateTime.now());
         userRepo.save(user);
+        loginActivityService.record(
+                request.getEmail(),
+                user,
+                true,
+                null,
+                clientIp(httpRequest),
+                httpRequest.getHeader("User-Agent")
+        );
 
         Hospital hospital = user.getHospital();
         String token = jwtService.generateToken(
@@ -302,6 +335,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiResponse.error("Email already in use."));
         }
+        PasswordPolicy.validate(request.getPassword());
 
         User staff = User.builder()
                 .hospital(currentUser.getHospital())
@@ -411,5 +445,13 @@ public class AuthController {
             if (value != null && !value.isBlank()) return value.trim();
         }
         return null;
+    }
+
+    private String clientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

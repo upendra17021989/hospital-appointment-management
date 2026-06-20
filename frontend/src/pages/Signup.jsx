@@ -11,6 +11,14 @@ const STEPS = [
   { num: 3, label: 'Review' },
 ];
 
+const passwordIssues = (password) => [
+  password.length >= 12 ? null : 'at least 12 characters',
+  /[A-Z]/.test(password) ? null : 'one uppercase letter',
+  /[a-z]/.test(password) ? null : 'one lowercase letter',
+  /\d/.test(password) ? null : 'one number',
+  /[^A-Za-z0-9]/.test(password) ? null : 'one special character',
+].filter(Boolean);
+
 const StepDots = ({ current }) => (
   <div className="auth-steps" style={{ marginBottom: 28 }}>
     {STEPS.map((s, idx) => (
@@ -67,7 +75,8 @@ const Signup = () => {
     if (!admin.lastName.trim())  return 'Last name is required.';
     if (!admin.email.trim())     return 'Email is required.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(admin.email)) return 'Invalid email address.';
-    if (admin.password.length < 8) return 'Password must be at least 8 characters.';
+    const issues = passwordIssues(admin.password);
+    if (issues.length) return `Password must contain ${issues.join(', ')}.`;
     if (admin.password !== admin.confirmPassword) return 'Passwords do not match.';
     return '';
   };
@@ -110,10 +119,10 @@ if (!data.success) { setError(data.message || 'Registration failed.'); setStep(2
 
   const passStrength =
     admin.password.length === 0 ? null :
-    admin.password.length < 8   ? 'weak' :
-    admin.password.length < 12  ? 'medium' : 'strong';
+    passwordIssues(admin.password).length > 2 ? 'weak' :
+    passwordIssues(admin.password).length > 0 ? 'medium' : 'strong';
 
-  const passStrengthLabel = { weak: 'Too short', medium: 'Good', strong: 'Strong' };
+  const passStrengthLabel = { weak: 'Weak', medium: 'Almost there', strong: 'Strong' };
 
   return (
     <div className="auth-shell">

@@ -1,8 +1,10 @@
 package com.hospital.config;
 
 import com.hospital.security.JwtAuthFilter;
+import com.hospital.security.SecurityAuditFilter;
 import com.hospital.security.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,6 +29,10 @@ public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService; // ← use impl, not UserRepo
     private final JwtAuthFilter jwtAuthFilter;
+    private final SecurityAuditFilter securityAuditFilter;
+
+    @Value("${app.security.require-https:false}")
+    private boolean requireHttps;
 
     private static final String[] PUBLIC_ENDPOINTS = {
         "/auth/**",
@@ -78,7 +84,16 @@ public class SecurityConfig {
                 s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter,
-                UsernamePasswordAuthenticationFilter.class);
+                UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(securityAuditFilter, JwtAuthFilter.class)
+            .headers(headers -> headers
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000)));
+
+        if (requireHttps) {
+            http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
+        }
         return http.build();
     }
 
