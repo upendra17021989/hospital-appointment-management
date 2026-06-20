@@ -21,6 +21,18 @@ public interface ConsultationReceiptRepo extends JpaRepository<ConsultationRecei
 
     List<ConsultationReceipt> findByHospitalIdAndConsultationPaymentIdOrderByReceiptDateTimeDesc(UUID hospitalId, UUID consultationPaymentId);
 
+    @Query("""
+            SELECT r FROM ConsultationReceipt r
+            WHERE r.hospital.id = :hospitalId
+              AND r.consultationPayment.id = :consultationPaymentId
+              AND UPPER(r.receiptStatus) <> 'VOIDED'
+            ORDER BY r.receiptDateTime DESC
+            """)
+    List<ConsultationReceipt> findActiveByHospitalIdAndConsultationPaymentId(
+            @Param("hospitalId") UUID hospitalId,
+            @Param("consultationPaymentId") UUID consultationPaymentId
+    );
+
     long countByHospitalIdAndReceiptNumberStartingWith(UUID hospitalId, String prefix);
 
     // Dashboard counts

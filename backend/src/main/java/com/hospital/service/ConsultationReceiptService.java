@@ -13,6 +13,7 @@ import com.hospital.repository.ConsultationReceiptRepo;
 import com.hospital.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -71,9 +72,8 @@ public class ConsultationReceiptService {
             throw new IllegalArgumentException("Consultation payment not found for current hospital");
         }
 
-        var existingActive = receiptRepo.findByHospitalIdAndConsultationPaymentIdOrderByReceiptDateTimeDesc(hospitalId, consultationPaymentId)
+        var existingActive = receiptRepo.findActiveByHospitalIdAndConsultationPaymentId(hospitalId, consultationPaymentId)
                 .stream()
-                .filter(r -> !"VOIDED".equalsIgnoreCase(r.getReceiptStatus()))
                 .findFirst();
         if (existingActive.isPresent()) {
             return existingActive.get();
@@ -141,7 +141,16 @@ public class ConsultationReceiptService {
         receipt.setLineItems(snapshot);
 
 
-        return receiptRepo.save(receipt);
+        try {
+            return receiptRepo.save(receipt);
+        } catch (DataIntegrityViolationException ex) {
+            log.warn("Receipt already exists for consultation payment {} in hospital {}; returning existing receipt",
+                    consultationPaymentId, hospitalId);
+            return receiptRepo.findActiveByHospitalIdAndConsultationPaymentId(hospitalId, consultationPaymentId)
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> ex);
+        }
 
     }
 
