@@ -52,6 +52,13 @@ public class Hospital {
     @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
 
+    @Column(name = "consultation_receipt_header_enabled")
+    @Builder.Default
+    private Boolean consultationReceiptHeaderEnabled = true;
+
+    @Column(name = "consultation_receipt_qr_code_url", columnDefinition = "TEXT")
+    private String consultationReceiptQrCodeUrl;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

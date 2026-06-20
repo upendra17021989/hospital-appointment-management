@@ -13,6 +13,8 @@ const emptyProfile = {
   email: '',
   website: '',
   logoUrl: '',
+  consultationReceiptHeaderEnabled: true,
+  consultationReceiptQrCodeUrl: '',
   licenseNumber: '',
   registrationNumber: '',
   clinicalEstablishmentRegistrationNumber: '',
@@ -72,6 +74,10 @@ const HospitalSettings = () => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
+  const setCheckbox = (field) => (event) => {
+    setForm((prev) => ({ ...prev, [field]: event.target.checked }));
+  };
+
   const loadDocuments = async () => {
     try {
       const docs = await api.get('/hospital/documents');
@@ -121,6 +127,62 @@ const HospitalSettings = () => {
       await loadDocuments();
     } catch (err) {
       setError(err.message || 'Failed to upload document.');
+    } finally {
+      setUploading('');
+    }
+  };
+
+  const uploadLogo = async (file) => {
+    if (!file) return;
+    try {
+      setUploading('HOSPITAL_LOGO');
+      setError('');
+      const payload = new FormData();
+      payload.append('file', file);
+      const res = await fetch(`${API_BASE}/hospital/logo`, {
+        method: 'POST',
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: payload,
+      });
+      const body = await res.json();
+      if (!body.success) throw new Error(body.message || 'Logo upload failed');
+      const updated = body.data;
+      setForm({ ...emptyProfile, ...updated });
+      if (token && user) {
+        saveAuth(token, { ...user, hospital: { ...user.hospital, ...updated } });
+      }
+      setToast('Logo uploaded for consultation receipt PDF.');
+      setTimeout(() => setToast(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to upload logo.');
+    } finally {
+      setUploading('');
+    }
+  };
+
+  const uploadConsultationQr = async (file) => {
+    if (!file) return;
+    try {
+      setUploading('CONSULTATION_QR');
+      setError('');
+      const payload = new FormData();
+      payload.append('file', file);
+      const res = await fetch(`${API_BASE}/hospital/consultation-qr`, {
+        method: 'POST',
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: payload,
+      });
+      const body = await res.json();
+      if (!body.success) throw new Error(body.message || 'QR code upload failed');
+      const updated = body.data;
+      setForm({ ...emptyProfile, ...updated });
+      if (token && user) {
+        saveAuth(token, { ...user, hospital: { ...user.hospital, ...updated } });
+      }
+      setToast('QR code uploaded for consultation receipt PDF.');
+      setTimeout(() => setToast(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to upload QR code.');
     } finally {
       setUploading('');
     }
@@ -218,10 +280,71 @@ const HospitalSettings = () => {
             <div className="form-group">
               <label>Logo URL</label>
               <input value={form.logoUrl || ''} onChange={setField('logoUrl')} placeholder="https://..." />
+              <small className="form-help">
+                Used on consultation receipt PDFs. You can paste a URL or upload a logo below.
+              </small>
             </div>
             <div className="form-group">
               <label>License Number</label>
               <input value={form.licenseNumber || ''} onChange={setField('licenseNumber')} />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Consultation QR URL</label>
+              <input
+                value={form.consultationReceiptQrCodeUrl || ''}
+                onChange={setField('consultationReceiptQrCodeUrl')}
+                placeholder="https://..."
+              />
+              <small className="form-help">
+                Used for the QR payment image on consultation receipt PDFs.
+              </small>
+            </div>
+            <div className="form-group">
+              <label>Consultation PDF QR Code</label>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={uploading === 'CONSULTATION_QR'}
+                onChange={(event) => uploadConsultationQr(event.target.files?.[0])}
+              />
+              <small className="form-help">
+                PNG, JPEG, or WebP up to 2 MB.
+              </small>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Consultation PDF Logo</label>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={uploading === 'HOSPITAL_LOGO'}
+                onChange={(event) => uploadLogo(event.target.files?.[0])}
+              />
+              <small className="form-help">
+                PNG, JPEG, or WebP up to 2 MB.
+              </small>
+            </div>
+            <div className="form-group">
+              <label>Consultation PDF Header</label>
+              <label className="dm-toggle" style={{ marginTop: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={form.consultationReceiptHeaderEnabled !== false}
+                  onChange={setCheckbox('consultationReceiptHeaderEnabled')}
+                />
+                <span className="dm-toggle__slider" />
+                <span className="dm-toggle__label">
+                  {form.consultationReceiptHeaderEnabled !== false ? 'Show header' : 'Hide header'}
+                </span>
+              </label>
+              <small className="form-help">
+                Controls the logo/contact header on generated consultation receipt PDFs.
+              </small>
             </div>
           </div>
 

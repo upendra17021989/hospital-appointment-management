@@ -78,12 +78,14 @@ public class ConsultationReceiptPdfService {
             Document doc = new Document(pdf, RECEIPT_PAGE);
             doc.setMargins(16, PAGE_MARGIN_X, 10, PAGE_MARGIN_X);
 
-            addHeader(doc, pdf, receipt, helveticaBold, helveticaBoldOblique);
+            if (isHeaderEnabled(receipt)) {
+                addHeader(doc, pdf, receipt, helveticaBold, helveticaBoldOblique);
+            }
             addTitle(doc, timesItalic);
             addReceiptMeta(doc, receipt, timesItalic, timesBold);
             addNarration(doc, receipt, timesItalic, timesBoldItalic);
             addParticulars(doc, receipt, times, timesItalic);
-            addQrAndSignature(doc, timesItalic);
+            addQrAndSignature(doc, receipt, timesItalic);
             addFooterNote(doc, timesBoldItalic);
 
             doc.close();
@@ -128,8 +130,8 @@ public class ConsultationReceiptPdfService {
                 .setFontColor(BRAND_RED)
                 .setMarginTop(0)
                 .setMarginBottom(4));
-        contact.add(contactLine(pdf, ContactIcon.PHONE, firstPresent(hospital(receipt).getPhone(), receipt.getHospitalPhone(), "9727777569"), boldOblique));
-        contact.add(contactLine(pdf, ContactIcon.EMAIL, firstPresent(hospital(receipt).getEmail(), "swastikclinic.rajula@gmail.com"), boldOblique));
+        contact.add(contactLine(pdf, ContactIcon.PHONE, firstPresent(hospital(receipt).getPhone(), receipt.getHospitalPhone(), "+919876543210"), boldOblique));
+        contact.add(contactLine(pdf, ContactIcon.EMAIL, firstPresent(hospital(receipt).getEmail(), "default@gmail.com"), boldOblique));
         addAddressLines(contact, pdf, boldOblique, receipt);
         header.addCell(contact);
 
@@ -239,7 +241,7 @@ public class ConsultationReceiptPdfService {
         doc.add(table);
     }
 
-    private void addQrAndSignature(Document doc, PdfFont italic) throws Exception {
+    private void addQrAndSignature(Document doc, ConsultationReceipt receipt, PdfFont italic) throws Exception {
         Table bottom = new Table(UnitValue.createPointArray(new float[]{330, 330}))
                 .setWidth(660)
                 .setHorizontalAlignment(HorizontalAlignment.CENTER)
@@ -250,9 +252,9 @@ public class ConsultationReceiptPdfService {
                 .setTextAlignment(TextAlignment.CENTER)
                 .setPaddingLeft(84)
                 .setPaddingTop(0);
-        URL qrUrl = resource("images/qr-code.png");
-        if (qrUrl != null) {
-            qrCell.add(new Image(ImageDataFactory.create(qrUrl))
+        Image qrImage = loadQrCode(receipt);
+        if (qrImage != null) {
+            qrCell.add(qrImage
                     .setWidth(84)
                     .setHeight(84)
                     .setHorizontalAlignment(HorizontalAlignment.CENTER));
@@ -348,8 +350,27 @@ public class ConsultationReceiptPdfService {
             }
         }
 
-        URL bundledLogo = resource("images/swastik-logo.png");
+        URL bundledLogo = resource("images/default-logo.png");
         return bundledLogo != null ? new Image(ImageDataFactory.create(bundledLogo)) : null;
+    }
+
+    private Image loadQrCode(ConsultationReceipt receipt) throws Exception {
+        String qrCodeUrl = hospital(receipt).getConsultationReceiptQrCodeUrl();
+        if (qrCodeUrl != null && !qrCodeUrl.isBlank()) {
+            try {
+                return new Image(ImageDataFactory.create(qrCodeUrl.trim()));
+            } catch (Exception ignored) {
+                // Fall back to bundled QR when a configured URL/path cannot be loaded.
+            }
+        }
+
+        URL bundledQr = resource("images/qr-code.png");
+        return bundledQr != null ? new Image(ImageDataFactory.create(bundledQr)) : null;
+    }
+
+    private boolean isHeaderEnabled(ConsultationReceipt receipt) {
+        Boolean enabled = hospital(receipt).getConsultationReceiptHeaderEnabled();
+        return enabled == null || enabled;
     }
 
     private String hospitalName(ConsultationReceipt receipt) {
@@ -361,7 +382,7 @@ public class ConsultationReceiptPdfService {
         String address = firstPresent(hospital.getAddress(), receipt.getHospitalAddress());
         String cityStatePin = joinNonBlank(", ", hospital.getCity(), hospital.getState(), hospital.getPincode());
         String full = joinNonBlank(", ", address, cityStatePin);
-        return firstPresent(full, "Behind Gayatrimata Temple, Near Old Court Building, Krishnanagar Society, Rajula. 365560");
+        return firstPresent(full, "default address line 1", "default address line 2");
     }
 
     private Hospital hospital(ConsultationReceipt receipt) {
