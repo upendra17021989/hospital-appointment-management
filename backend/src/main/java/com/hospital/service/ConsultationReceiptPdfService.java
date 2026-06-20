@@ -108,7 +108,7 @@ public class ConsultationReceiptPdfService {
 
         Image logo = loadLogo(receipt);
         if (logo != null) {
-            logoCell.add(logo.setWidth(185).setAutoScaleHeight(false));
+            logoCell.add(logo.setWidth(113).setAutoScaleHeight(false));
         } else {
             logoCell.add(new Paragraph(hospitalName(receipt))
                     .setFont(bold)

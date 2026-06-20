@@ -29,6 +29,7 @@ export const consultationReceiptApi = {
   stats: () => api.get('/consultation-receipts/stats'),
   create: (payload) => api.post('/consultation-receipts', payload),
   get: (id) => api.get(`/consultation-receipts/${id}`),
+  activeByAppointment: (appointmentId) => api.get(`/consultation-receipts/appointment/${appointmentId}/active`),
   update: (id, payload) => api.put(`/consultation-receipts/${id}`, payload),
   void: (id) => api.post(`/consultation-receipts/${id}/void`, {}),
   patientHistory: (patientId) => api.get(`/consultation-receipts/patient/${patientId}`),

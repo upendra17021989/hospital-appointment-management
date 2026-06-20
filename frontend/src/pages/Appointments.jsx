@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { LoadingSpinner, Badge, EmptyState, Tabs } from '../components/Common';
 import { consultationPaymentApi } from '../services/consultationPaymentApi';
-import { consultationReceiptApi } from '../services/receiptApi';
+import { consultationReceiptApi, printBlob, saveBlob } from '../services/receiptApi';
 import { Modal } from '../components/Common';
 
 
@@ -66,6 +66,8 @@ const Appointments = () => {
     open: false,
     appointment: null,
   });
+  const [existingAppointmentReceipt, setExistingAppointmentReceipt] = useState(null);
+  const [checkingAppointmentReceipt, setCheckingAppointmentReceipt] = useState(false);
 
   const [paymentForm, setPaymentForm] = useState({
     paymentMode: 'CASH',
@@ -80,9 +82,11 @@ const Appointments = () => {
     ],
   });
 
-  const openPaymentModal = (appt) => {
+  const openPaymentModal = async (appt) => {
     const consultationFee = appt?.doctor?.consultationFee;
     setPaymentModal({ open: true, appointment: appt });
+    setExistingAppointmentReceipt(null);
+    setCheckingAppointmentReceipt(true);
 
     const fee = consultationFee != null ? Number(consultationFee) : 0;
     setPaymentForm({
@@ -96,16 +100,30 @@ const Appointments = () => {
         },
       ],
     });
+
+    try {
+      const receipt = appt?.id ? await consultationReceiptApi.activeByAppointment(appt.id) : null;
+      setExistingAppointmentReceipt(receipt || null);
+    } catch {
+      setExistingAppointmentReceipt(null);
+    } finally {
+      setCheckingAppointmentReceipt(false);
+    }
   };
 
   const closePaymentModal = () => {
     setPaymentModal({ open: false, appointment: null });
+    setExistingAppointmentReceipt(null);
+    setCheckingAppointmentReceipt(false);
   };
 
   const submitPaymentAndPrintPdf = async (opts) => {
     const appt = paymentModal.appointment;
 
     if (!appt?.id) throw new Error('Missing appointment id');
+    if (existingAppointmentReceipt) {
+      throw new Error(`Receipt ${existingAppointmentReceipt.receiptNumber} already exists for this appointment.`);
+    }
 
     const consultationFee = appt?.doctor?.consultationFee;
     if (!consultationFee || Number(consultationFee) <= 0) {
@@ -138,19 +156,24 @@ const Appointments = () => {
 
     // Always “Save & Print” = download receipt immediately (for now, to avoid changing backend snapshot behavior)
     const blob = await consultationReceiptApi.saveAndPrintByPaymentId(consultationPaymentId);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'consultation-receipt.pdf';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    saveBlob(blob, 'consultation-receipt.pdf');
 
     if (opts?.markCompleted) {
       await api.patch(`/appointments/hospital/${appt.id}/status`, { status: 'completed' });
       fetchAppointments();
     }
+  };
+
+  const printExistingReceipt = async () => {
+    if (!existingAppointmentReceipt?.id) return;
+    const blob = await consultationReceiptApi.downloadById(existingAppointmentReceipt.id);
+    printBlob(blob);
+  };
+
+  const downloadExistingReceipt = async () => {
+    if (!existingAppointmentReceipt?.id) return;
+    const blob = await consultationReceiptApi.downloadById(existingAppointmentReceipt.id);
+    saveBlob(blob, `${existingAppointmentReceipt.receiptNumber}.pdf`);
   };
 
 
@@ -230,6 +253,26 @@ const Appointments = () => {
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               Consultation fee: <strong>₹{paymentForm.amountPaid ? paymentForm.amountPaid : (paymentModal.appointment?.doctor?.consultationFee ?? 0)}</strong>
             </div>
+
+            {checkingAppointmentReceipt && (
+              <div className="alert alert-info">
+                Checking whether this appointment already has a receipt...
+              </div>
+            )}
+
+            {existingAppointmentReceipt && (
+              <div className="alert alert-error">
+                Receipt {existingAppointmentReceipt.receiptNumber} already exists for this appointment. New receipt creation is disabled.
+                <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={printExistingReceipt}>
+                    Print Existing
+                  </button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={downloadExistingReceipt}>
+                    Download PDF
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="form-group">
               <label>Payment Mode</label>
@@ -348,6 +391,7 @@ const Appointments = () => {
 
               <button
                 className="btn btn-secondary"
+                disabled={checkingAppointmentReceipt || !!existingAppointmentReceipt}
                 onClick={async () => {
                   try {
                     await submitPaymentAndPrintPdf({ markCompleted: false });
@@ -362,6 +406,7 @@ const Appointments = () => {
 
               <button
                 className="btn btn-primary"
+                disabled={checkingAppointmentReceipt || !!existingAppointmentReceipt}
                 onClick={async () => {
                   try {
                     await submitPaymentAndPrintPdf({ markCompleted: true });

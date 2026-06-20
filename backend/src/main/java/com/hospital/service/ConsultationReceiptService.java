@@ -216,6 +216,14 @@ public class ConsultationReceiptService {
         return receipt;
     }
 
+    @Transactional(readOnly = true)
+    public java.util.Optional<ConsultationReceipt> findActiveReceiptForAppointment(UUID appointmentId) {
+        UUID hospitalId = tenantContext.requireHospitalId();
+        return receiptRepo.findActiveByHospitalIdAndAppointmentId(hospitalId, appointmentId)
+                .stream()
+                .findFirst();
+    }
+
     @Transactional
     public ConsultationReceipt updateReceipt(UUID id, ConsultationReceiptDtos.UpdateConsultationReceiptRequest req) {
         ConsultationReceipt receipt = getReceipt(id);

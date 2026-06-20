@@ -56,6 +56,8 @@ const ConsultationReceipts = () => {
     lineItems: [{ ...emptyLine }],
   });
   const [saving, setSaving] = useState(false);
+  const [existingAppointmentReceipt, setExistingAppointmentReceipt] = useState(null);
+  const [checkingAppointmentReceipt, setCheckingAppointmentReceipt] = useState(false);
 
   const [reportFilters, setReportFilters] = useState({ startDate: today(), endDate: today() });
   const [report, setReport] = useState({ dailyCollection: [], paymentModeWiseCollection: [], doctorWiseCollection: [] });
@@ -123,6 +125,28 @@ const ConsultationReceipts = () => {
     }));
   }, [selectedDoctor]);
 
+  useEffect(() => {
+    if (!form.appointmentId) {
+      setExistingAppointmentReceipt(null);
+      return;
+    }
+
+    let cancelled = false;
+    setCheckingAppointmentReceipt(true);
+    consultationReceiptApi.activeByAppointment(form.appointmentId)
+      .then((receipt) => {
+        if (!cancelled) setExistingAppointmentReceipt(receipt || null);
+      })
+      .catch(() => {
+        if (!cancelled) setExistingAppointmentReceipt(null);
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingAppointmentReceipt(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [form.appointmentId]);
+
   const loadReport = async () => {
     try {
       const data = await consultationReceiptApi.report(reportFilters);
@@ -148,6 +172,10 @@ const ConsultationReceipts = () => {
   };
 
   const createReceipt = async (shouldPrint) => {
+    if (existingAppointmentReceipt) {
+      setMessage(`Receipt ${existingAppointmentReceipt.receiptNumber} already exists for this appointment. Use Print or PDF on the existing receipt.`);
+      return;
+    }
     setSaving(true);
     setMessage('');
     try {
@@ -188,6 +216,7 @@ const ConsultationReceipts = () => {
         receivedByName: user?.fullName || '',
         lineItems: [{ ...emptyLine }],
       });
+      setExistingAppointmentReceipt(null);
       await loadDashboard(0);
       if (shouldPrint && saved?.id) {
         const blob = await consultationReceiptApi.downloadById(saved.id);
@@ -215,7 +244,9 @@ const ConsultationReceipts = () => {
     && form.doctorId
     && form.appointmentId
     && Number(form.amountPaid) > 0
-    && Math.round(lineTotal * 100) === Math.round(Number(form.amountPaid || 0) * 100);
+    && Math.round(lineTotal * 100) === Math.round(Number(form.amountPaid || 0) * 100)
+    && !existingAppointmentReceipt
+    && !checkingAppointmentReceipt;
 
   const downloadReceipt = async (receipt) => {
     const blob = await consultationReceiptApi.downloadById(receipt.id);
@@ -404,6 +435,27 @@ const ConsultationReceipts = () => {
             {selectedPatient && selectedDoctor && (
               <div className="alert alert-info" style={{ marginTop: 12 }}>
                 Receipt for {selectedPatient.fullName} with {selectedDoctor.fullName}
+              </div>
+            )}
+            {checkingAppointmentReceipt && (
+              <div className="alert alert-info" style={{ marginTop: 12 }}>
+                Checking whether this appointment already has a receipt...
+              </div>
+            )}
+            {existingAppointmentReceipt && (
+              <div className="alert alert-error" style={{ marginTop: 12 }}>
+                Receipt {existingAppointmentReceipt.receiptNumber} already exists for this appointment. Create is disabled.
+                <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setViewReceipt(existingAppointmentReceipt)}>
+                    View
+                  </button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => printReceipt(existingAppointmentReceipt)}>
+                    Print
+                  </button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => downloadReceipt(existingAppointmentReceipt)}>
+                    PDF
+                  </button>
+                </div>
               </div>
             )}
             {Math.round(lineTotal * 100) !== Math.round(Number(form.amountPaid || 0) * 100) && (

@@ -89,6 +89,16 @@ public class ConsultationReceiptController {
         return ResponseEntity.ok(ApiResponse.success(receiptService.toResponse(receiptService.getReceipt(id))));
     }
 
+    @GetMapping("/appointment/{appointmentId}/active")
+    @PreAuthorize("hasAnyRole('STAFF','RECEPTIONIST','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN', 'DOCTOR')")
+    @Operation(summary = "Get active consultation receipt for an appointment")
+    public ResponseEntity<ApiResponse<ConsultationReceiptDtos.ConsultationReceiptResponse>> getActiveReceiptForAppointment(
+            @PathVariable UUID appointmentId) {
+        return receiptService.findActiveReceiptForAppointment(appointmentId)
+                .map(receipt -> ResponseEntity.ok(ApiResponse.success(receiptService.toResponse(receipt))))
+                .orElseGet(() -> ResponseEntity.ok(ApiResponse.success(null)));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('HOSPITAL_ADMIN','SUPER_ADMIN')")
     @Operation(summary = "Update consultation receipt")

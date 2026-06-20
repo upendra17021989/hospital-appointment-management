@@ -33,6 +33,18 @@ public interface ConsultationReceiptRepo extends JpaRepository<ConsultationRecei
             @Param("consultationPaymentId") UUID consultationPaymentId
     );
 
+    @Query("""
+            SELECT r FROM ConsultationReceipt r
+            WHERE r.hospital.id = :hospitalId
+              AND r.consultationPayment.appointment.id = :appointmentId
+              AND UPPER(r.receiptStatus) <> 'VOIDED'
+            ORDER BY r.receiptDateTime DESC
+            """)
+    List<ConsultationReceipt> findActiveByHospitalIdAndAppointmentId(
+            @Param("hospitalId") UUID hospitalId,
+            @Param("appointmentId") UUID appointmentId
+    );
+
     long countByHospitalIdAndReceiptNumberStartingWith(UUID hospitalId, String prefix);
 
     // Dashboard counts

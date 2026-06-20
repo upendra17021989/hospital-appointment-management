@@ -20,6 +20,7 @@ public class ConsultationPaymentService {
 
     private final ConsultationPaymentRepo paymentRepo;
     private final AppointmentRepo appointmentRepo;
+    private final ConsultationReceiptRepo consultationReceiptRepo;
     private final ConsultationPaymentLineItemRepo consultationPaymentLineItemRepo;
     private final TenantContext tenantContext;
 
@@ -42,6 +43,13 @@ public class ConsultationPaymentService {
         if (effectiveHospitalId == null || !hospitalId.equals(effectiveHospitalId)) {
             throw new IllegalArgumentException("Appointment not found for current hospital");
         }
+
+        consultationReceiptRepo.findActiveByHospitalIdAndAppointmentId(hospitalId, appt.getId())
+                .stream()
+                .findFirst()
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("Receipt already exists for this appointment: " + existing.getReceiptNumber());
+                });
 
         if (req.getAmountPaid() == null || req.getAmountPaid().compareTo(java.math.BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("amountPaid must be > 0");
