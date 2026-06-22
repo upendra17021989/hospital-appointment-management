@@ -27,38 +27,23 @@ const getNavGroups = (role) => {
   // Role-based navigation items
   const roleBasedGroups = [];
 
-  if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
-    roleBasedGroups.push({
-      key: 'management',
-      label: 'Management',
-      items: [
-        { id: 'doctor-management', label: 'Manage Doctors', icon: 'doctor' },
-        { id: 'user-management',   label: 'Manage Users',   icon: 'user' },
-        { id: 'hospital-settings', label: 'Hospital Settings', icon: 'department' },
-        ...(role === 'SUPER_ADMIN' ? [{ id: 'hospital-verification', label: 'Hospital Verification', icon: 'receipt' }] : []),
-        ...(role === 'SUPER_ADMIN' ? [{ id: 'legal-review', label: 'Legal Review', icon: 'receipt' }] : []),
-        { id: 'departments',       label: 'Departments',    icon: 'department' },
-      ],
-    });
-  }
-
-  if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
-    roleBasedGroups.push({
-      key: 'legal',
-      label: 'Legal',
-      items: [
-        { id: 'legal-agreements', label: 'Legal & Agreements', icon: 'receipt' },
-      ],
-    });
-  }
-
   if (['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
     roleBasedGroups.push({
       key: 'patients',
       label: 'Patients',
       items: [
-        { id: 'patients',     label: 'Patient Records',  icon: 'patient' },
         { id: 'patient-form', label: 'Register Patient', icon: 'patient' },
+        { id: 'patients',     label: 'Patient Records',  icon: 'patient' },
+      ],
+    });
+  }
+
+  if (['STAFF', 'RECEPTIONIST', 'DOCTOR', 'ACCOUNTANT', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'consultation-receipts',
+      label: 'Consultation',
+      items: [
+        { id: 'consultation-receipts', label: 'Consultation Receipts', icon: 'receipt' },
       ],
     });
   }
@@ -87,6 +72,31 @@ const getNavGroups = (role) => {
 
   if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
     roleBasedGroups.push({
+      key: 'reports',
+      label: 'Reports',
+      items: [
+        { id: 'reports', label: 'Patient Reports', icon: 'dashboard' },
+      ],
+    });
+  }
+
+  if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
+      key: 'management',
+      label: 'Management',
+      items: [
+        { id: 'doctor-management', label: 'Manage Doctors', icon: 'doctor' },
+        { id: 'user-management',   label: 'Manage Users',   icon: 'user' },
+        { id: 'hospital-settings', label: 'Hospital Settings', icon: 'department' },
+        { id: 'departments',       label: 'Departments',    icon: 'department' },
+        ...(role === 'SUPER_ADMIN' ? [{ id: 'hospital-verification', label: 'Hospital Verification', icon: 'receipt' }] : []),
+        ...(role === 'SUPER_ADMIN' ? [{ id: 'legal-review', label: 'Legal Review', icon: 'receipt' }] : []),
+      ],
+    });
+  }
+
+  if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
+    roleBasedGroups.push({
       key: 'billing',
       label: 'Billing & Plans',
       items: [
@@ -96,22 +106,12 @@ const getNavGroups = (role) => {
     });
   }
 
-  if (['STAFF', 'RECEPTIONIST', 'DOCTOR', 'ACCOUNTANT', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
-    roleBasedGroups.push({
-      key: 'consultation-receipts',
-      label: 'Consultation',
-      items: [
-        { id: 'consultation-receipts', label: 'Consultation Receipts', icon: 'receipt' },
-      ],
-    });
-  }
-
   if (['HOSPITAL_ADMIN', 'SUPER_ADMIN'].includes(role)) {
     roleBasedGroups.push({
-      key: 'reports',
-      label: 'Reports',
+      key: 'legal',
+      label: 'Legal',
       items: [
-        { id: 'reports', label: 'Patient Reports', icon: 'dashboard' },
+        { id: 'legal-agreements', label: 'Legal & Agreements', icon: 'receipt' },
       ],
     });
   }
