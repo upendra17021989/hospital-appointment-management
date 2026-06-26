@@ -130,6 +130,7 @@ const getNavGroups = (role) => {
     key: 'support',
     label: 'Support',
     items: [
+      { id: 'user-manual', label: 'User Manual', icon: 'manual' },
       { id: 'enquiries', label: 'Enquiries', icon: 'enquiry' },
     ],
   });

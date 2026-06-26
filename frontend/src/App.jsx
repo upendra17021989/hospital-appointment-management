@@ -26,6 +26,7 @@ import MedicalCertificates from './pages/MedicalCertificates';
 import HospitalVerification from './pages/HospitalVerification';
 import LegalAgreements from './pages/LegalAgreements';
 import LegalReview from './pages/LegalReview';
+import UserManual from './pages/UserManual';
 
 
 const Login  = React.lazy(() => import('./pages/Login'));
@@ -79,6 +80,7 @@ const ROUTE_CONFIG = [
   { path: '/payment-receipt', component: BillingReceiptViewer, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/reports', component: Reports, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/consultation-receipts', component: React.lazy(() => import('./pages/ConsultationReceipts')), roles: ['STAFF','RECEPTIONIST','DOCTOR','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN'], authRequired: true },
+  { path: '/user-manual', component: UserManual, roles: [], authRequired: true },
 ];
 
 
