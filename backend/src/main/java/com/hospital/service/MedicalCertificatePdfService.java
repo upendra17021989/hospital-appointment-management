@@ -41,6 +41,8 @@ public class MedicalCertificatePdfService {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
     private static final DeviceRgb BRAND_RED = new DeviceRgb(219, 30, 37);
     private static final DeviceRgb BRAND_BLUE = new DeviceRgb(26, 82, 142);
+    private static final String MEDICOLEGAL_DISCLAIMER =
+            "This Prescription / Certificate is not for medicolegal purpose.";
 
     private final MedicalCertificateService certificateService;
 
@@ -190,6 +192,11 @@ public class MedicalCertificatePdfService {
     }
 
     private void addFooter(Document doc, PdfFont italic) {
+        doc.add(new Paragraph(MEDICOLEGAL_DISCLAIMER)
+                .setFontSize(9)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(18)
+                .setMarginBottom(4));
         doc.add(new Paragraph("This certificate is issued based on clinical information available at the time of examination.")
                 .setFont(italic)
                 .setFontSize(9)

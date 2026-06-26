@@ -12,6 +12,9 @@ import java.io.ByteArrayOutputStream;
 @Service
 public class PrescriptionPdfService {
 
+    private static final String MEDICOLEGAL_DISCLAIMER =
+            "This Prescription / Certificate is not for medicolegal purpose.";
+
     public byte[] generatePdf(Prescription prescription) {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -33,6 +36,8 @@ public class PrescriptionPdfService {
                     m.getDosage() + " - " +
                     m.getFrequency()));
         });
+
+        document.add(new Paragraph(MEDICOLEGAL_DISCLAIMER));
 
         document.close();
 

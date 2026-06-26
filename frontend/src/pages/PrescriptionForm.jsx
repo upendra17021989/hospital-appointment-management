@@ -200,6 +200,7 @@ const LabTestRow = ({ test, idx, onChange, onRemove, commonTestsForRow }) => {
 
 // ── Print Prescription ────────────────────────────────────────
 const printPrescription = (data) => {
+  const medicolegalDisclaimer = 'This Prescription / Certificate is not for medicolegal purpose.';
   const {
     patient, doctor, diagnosis, medicines, labTests, prescriptionDate, vitalSigns,
     followUpDate, followUpAfterDays, additionalNotes,
@@ -244,6 +245,7 @@ const printPrescription = (data) => {
       td { padding:6px 8px; border-bottom:1px solid #f0e8e0; font-size:12px; }
       .urgent { background:#fff0f0; font-weight:700; color:#c0220a; }
       .footer { margin-top:30px; display:flex; justify-content:space-between; align-items:flex-end; border-top:1px dashed #ddd; padding-top:14px; }
+      .medicolegal-note { margin-top:20px; font-size:11px; font-weight:700; color:#444; text-align:center; }
       .sign-line { width:180px; border-top:1px solid #333; text-align:center; font-size:11px; color:#888; padding-top:4px; }
       .followup { background:#e6f4ee; border:1px solid #3d7a5e; border-radius:6px; padding:8px 12px; font-size:12px; }
       .followup-none { background:#f5f5f5; border:1px solid #ccc; color:#555; }
@@ -321,6 +323,7 @@ const printPrescription = (data) => {
       <div style="font-size:11px;color:#888">This prescription is valid for 30 days from the date of issue.</div>
       <div class="sign-line">Doctor's Signature</div>
     </div>
+    <div class="medicolegal-note">${medicolegalDisclaimer}</div>
     </body></html>`;
 
   const w = window.open('', '_blank');
