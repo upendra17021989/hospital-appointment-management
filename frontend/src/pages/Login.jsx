@@ -5,6 +5,17 @@ import { useAuth } from '../context/AuthContext';
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
+const platformFeatures = [
+  'Multi-hospital support',
+  'Real-time appointment slots',
+  'Patient health records',
+  'Doctor & department management',
+  'Digital prescriptions',
+  'Consultation receipts',
+  'Medical certificates',
+  'Reports & role-based access',
+];
+
 const Login = () => {
   const { saveAuth } = useAuth();
   const navigate = useNavigate();
@@ -51,13 +62,8 @@ const Login = () => {
           Streamline appointments, enquiries, and patient care — all in one place.
           Trusted by hospitals across India.
         </p>
-        <div className="auth-features">
-          {[
-            'Multi-hospital support',
-            'Real-time appointment slots',
-            'Patient & doctor management',
-            'Enquiry tracking',
-          ].map(f => (
+        <div className="auth-features auth-login-features" aria-label="Platform features">
+          {platformFeatures.map(f => (
             <div key={f} className="auth-feature-item">
               <span className="auth-feature-check">✓</span> {f}
             </div>
