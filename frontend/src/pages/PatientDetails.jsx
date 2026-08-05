@@ -109,7 +109,7 @@ const AppointmentCard = ({ appt, onPrescription }) => (
 const PrescriptionCard = ({ presc }) => {
   const [expanded, setExpanded] = useState(false);
   let vitals = {};
-  try { vitals = JSON.parse(presc.vitalSigns || '{}'); } catch {}
+  try { vitals = JSON.parse(presc.vitalSigns || '{}'); } catch { vitals = {}; }
 
   return (
     <div className="pd-presc-card">

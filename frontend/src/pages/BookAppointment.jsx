@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { reconcileDoctorSelection } from '../services/appointmentSelection';
 import { LoadingSpinner } from '../components/Common';
 
 
@@ -697,12 +698,7 @@ const BookAppointment = () => {
         if (cancelled) return;
         const availableDoctors = Array.isArray(result) ? result : [];
         setDoctors(availableDoctors);
-        setSelectedDoctor(current => {
-          if (availableDoctors.length === 1) return availableDoctors[0];
-          return current && availableDoctors.some(doctor => doctor.id === current.id)
-            ? current
-            : null;
-        });
+        setSelectedDoctor(current => reconcileDoctorSelection(availableDoctors, current));
         setSelectedSlot(null);
       })
       .catch(() => {

@@ -2,6 +2,7 @@
 // _pages.scss — Doctor cards, slots, dept cards, steps
 // ============================================================
 @use 'variables' as *;
+@use 'sass:color';
 
 // ── Doctor Grid ───────────────────────────────────────────────
 .doctor-grid {
@@ -755,10 +756,10 @@
     font-size: 12px;
     font-weight: 600;
 
-    &-success { background: rgba($accent, 0.12); color: darken($accent, 15%); }
-    &-warning { background: rgba($gold, 0.15); color: darken($gold, 20%); }
+    &-success { background: rgba($accent, 0.12); color: color.adjust($accent, $lightness: -15%); }
+    &-warning { background: rgba($gold, 0.15); color: color.adjust($gold, $lightness: -20%); }
     &-danger  { background: rgba(#e74c3c, 0.08); color: #c0392b; }
-    &-info    { background: rgba($primary, 0.1); color: darken($primary, 10%); }
+    &-info    { background: rgba($primary, 0.1); color: color.adjust($primary, $lightness: -10%); }
     &-secondary { background: #eee; color: #888; }
   }
 }
@@ -857,7 +858,7 @@
   &.banner-warning {
     background: linear-gradient(90deg, #fff9e6, #fff3cc);
     border-bottom: 2px solid $gold;
-    color: darken($gold, 30%);
+    color: color.adjust($gold, $lightness: -30%);
 
     .btn-light { background: $gold; color: white; }
   }
@@ -865,7 +866,7 @@
   &.banner-info {
     background: linear-gradient(90deg, #f0f6ff, #e6f0ff);
     border-bottom: 2px solid $primary;
-    color: darken($primary, 15%);
+    color: color.adjust($primary, $lightness: -15%);
 
     .btn-light { background: $primary; color: white; }
   }

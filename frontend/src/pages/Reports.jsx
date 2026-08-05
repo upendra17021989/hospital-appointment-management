@@ -130,7 +130,7 @@ const Reports = () => {
         if (!res.ok) throw new Error(`Download failed: ${res.status}`);
         const blob = await res.blob();
         const cd = res.headers.get('Content-Disposition');
-        const match = cd && cd.match(/filename="?([^\"]+)"?/);
+        const match = cd && cd.match(/filename="?([^"]+)"?/);
         const filename = match ? match[1] : `patient-report-${startDate}-${endDate}.csv`;
         const link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
@@ -190,7 +190,7 @@ const Reports = () => {
         if (!res.ok) throw new Error(`Download failed: ${res.status}`);
         const blob = await res.blob();
         const cd = res.headers.get('Content-Disposition');
-        const match = cd && cd.match(/filename="?([^\"]+)"?/);
+        const match = cd && cd.match(/filename="?([^"]+)"?/);
         const filename = match ? match[1] : `patient-report-${startDate}-${endDate}.pdf`;
 
         const link = document.createElement('a');
@@ -233,7 +233,7 @@ const Reports = () => {
         if (!res.ok) throw new Error(`Download failed: ${res.status}`);
         const blob = await res.blob();
         const cd = res.headers.get('Content-Disposition');
-        const match = cd && cd.match(/filename="?([^\"]+)"?/);
+        const match = cd && cd.match(/filename="?([^"]+)"?/);
         const filename = match ? match[1] : `patient-report-${startDate}-${endDate}.xlsx`;
 
         const link = document.createElement('a');
@@ -262,12 +262,9 @@ const Reports = () => {
         endDate={endDate}
         setStartDate={(v) => {
           setStartDate(v);
-          // manual edit resets quick selection
-          setActiveQuickKey(null);
         }}
         setEndDate={(v) => {
           setEndDate(v);
-          setActiveQuickKey(null);
         }}
         loading={loading}
         onGenerate={fetchReports}

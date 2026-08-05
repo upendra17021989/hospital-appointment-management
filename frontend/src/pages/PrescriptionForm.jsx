@@ -206,7 +206,7 @@ const printPrescription = (data) => {
     followUpDate, followUpAfterDays, additionalNotes,
   } = data;
   let vitals = {};
-  try { vitals = JSON.parse(vitalSigns || '{}'); } catch {}
+  try { vitals = JSON.parse(vitalSigns || '{}'); } catch { vitals = {}; }
 
   const patientHeight = vitals.height || '';
   const patientWeight = vitals.weight || '';
@@ -476,8 +476,6 @@ patientId:      (routePrefillPatient || prefillPatient)?.id     || '',
   };
 
   const handlePrint = () => {
-    let vitalsObj = {};
-    try { vitalsObj = JSON.parse(success?.vitalSigns || '{}'); } catch {}
     printPrescription({ ...success, vitalSigns: success?.vitalSigns });
   };
 
