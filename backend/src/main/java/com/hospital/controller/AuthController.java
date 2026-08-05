@@ -35,7 +35,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Tag(name = "Authentication", description = "Register, login and profile endpoints")
 public class AuthController {

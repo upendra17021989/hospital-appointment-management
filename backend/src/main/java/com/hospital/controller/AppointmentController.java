@@ -24,7 +24,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/appointments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Appointments", description = "Appointment management APIs")
 public class AppointmentController {
 

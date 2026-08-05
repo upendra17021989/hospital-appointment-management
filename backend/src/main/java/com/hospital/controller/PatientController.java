@@ -21,7 +21,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/patients")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Patients", description = "Patient management APIs")
 public class PatientController {
 

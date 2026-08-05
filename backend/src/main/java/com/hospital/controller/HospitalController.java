@@ -36,7 +36,6 @@ import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/hospital")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Tag(name = "Hospital Profile", description = "Hospital profile and receipt header settings")
 public class HospitalController {

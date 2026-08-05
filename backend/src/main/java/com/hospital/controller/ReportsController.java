@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/reports")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Reports", description = "Patient visit reports APIs")
 public class ReportsController {
 

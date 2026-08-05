@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/doctors")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Doctor Management", description = "Doctor CRUD and schedule management APIs")
 public class DoctorManagementController {
 

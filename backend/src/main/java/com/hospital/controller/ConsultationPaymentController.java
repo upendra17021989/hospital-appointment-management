@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/consultation-payments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Consultation Payments", description = "Create consultation payments and enable receipt printing")
 public class ConsultationPaymentController {
 

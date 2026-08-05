@@ -21,7 +21,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/enquiries")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Enquiries", description = "Hospital enquiry management APIs")
 public class EnquiryController {
 

@@ -24,7 +24,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/consultation-receipts")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Consultation Receipts", description = "Consultation receipt printing APIs")
 public class ConsultationReceiptController {
 

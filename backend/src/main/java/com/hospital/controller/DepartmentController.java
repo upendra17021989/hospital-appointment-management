@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/departments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Departments", description = "Department management APIs")
 public class DepartmentController {
 

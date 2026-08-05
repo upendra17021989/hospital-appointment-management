@@ -17,7 +17,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/dashboard")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Dashboard", description = "Dashboard statistics APIs")
 public class DashboardController {
 

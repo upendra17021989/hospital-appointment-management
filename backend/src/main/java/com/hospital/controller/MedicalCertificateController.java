@@ -21,7 +21,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/medical-certificates")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Medical Certificates", description = "Dynamic medical certificate APIs")
 public class MedicalCertificateController {
 
