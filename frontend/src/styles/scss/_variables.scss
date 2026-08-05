@@ -1,89 +1,162 @@
 // ============================================================
-// _variables.scss — Design tokens & mixins
+// _variables.scss — shared design tokens and responsive helpers
 // ============================================================
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
-// ── Color Palette ─────────────────────────────────────────────
-$bg:            #f0ebe3;
-$bg-card:       #faf8f5;
-$bg-dark:       #1a1410;
+// Brand and semantic colors
+$bg: #f0ebe3;
+$bg-card: #faf8f5;
+$bg-dark: #1a1410;
+$surface: #ffffff;
+$surface-muted: #f6f2ec;
 
-$primary:       #c5522a;
+$primary: #c5522a;
 $primary-light: #e8744e;
+$accent: #3d7a5e;
+$accent-light: #5aaa84;
+$gold: #d4a84b;
 
-$accent:        #3d7a5e;
-$accent-light:  #5aaa84;
+$text: #2d2520;
+$text-muted: #7a6e68;
+$text-subtle: #9a8f88;
+$border: #ddd4c8;
+$border-strong: #c9bdaf;
 
-$gold:          #d4a84b;
-
-$text:          #2d2520;
-$text-muted:    #7a6e68;
-
-$border:        #ddd4c8;
-
-// ── Shadows ───────────────────────────────────────────────────
-$shadow:        0 4px 24px rgba(45, 37, 32, 0.08);
-$shadow-md:     0 8px 36px rgba(45, 37, 32, 0.11);
-$shadow-lg:     0 12px 48px rgba(45, 37, 32, 0.14);
-
-// ── Border Radius ─────────────────────────────────────────────
-$radius:        12px;
-$radius-lg:     20px;
-
-// ── Typography ────────────────────────────────────────────────
-$font-body:     'DM Sans', sans-serif;
-$font-display:  'Playfair Display', serif;
-
-// ── Color Palette ─────────────────────────────────────────────
-$bg:            #f0ebe3;
-$bg-card:       #faf8f5;
-$bg-dark:       #1a1410;
-
-$primary:       #c5522a;
-$primary-light: #e8744e;
-
-$accent:        #3d7a5e;
-$accent-light:  #5aaa84;
-
-$gold:          #d4a84b;
-
-$text:          #2d2520;
-$text-muted:    #7a6e68;
-
-$border:        #ddd4c8;
-
-// ── Add these missing variables ───────────────────────────────
-$error:         #c0220a;
-$error-light:   #fcecea;
-$success:       #1a7a4a;
+$error: #c0220a;
+$error-light: #fcecea;
+$success: #1a7a4a;
 $success-light: #e6f4ee;
-$warning:       #c07b00;
+$warning: #c07b00;
 $warning-light: #fff8e6;
+$info: #1a4a7a;
+$info-light: #e6ecf4;
 
-// ── Breakpoints ───────────────────────────────────────────────
+// Typography
+$font-body: 'DM Sans', sans-serif;
+$font-display: 'Playfair Display', serif;
+
+$font-size-xs: 0.6875rem; // 11px
+$font-size-sm: 0.75rem;   // 12px
+$font-size-md: 0.875rem;  // 14px
+$font-size-base: 0.9375rem; // 15px
+$font-size-lg: 1.0625rem; // 17px
+$font-size-xl: 1.25rem;   // 20px
+$font-size-2xl: 1.75rem;  // 28px
+
+$line-height-tight: 1.2;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.6;
+
+// Spacing scale
+$space-0: 0;
+$space-1: 0.25rem; // 4px
+$space-2: 0.5rem;  // 8px
+$space-3: 0.75rem; // 12px
+$space-4: 1rem;    // 16px
+$space-5: 1.25rem; // 20px
+$space-6: 1.5rem;  // 24px
+$space-7: 1.75rem; // 28px
+$space-8: 2rem;    // 32px
+$space-10: 2.5rem; // 40px
+$space-12: 3rem;   // 48px
+
+// Sizing and content widths
+$control-height-sm: 32px;
+$control-height-md: 40px;
+$control-height-lg: 48px;
+$sidebar-width: 260px;
+$content-max-width: 1600px;
+$readable-max-width: 760px;
+
+// Radius
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius: 12px;
+$radius-lg: 20px;
+$radius-pill: 999px;
+
+// Elevation
+$shadow-sm: 0 2px 12px rgba(45, 37, 32, 0.06);
+$shadow: 0 4px 24px rgba(45, 37, 32, 0.08);
+$shadow-md: 0 8px 36px rgba(45, 37, 32, 0.11);
+$shadow-lg: 0 12px 48px rgba(45, 37, 32, 0.14);
+
+// Interaction
+$focus-ring: 0 0 0 3px rgba($primary, 0.22);
+$duration-fast: 120ms;
+$duration-normal: 200ms;
+$duration-slow: 300ms;
+$ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+// Layering
+$z-base: 0;
+$z-sticky: 20;
+$z-mobile-header: 90;
+$z-sidebar: 100;
+$z-overlay: 200;
+$z-modal: 210;
+$z-toast: 300;
+
+// Breakpoints
+$breakpoint-sm: 480px;
 $breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
 
-// ── CSS Custom Properties (runtime theming) ───────────────────
+// Runtime tokens. Keep these aligned with the Sass tokens above.
 :root {
-  --bg:           #{$bg};
-  --bg-card:      #{$bg-card};
-  --bg-dark:      #{$bg-dark};
-  --primary:      #{$primary};
-  --primary-light:#{$primary-light};
-  --accent:       #{$accent};
+  --bg: #{$bg};
+  --bg-card: #{$bg-card};
+  --bg-dark: #{$bg-dark};
+  --surface: #{$surface};
+  --surface-muted: #{$surface-muted};
+  --primary: #{$primary};
+  --primary-light: #{$primary-light};
+  --accent: #{$accent};
   --accent-light: #{$accent-light};
-  --gold:         #{$gold};
-  --text:         #{$text};
-  --text-muted:   #{$text-muted};
-  --border:       #{$border};
-  --shadow:       #{$shadow};
-  --shadow-lg:    #{$shadow-lg};
-  --radius:       #{$radius};
-  --radius-lg:    #{$radius-lg};
+  --gold: #{$gold};
+  --text: #{$text};
+  --text-muted: #{$text-muted};
+  --text-subtle: #{$text-subtle};
+  --border: #{$border};
+  --border-strong: #{$border-strong};
+  --error: #{$error};
+  --error-light: #{$error-light};
+  --success: #{$success};
+  --success-light: #{$success-light};
+  --warning: #{$warning};
+  --warning-light: #{$warning-light};
+  --info: #{$info};
+  --info-light: #{$info-light};
+  --font-body: #{$font-body};
+  --font-display: #{$font-display};
+  --space-1: #{$space-1};
+  --space-2: #{$space-2};
+  --space-3: #{$space-3};
+  --space-4: #{$space-4};
+  --space-5: #{$space-5};
+  --space-6: #{$space-6};
+  --space-8: #{$space-8};
+  --control-height-sm: #{$control-height-sm};
+  --control-height-md: #{$control-height-md};
+  --control-height-lg: #{$control-height-lg};
+  --shadow-sm: #{$shadow-sm};
+  --shadow: #{$shadow};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --radius-sm: #{$radius-sm};
+  --radius-md: #{$radius-md};
+  --radius: #{$radius};
+  --radius-lg: #{$radius-lg};
+  --radius-pill: #{$radius-pill};
+  --focus-ring: #{$focus-ring};
+  --duration-fast: #{$duration-fast};
+  --duration-normal: #{$duration-normal};
+  --ease-standard: #{$ease-standard};
 }
 
-// ── Mixins ────────────────────────────────────────────────────
+// Layout helpers
 @mixin flex-center {
   display: flex;
   align-items: center;
@@ -98,26 +171,56 @@ $breakpoint-md: 768px;
 
 @mixin card-base {
   background: $bg-card;
+  border: 1px solid $border;
   border-radius: $radius-lg;
   box-shadow: $shadow;
-  border: 1px solid $border;
 }
 
 @mixin display-font {
   font-family: $font-display;
 }
 
+@mixin focus-ring {
+  outline: none;
+  box-shadow: $focus-ring;
+}
+
 @mixin hover-lift {
-  transition: all 0.25s;
+  transition: transform $duration-normal $ease-standard, box-shadow $duration-normal $ease-standard;
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: $shadow-lg;
   }
 }
 
+// Compatibility helper used throughout the current styles.
 @mixin responsive-mobile {
   @media (max-width: $breakpoint-md) {
     @content;
   }
 }
 
+@mixin responsive-small-mobile {
+  @media (max-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin responsive-tablet {
+  @media (min-width: ($breakpoint-md + 1px)) and (max-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin responsive-laptop {
+  @media (min-width: ($breakpoint-lg + 1px)) and (max-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+@mixin responsive-below($width) {
+  @media (max-width: $width) {
+    @content;
+  }
+}

@@ -2,6 +2,7 @@ import React, { Suspense, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import Sidebar from './components/Sidebar';
 import SubscriptionBanner from './components/SubscriptionBanner';
 import RoleGuard from './components/RoleGuard';
@@ -178,9 +179,11 @@ const AppRoutes = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

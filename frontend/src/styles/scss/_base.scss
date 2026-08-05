@@ -16,13 +16,41 @@ body {
   background: $bg;
   color: $text;
   min-height: 100vh;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: $font-size-base;
+  line-height: $line-height-relaxed;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+[tabindex]:not([tabindex='-1']) {
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
 }
 
 // ── Form Elements ─────────────────────────────────────────────
 label {
-  font-size: 13px;
+  font-size: $font-size-md;
   font-weight: 600;
   color: $text;
 }
@@ -34,10 +62,10 @@ textarea {
   border: 1.5px solid $border;
   border-radius: $radius;
   font-family: $font-body;
-  font-size: 14px;
+  font-size: $font-size-md;
   color: $text;
   background: white;
-  transition: border-color 0.2s;
+  transition: border-color $duration-normal $ease-standard, box-shadow $duration-normal $ease-standard;
   outline: none;
 
   &:focus {
@@ -89,4 +117,15 @@ tr {
 // ── Keyframes ─────────────────────────────────────────────────
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

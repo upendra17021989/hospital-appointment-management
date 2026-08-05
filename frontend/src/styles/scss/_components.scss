@@ -125,15 +125,20 @@
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: $space-2;
+  min-height: $control-height-md;
+  padding: 10px $space-5;
   border-radius: $radius;
   font-family: $font-body;
-  font-size: 14px;
+  font-size: $font-size-md;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: all 0.2s;
+  transition: background-color $duration-normal $ease-standard,
+    border-color $duration-normal $ease-standard,
+    color $duration-normal $ease-standard,
+    box-shadow $duration-normal $ease-standard,
+    transform $duration-normal $ease-standard;
   text-decoration: none;
 
   &-primary {
@@ -314,13 +319,13 @@
     background: rgba(26, 20, 16, 0.6);
     backdrop-filter: blur(4px);
     @include flex-center;
-    z-index: 1000;
-    padding: 20px;
+    z-index: $z-overlay;
+    padding: $space-5;
   }
 
   background: $bg-card;
   border-radius: $radius-lg;
-  padding: 32px;
+  padding: $space-8;
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
@@ -329,7 +334,7 @@
 
   &-header {
     @include flex-between;
-    margin-bottom: 24px;
+    margin-bottom: $space-6;
   }
 
   &-title {
@@ -1040,4 +1045,228 @@
   color: $text-muted;
   font-size: 13px;
   font-weight: 700;
+}
+
+// Shared UI primitives
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ui-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-6;
+  margin-bottom: $space-7;
+}
+
+.ui-page-header-copy { min-width: 0; }
+
+.ui-page-eyebrow {
+  margin-bottom: $space-1;
+  color: $primary;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ui-page-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.filter-bar {
+  @include card-base;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-5;
+  padding: $space-4;
+}
+
+.filter-bar-fields,
+.filter-bar-actions {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: $space-3;
+}
+
+.filter-bar-fields { flex: 1; }
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  min-width: 0;
+}
+
+.form-field-required,
+.form-field-error { color: $error; }
+
+.form-field-error,
+.form-field-hint {
+  font-size: $font-size-sm;
+  line-height: $line-height-normal;
+}
+
+.form-field-hint { color: $text-muted; }
+
+.form-field--error input,
+.form-field--error select,
+.form-field--error textarea {
+  border-color: $error;
+}
+
+.data-table-shell {
+  @include card-base;
+  overflow: hidden;
+}
+
+.data-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  min-width: 720px;
+}
+
+.pagination__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.action-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.action-menu-trigger { min-width: max-content; }
+
+.action-menu-popover {
+  position: absolute;
+  top: calc(100% + #{$space-1});
+  right: 0;
+  z-index: $z-sticky;
+  display: grid;
+  min-width: 180px;
+  padding: $space-1;
+  overflow: hidden;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+}
+
+.action-menu-item {
+  width: 100%;
+  padding: $space-2 $space-3;
+  color: $text;
+  font-family: $font-body;
+  font-size: $font-size-md;
+  font-weight: 600;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: $radius-sm;
+  cursor: pointer;
+
+  &:hover { background: $surface-muted; }
+  &--danger { color: $error; }
+}
+
+.modal--sm { max-width: 440px; }
+.modal--lg { max-width: 840px; }
+
+.confirm-dialog-message {
+  margin-bottom: $space-6;
+  color: $text-muted;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.toast-region {
+  position: fixed;
+  top: $space-5;
+  right: $space-5;
+  z-index: $z-toast;
+  display: grid;
+  width: min(380px, calc(100vw - #{$space-8}));
+  gap: $space-2;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  color: $text;
+  background: $surface;
+  border: 1px solid $border;
+  border-left: 4px solid $info;
+  border-radius: $radius;
+  box-shadow: $shadow-md;
+  pointer-events: auto;
+
+  &--success { border-left-color: $success; }
+  &--warning { border-left-color: $warning; }
+  &--error { border-left-color: $error; }
+}
+
+.toast-content { flex: 1; min-width: 0; }
+.toast-title { margin-bottom: $space-1; font-weight: 700; }
+.toast-message { color: $text-muted; font-size: $font-size-md; }
+
+.toast-dismiss {
+  display: grid;
+  width: $control-height-sm;
+  height: $control-height-sm;
+  flex: 0 0 auto;
+  place-items: center;
+  color: $text-muted;
+  font-size: $font-size-xl;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  border-radius: $radius-sm;
+  cursor: pointer;
+
+  &:hover { color: $text; background: $surface-muted; }
+}
+
+@include responsive-below($breakpoint-lg) {
+  .filter-bar { align-items: stretch; flex-direction: column; }
+  .filter-bar-actions { justify-content: flex-end; }
+}
+
+@include responsive-mobile {
+  .ui-page-header { flex-direction: column; gap: $space-4; }
+  .ui-page-header-actions { width: 100%; justify-content: flex-start; }
+  .filter-bar-fields, .filter-bar-actions { align-items: stretch; flex-direction: column; }
+  .filter-bar .form-field, .filter-bar input, .filter-bar select { width: 100%; }
+  .pagination { align-items: stretch; flex-direction: column; }
+  .pagination__actions .btn { flex: 1; justify-content: center; }
+  .toast-region { top: $space-3; right: $space-3; width: calc(100vw - #{$space-6}); }
 }

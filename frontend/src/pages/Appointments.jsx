@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { LoadingSpinner, Badge, EmptyState, Tabs } from '../components/Common';
+import { ActionMenu, ConfirmDialog, Dialog, FilterBar, FormField, PageHeader, Pagination } from '../components/SharedUI';
+import { useToast } from '../context/ToastContext';
 import { consultationPaymentApi } from '../services/consultationPaymentApi';
 import { consultationReceiptApi, printBlob, saveBlob } from '../services/receiptApi';
-import { Modal } from '../components/Common';
 
 
 
 const Appointments = () => {
+  const { showToast } = useToast();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -26,6 +28,8 @@ const Appointments = () => {
   const [sortDirection, setSortDirection] = useState('DESC');
   
   const [updating, setUpdating] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const showLegacyPagination = false;
 
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
@@ -56,7 +60,10 @@ const Appointments = () => {
     setUpdating(id);
     try {
       await api.patch(`/appointments/hospital/${id}/status`, { status });
-      fetchAppointments();
+      await fetchAppointments();
+      showToast(`Appointment marked as ${status}.`, { type: 'success' });
+    } catch (error) {
+      showToast(error.message || 'Could not update the appointment.', { type: 'error', title: 'Update failed' });
     } finally {
       setUpdating(null);
     }
@@ -221,33 +228,15 @@ const Appointments = () => {
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Appointments</h1>
-          <p className="page-subtitle">{totalElements} total appointments</p>
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={e => {
-              setDateFilter(e.target.value);
-              setPage(0);
-            }}
-            style={{ padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'white', fontFamily: 'DM Sans' }}
-          />
-          {dateFilter && (
-            <button className="btn btn-secondary btn-sm" onClick={() => setDateFilter('')}>Clear</button>
-          )}
-        </div>
-      </div>
+      <PageHeader title="Appointments" subtitle={`${totalElements} total appointments`} eyebrow="Scheduling" />
 
       <Tabs tabs={tabs} active={statusFilter} onChange={(val) => { setStatusFilter(val); setPage(0); }} />
 
       {paymentModal.open && (
-        <Modal
+        <Dialog
           title="Collect Consultation Payment & Print"
           onClose={closePaymentModal}
+          size="lg"
         >
           <div style={{ display: 'grid', gap: 12, minWidth: 320 }}>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
@@ -397,7 +386,7 @@ const Appointments = () => {
                     await submitPaymentAndPrintPdf({ markCompleted: false });
                     closePaymentModal();
                   } catch (e) {
-                    alert(e.message || String(e));
+                    showToast(e.message || String(e), { type: 'error', title: 'Receipt failed' });
                   }
                 }}
               >
@@ -412,7 +401,7 @@ const Appointments = () => {
                     await submitPaymentAndPrintPdf({ markCompleted: true });
                     closePaymentModal();
                   } catch (e) {
-                    alert(e.message || String(e));
+                    showToast(e.message || String(e), { type: 'error', title: 'Payment failed' });
                   }
                 }}
               >
@@ -420,27 +409,35 @@ const Appointments = () => {
               </button>
             </div>
           </div>
-        </Modal>
+        </Dialog>
       )}
 
       {/* Table Controls */}
 
-      <div style={{ marginBottom: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <label style={{ fontSize: 14, color: 'var(--text-muted)' }}>Show:</label>
-          <select 
+      <FilterBar>
+        <FormField label="Appointment date">
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={e => {
+              setDateFilter(e.target.value);
+              setPage(0);
+            }}
+          />
+        </FormField>
+        <FormField label="Records per page">
+          <select
             value={size} 
             onChange={e => handleSizeChange(Number(e.target.value))}
-            style={{ padding: '6px 10px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 14 }}
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
             <option value={15}>15</option>
             <option value={100}>100</option>
           </select>
-          <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>records</span>
-        </div>
-      </div>
+        </FormField>
+        {dateFilter && <button className="btn btn-secondary" onClick={() => setDateFilter('')}>Clear date</button>}
+      </FilterBar>
 
       <div className="table-wrap appointments-table-wrap">
         {loading ? <LoadingSpinner /> : appointments.length === 0 ? (
@@ -503,30 +500,20 @@ const Appointments = () => {
                             onClick={() => updateStatus(a.id, 'confirmed')}>Confirm</button>
                         )}
                         {a.status === 'confirmed' && (
-                          <>
-                            <button className="btn btn-secondary btn-sm" disabled={updating === a.id}
-                              onClick={() => updateStatus(a.id, 'completed')}>Complete</button>
-                            <button
-                              className="btn btn-primary btn-sm"
-                              disabled={updating === a.id}
-                              onClick={() => openPaymentModal(a)}
-                            >
-                              Save & Print
-                            </button>
-                            <button
-                              className="btn btn-secondary btn-sm"
-                              disabled={updating === a.id}
-                              onClick={() => openPaymentModal(a)}
-                            >
-                              Print Receipt
-                            </button>
-                          </>
+                          <button className="btn btn-secondary btn-sm" disabled={updating === a.id}
+                            onClick={() => updateStatus(a.id, 'completed')}>Complete</button>
                         )}
-
                         {(a.status === 'pending' || a.status === 'confirmed') && (
-
-                          <button className="btn btn-danger btn-sm" disabled={updating === a.id}
-                            onClick={() => updateStatus(a.id, 'cancelled')}>Cancel</button>
+                          <ActionMenu
+                            label="Actions"
+                            items={[
+                              ...(a.status === 'confirmed' ? [
+                                { label: 'Collect payment & print', onSelect: () => openPaymentModal(a) },
+                                { label: 'Print receipt', onSelect: () => openPaymentModal(a) },
+                              ] : []),
+                              { label: 'Cancel appointment', danger: true, disabled: updating === a.id, onSelect: () => setCancelTarget(a) },
+                            ]}
+                          />
                         )}
                       </div>
                     </td>
@@ -580,7 +567,7 @@ const Appointments = () => {
                     )}
                     {(a.status === 'pending' || a.status === 'confirmed') && (
                       <button className="btn btn-danger btn-sm" disabled={updating === a.id}
-                        onClick={() => updateStatus(a.id, 'cancelled')}>Cancel</button>
+                        onClick={() => setCancelTarget(a)}>Cancel</button>
                     )}
                   </div>
                 </div>
@@ -591,7 +578,7 @@ const Appointments = () => {
       </div>
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
+      {showLegacyPagination && totalPages > 1 && (
         <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <button 
             className="btn btn-secondary btn-sm"
@@ -633,6 +620,22 @@ const Appointments = () => {
           </button>
         </div>
       )}
+      <Pagination page={page} totalPages={totalPages} totalElements={totalElements} onChange={handlePageChange} disabled={loading} />
+
+      <ConfirmDialog
+        open={!!cancelTarget}
+        title="Cancel appointment?"
+        message={cancelTarget ? `This will cancel ${cancelTarget.patient?.fullName || 'this patient'}'s appointment.` : ''}
+        confirmLabel="Cancel appointment"
+        danger
+        busy={updating === cancelTarget?.id}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={async () => {
+          if (!cancelTarget) return;
+          await updateStatus(cancelTarget.id, 'cancelled');
+          setCancelTarget(null);
+        }}
+      />
     </div>
   );
 };

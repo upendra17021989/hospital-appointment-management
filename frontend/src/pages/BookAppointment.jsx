@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { reconcileDoctorSelection } from '../services/appointmentSelection';
 import { LoadingSpinner } from '../components/Common';
+import { PageHeader } from '../components/SharedUI';
 
 
 const STEPS = [
@@ -32,17 +33,18 @@ const Step1Department = ({ departments, selected, onSelect, onNext }) => (
     <div className="card-title">Select Department</div>
     <div className="dept-select-grid">
       {departments.map(d => (
-        <div
+        <button
+          type="button"
           key={d.id}
           className={`dept-card ${selected?.id === d.id ? 'selected' : ''}`}
           onClick={() => onSelect(d)}
         >
           <div className="dept-card-name">{d.name}</div>
           <div className="dept-card-floor">Floor {d.floorNumber}</div>
-        </div>
+        </button>
       ))}
     </div>
-    <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
+    <div className="booking-step-actions">
       <button className="btn btn-primary" disabled={!selected} onClick={onNext}>Next →</button>
     </div>
   </div>
@@ -54,7 +56,8 @@ const Step2Doctor = ({ doctors, selected, onSelect, onNext, onBack, deptName }) 
     <div className="card-title">Select Doctor — {deptName}</div>
     <div className="doctor-grid">
       {doctors.map(d => (
-        <div
+        <button
+          type="button"
           key={d.id}
           className={`doctor-card`}
           style={{ cursor: 'pointer', border: selected?.id === d.id ? '2px solid var(--primary)' : undefined }}
@@ -75,7 +78,7 @@ const Step2Doctor = ({ doctors, selected, onSelect, onNext, onBack, deptName }) 
               ))}
             </div>
           )}
-        </div>
+        </button>
       ))}
     </div>
     {doctors.length === 0 && (
@@ -84,7 +87,7 @@ const Step2Doctor = ({ doctors, selected, onSelect, onNext, onBack, deptName }) 
         <div className="empty-state-title">No doctors available</div>
       </div>
     )}
-    <div style={{ marginTop: 20, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+    <div className="booking-step-actions">
       <button className="btn btn-secondary" onClick={onBack}>← Back</button>
       <button className="btn btn-primary" disabled={!selected} onClick={onNext}>Next →</button>
     </div>
@@ -130,7 +133,7 @@ const Step3DateTime = ({ doctor, selectedDate, setSelectedDate, slots, slotsLoad
         </div>
       )}
 
-      <div style={{ marginTop: 20, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+      <div className="booking-step-actions">
         <button className="btn btn-secondary" onClick={onBack}>← Back</button>
         <button className="btn btn-primary" disabled={!selectedSlot} onClick={onNext}>Next →</button>
       </div>
@@ -267,8 +270,6 @@ const Step4PatientInfo = ({
     setPatientData(p => ({ ...p, phone: normalisePhone(p.phone) }));
     onNext();
   };
-
-  const fieldDisabled = !isNewPatient;
 
   return (
     <div className="card">
@@ -558,7 +559,7 @@ const Step4PatientInfo = ({
         </div>
       </div>
 
-      <div style={{ marginTop: 20, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+      <div className="booking-step-actions">
         <button className="btn btn-secondary" onClick={onBack}>← Back</button>
         <button
           className="btn btn-primary"
@@ -606,7 +607,7 @@ const Step5Confirm = ({ dept, doctor, selectedDate, selectedSlot, patientData, v
           </div>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+      <div className="booking-step-actions">
         <button className="btn btn-secondary" onClick={onBack}>← Back</button>
         <button className="btn btn-primary" disabled={loading} onClick={onConfirm}>
           {loading ? 'Booking...' : '✓ Confirm Appointment'}
@@ -648,7 +649,6 @@ const SuccessScreen = ({ appointment, onReset }) => {
 
 // ── Main BookAppointment Page ─────────────────────────────────
 const BookAppointment = () => {
-  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
 
   const [step, setStep] = useState(1);
@@ -808,13 +808,8 @@ const BookAppointment = () => {
   if (success) return <SuccessScreen appointment={success} onReset={handleReset} />;
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Book Appointment</h1>
-          <p className="page-subtitle">Schedule a consultation with our specialists</p>
-        </div>
-      </div>
+    <div className="appointment-booking-page">
+      <PageHeader title="Book Appointment" subtitle="Schedule a consultation with our specialists" eyebrow="Scheduling" />
 
       <StepIndicator current={step} />
 

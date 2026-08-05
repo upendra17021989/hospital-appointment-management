@@ -12,6 +12,10 @@
 }
 
 .doctor-card {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   background: $bg-card;
   border-radius: $radius-lg;
   padding: 24px;
@@ -121,6 +125,10 @@
 }
 
 .dept-card {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   padding: 14px 12px;
   border-radius: 10px;
   border: 2px solid $border;
@@ -274,6 +282,33 @@
 
   @include responsive-mobile {
     display: none;
+  }
+}
+
+.appointment-booking-page {
+  max-width: $content-max-width;
+  margin: 0 auto;
+}
+
+.booking-step-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: $space-3;
+  margin-top: $space-5;
+}
+
+@include responsive-mobile {
+  .booking-step-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+
+    .btn { justify-content: center; width: 100%; }
+  }
+
+  .doctor-grid,
+  .dept-select-grid {
+    grid-template-columns: 1fr;
   }
 }
 
