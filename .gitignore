@@ -78,3 +78,8 @@ coverage/
 .nyc_output/
 test-results/
 surefire-reports/
+
+# Database backups may contain patient data and credentials
+/backups/
+/*_backup.sql
+*.dump

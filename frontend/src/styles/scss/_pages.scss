@@ -249,9 +249,50 @@
 // ── Appointment Cards (Mobile) ──────────────────────────────
 .appointments-table-desktop {
   display: table;
+  min-width: 1180px;
+
+  th,
+  td {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  th:first-child,
+  td:first-child,
+  th:nth-child(5),
+  td:nth-child(5),
+  th:nth-child(6),
+  td:nth-child(6) {
+    white-space: nowrap;
+  }
+
+  th:last-child,
+  td:last-child {
+    min-width: 300px;
+  }
 
   @include responsive-mobile {
     display: none;
+  }
+}
+
+.appointments-table-wrap {
+  overflow-x: auto;
+}
+
+.appointment-token {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.appointment-table-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .btn {
+    white-space: nowrap;
   }
 }
 

@@ -683,9 +683,36 @@ const BookAppointment = () => {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    if (selectedDept) {
-      api.get(`/doctors?departmentId=${selectedDept.id}`).then(setDoctors).catch(() => {});
+    let cancelled = false;
+
+    if (!selectedDept) {
+      setDoctors([]);
+      setSelectedDoctor(null);
+      setSelectedSlot(null);
+      return () => { cancelled = true; };
     }
+
+    api.get(`/doctors?departmentId=${selectedDept.id}`)
+      .then(result => {
+        if (cancelled) return;
+        const availableDoctors = Array.isArray(result) ? result : [];
+        setDoctors(availableDoctors);
+        setSelectedDoctor(current => {
+          if (availableDoctors.length === 1) return availableDoctors[0];
+          return current && availableDoctors.some(doctor => doctor.id === current.id)
+            ? current
+            : null;
+        });
+        setSelectedSlot(null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setDoctors([]);
+        setSelectedDoctor(null);
+        setSelectedSlot(null);
+      });
+
+    return () => { cancelled = true; };
   }, [selectedDept]);
 
   useEffect(() => {

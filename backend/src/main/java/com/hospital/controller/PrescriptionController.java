@@ -362,7 +362,8 @@ public class PrescriptionController {
     @GetMapping("/{id}")
     @Operation(summary = "Get prescription by ID")
     public ResponseEntity<ApiResponse<PrescriptionResponse>> getById(@PathVariable UUID id) {
-        return prescriptionRepo.findById(id)
+        UUID hospitalId = tenantContext.requireHospitalId();
+        return prescriptionRepo.findByHospitalOrDoctorOrPatientHospitalIdAndId(hospitalId, id)
                 .map(p -> ResponseEntity.ok(ApiResponse.success(mapResponse(p))))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -371,8 +372,9 @@ public class PrescriptionController {
     @Operation(summary = "Get all prescriptions for a patient")
     public ResponseEntity<ApiResponse<List<PrescriptionResponse>>> getByPatient(
             @PathVariable UUID patientId) {
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<PrescriptionResponse> list = prescriptionRepo
-                .findByPatientIdOrderByCreatedAtDesc(patientId)
+                .findByHospitalOrDoctorOrPatientHospitalIdAndPatientIdOrderByCreatedAtDesc(hospitalId, patientId)
                 .stream().map(this::mapResponse).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(list));
     }
@@ -381,7 +383,8 @@ public class PrescriptionController {
     @Operation(summary = "Get prescription for a specific appointment")
     public ResponseEntity<ApiResponse<PrescriptionResponse>> getByAppointment(
             @PathVariable UUID appointmentId) {
-        return prescriptionRepo.findByAppointmentId(appointmentId)
+        UUID hospitalId = tenantContext.requireHospitalId();
+        return prescriptionRepo.findByHospitalOrDoctorOrPatientHospitalIdAndAppointmentId(hospitalId, appointmentId)
                 .map(p -> ResponseEntity.ok(ApiResponse.success(mapResponse(p))))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -389,7 +392,9 @@ public class PrescriptionController {
     @GetMapping
     @Operation(summary = "Get all prescriptions")
     public ResponseEntity<ApiResponse<List<PrescriptionResponse>>> getAll() {
-        List<PrescriptionResponse> list = prescriptionRepo.findAll()
+        UUID hospitalId = tenantContext.requireHospitalId();
+        List<PrescriptionResponse> list = prescriptionRepo
+                .findByHospitalOrDoctorOrPatientHospitalIdOrderByCreatedAtDesc(hospitalId)
                 .stream().map(this::mapResponse).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(list));
     }
@@ -397,8 +402,12 @@ public class PrescriptionController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a prescription")
     public ResponseEntity<ApiResponse<String>> delete(@PathVariable UUID id) {
-        if (!prescriptionRepo.existsById(id)) return ResponseEntity.notFound().build();
-        prescriptionRepo.deleteById(id);
+        UUID hospitalId = tenantContext.requireHospitalId();
+        Prescription prescription = prescriptionRepo
+                .findByHospitalOrDoctorOrPatientHospitalIdAndId(hospitalId, id)
+                .orElse(null);
+        if (prescription == null) return ResponseEntity.notFound().build();
+        prescriptionRepo.delete(prescription);
         return ResponseEntity.ok(ApiResponse.success("Prescription deleted", "deleted"));
     }
 

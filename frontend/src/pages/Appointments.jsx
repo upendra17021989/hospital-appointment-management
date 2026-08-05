@@ -442,7 +442,7 @@ const Appointments = () => {
         </div>
       </div>
 
-      <div className="table-wrap">
+      <div className="table-wrap appointments-table-wrap">
         {loading ? <LoadingSpinner /> : appointments.length === 0 ? (
           <EmptyState icon="📅" title="No appointments found" />
         ) : (
@@ -482,7 +482,7 @@ const Appointments = () => {
               <tbody>
                 {appointments.map(a => (
                   <tr key={a.id}>
-                    <td><span className="token-badge">{a.tokenNumber}</span></td>
+                    <td><span className="token-badge appointment-token">{a.tokenNumber}</span></td>
                     <td>
                       <div style={{ fontWeight: 600 }}>{a.patient?.fullName}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.patient?.phone}</div>
@@ -497,13 +497,13 @@ const Appointments = () => {
                     <td><Badge status={a.appointmentType} /></td>
                     <td><Badge status={a.status} /></td>
                     <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
+                      <div className="appointment-table-actions">
                         {a.status === 'pending' && (
                           <button className="btn btn-accent btn-sm" disabled={updating === a.id}
                             onClick={() => updateStatus(a.id, 'confirmed')}>Confirm</button>
                         )}
-                    {a.status === 'confirmed' && (
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {a.status === 'confirmed' && (
+                          <>
                             <button className="btn btn-secondary btn-sm" disabled={updating === a.id}
                               onClick={() => updateStatus(a.id, 'completed')}>Complete</button>
                             <button
@@ -520,7 +520,7 @@ const Appointments = () => {
                             >
                               Print Receipt
                             </button>
-                          </div>
+                          </>
                         )}
 
                         {(a.status === 'pending' || a.status === 'confirmed') && (

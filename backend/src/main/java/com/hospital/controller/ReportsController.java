@@ -60,7 +60,7 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         validateReportRange(startDate, endDate);
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
 
@@ -212,7 +212,7 @@ public class ReportsController {
             @RequestParam String department) {
 
         validateReportRange(startDate, endDate);
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
 
@@ -283,7 +283,7 @@ public class ReportsController {
             @RequestParam String doctor) {
 
         validateReportRange(startDate, endDate);
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
 
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
@@ -360,7 +360,7 @@ public class ReportsController {
         // returns CSV
 
 
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
         // Unique patients
@@ -451,7 +451,7 @@ public class ReportsController {
         validateReportRange(startDate, endDate);
 
 
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
         Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
@@ -563,7 +563,7 @@ public class ReportsController {
 
 
 
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
         Map<UUID, Appointment> lastVisitByPatient = new LinkedHashMap<>();
@@ -672,13 +672,9 @@ public class ReportsController {
 
 
     private List<Appointment> getAppointmentsInRange(UUID hospitalId, LocalDate start, LocalDate end) {
-        if (hospitalId != null) {
-            // Filter appointments within date range for this hospital
-            return appointmentRepo.findByHospitalOrDoctorHospitalId(hospitalId).stream()
-                    .filter(a -> !a.getAppointmentDate().isBefore(start) && !a.getAppointmentDate().isAfter(end))
-                    .collect(Collectors.toList());
-        }
-        return appointmentRepo.findByDateRange(start, end);
+        return appointmentRepo.findByHospitalOrDoctorHospitalId(hospitalId).stream()
+                .filter(a -> !a.getAppointmentDate().isBefore(start) && !a.getAppointmentDate().isAfter(end))
+                .collect(Collectors.toList());
     }
 
     private static String formatLastVisit(LocalDate d, Object time) {
@@ -741,7 +737,7 @@ public class ReportsController {
         validateReportRange(startDate, endDate);
 
 
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
         List<Appointment> opdAppointments = appointments.stream()
@@ -763,7 +759,7 @@ public class ReportsController {
         validateReportRange(startDate, endDate);
 
 
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
         List<Appointment> ipdAppointments = appointments.stream()
@@ -811,7 +807,7 @@ public class ReportsController {
         validateReportRange(startDate, endDate);
 
 
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
         List<Appointment> deptAppointments = appointments.stream()
@@ -925,7 +921,7 @@ public class ReportsController {
         validateReportRange(startDate, endDate);
 
 
-        UUID hospitalId = tenantContext.getCurrentHospitalId().orElse(null);
+        UUID hospitalId = tenantContext.requireHospitalId();
         List<Appointment> appointments = getAppointmentsInRange(hospitalId, startDate, endDate);
 
         List<Appointment> docAppointments = appointments.stream()

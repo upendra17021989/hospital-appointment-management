@@ -43,4 +43,10 @@ public interface PrescriptionRepo extends JpaRepository<Prescription, UUID> {
     Optional<Prescription> findByHospitalOrDoctorOrPatientHospitalIdAndId(
             @Param("hospitalId") UUID hospitalId,
             @Param("id") UUID id);
+
+    @Query("SELECT p FROM Prescription p WHERE " +
+            "(p.hospital.id = :hospitalId OR p.doctor.hospital.id = :hospitalId OR p.patient.hospital.id = :hospitalId) " +
+            "ORDER BY p.createdAt DESC")
+    List<Prescription> findByHospitalOrDoctorOrPatientHospitalIdOrderByCreatedAtDesc(
+            @Param("hospitalId") UUID hospitalId);
 }

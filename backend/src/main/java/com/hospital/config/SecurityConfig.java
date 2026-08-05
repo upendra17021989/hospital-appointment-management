@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -37,20 +38,11 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
         "/auth/**",
         "/hospitals/public",
-        "/departments",
-        "/departments/**",
-        "/doctors",
-        "/doctors/**",
-        "/appointments",
-        "/appointments/**",
-        "/enquiries",
-        "/patients",
-        "/subscriptions/plans",
         "/actuator/health",
         "/v3/api-docs/**",
         "/swagger-ui/**",
         "/swagger-ui.html",
-        "/payments/webhook",
+        "/payments/webhook"
     };
 
     private static final String[] HOSPITAL_ADMIN_ENDPOINTS = {
@@ -76,6 +68,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                .requestMatchers(HttpMethod.GET, "/departments", "/departments/**", "/doctors", "/doctors/**", "/subscriptions/plans").permitAll()
+                .requestMatchers(HttpMethod.POST, "/appointments", "/enquiries", "/patients").permitAll()
                 .requestMatchers(HOSPITAL_ADMIN_ENDPOINTS).hasAnyRole("HOSPITAL_ADMIN", "SUPER_ADMIN")
                 .requestMatchers(STAFF_ENDPOINTS).hasAnyRole("STAFF", "RECEPTIONIST", "DOCTOR", "HOSPITAL_ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
