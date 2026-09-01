@@ -29,9 +29,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final UserDetailsServiceImpl userDetailsService; // ← use impl, not UserRepo
+    private final UserDetailsServiceImpl userDetailsService; // Ã¢â€ Â use impl, not UserRepo
     private final JwtAuthFilter jwtAuthFilter;
     private final SecurityAuditFilter securityAuditFilter;
+    private final org.springframework.beans.factory.ObjectProvider<com.hospital.security.ModuleAccessFilter> moduleAccessFilterProvider;
 
     @Value("${app.security.require-https:false}")
     private boolean requireHttps;
@@ -87,6 +88,11 @@ public class SecurityConfig {
                     .includeSubDomains(true)
                     .maxAgeInSeconds(31536000)));
 
+        com.hospital.security.ModuleAccessFilter moduleFilter = moduleAccessFilterProvider.getIfAvailable();
+        if (moduleFilter != null) {
+            http.addFilterAfter(moduleFilter, JwtAuthFilter.class);
+        }
+
         if (requireHttps) {
             http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
         }
@@ -96,7 +102,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService); // ← injected directly
+        provider.setUserDetailsService(userDetailsService); // Ã¢â€ Â injected directly
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }

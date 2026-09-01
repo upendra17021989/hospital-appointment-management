@@ -6,6 +6,7 @@ import { ToastProvider } from './context/ToastContext';
 import Sidebar from './components/Sidebar';
 import SubscriptionBanner from './components/SubscriptionBanner';
 import RoleGuard from './components/RoleGuard';
+import ModuleGuard from './components/ModuleGuard';
 import Dashboard        from './pages/Dashboard';
 import BookAppointment  from './pages/BookAppointment';
 import Appointments     from './pages/Appointments';
@@ -28,6 +29,7 @@ import HospitalVerification from './pages/HospitalVerification';
 import LegalAgreements from './pages/LegalAgreements';
 import LegalReview from './pages/LegalReview';
 import UserManual from './pages/UserManual';
+import ModuleManagement from './pages/ModuleManagement';
 
 
 const Login  = React.lazy(() => import('./pages/Login'));
@@ -41,7 +43,7 @@ const RequireAuth = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" state={{ from: location }} replace />;
 };
 
-const ProtectedRoute = ({ component: Component, roles, children }) => {
+const ProtectedRoute = ({ component: Component, roles, module }) => {
   if (Component) {
     return (
       <RequireAuth>
@@ -61,26 +63,27 @@ const ROUTE_CONFIG = [
   { path: '/', redirectTo: '/dashboard' },
   { path: '/dashboard', component: Dashboard, roles: [], authRequired: true },
   { path: '/book-appointment', component: BookAppointment, roles: [], authRequired: true },
-  { path: '/appointments', component: Appointments, roles: [], authRequired: true },
+  { path: '/appointments', component: Appointments, roles: [], module: 'APPOINTMENTS', authRequired: true },
   { path: '/enquiries', component: Enquiries, roles: [], authRequired: true },
   { path: '/doctors', component: Doctors, roles: [], authRequired: true },
   { path: '/doctor-management', component: DoctorManagement, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/user-management', component: UserManagement, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/user-management', component: UserManagement, module: 'USER_MANAGEMENT', roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/hospital-settings', component: HospitalSettings, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/hospital-verification', component: HospitalVerification, roles: ['SUPER_ADMIN'], authRequired: true },
   { path: '/legal-agreements', component: LegalAgreements, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/legal-review', component: LegalReview, roles: ['SUPER_ADMIN'], authRequired: true },
+  { path: '/module-management', component: ModuleManagement, roles: ['SUPER_ADMIN'], authRequired: true },
   { path: '/departments', component: Departments, roles: [], authRequired: true },
   { path: '/patient-form', component: PatientForm, roles: ['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/patients', component: Patients, roles: ['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/patients', component: Patients, module: 'PATIENTS', roles: ['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/patients/:id', component: PatientDetail, roles: ['DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/prescription-form', component: PrescriptionForm, roles: ['DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/medical-certificates', component: MedicalCertificates, roles: ['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/subscription-plans', component: SubscriptionPlans, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/billing-history', component: BillingHistory, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/prescription-form', component: PrescriptionForm, module: 'CLINICAL', roles: ['DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/medical-certificates', component: MedicalCertificates, module: 'CLINICAL', roles: ['STAFF', 'RECEPTIONIST', 'DOCTOR', 'HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/subscription-plans', component: SubscriptionPlans, module: 'BILLING_PLANS', roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/billing-history', component: BillingHistory, module: 'BILLING_PLANS', roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
   { path: '/payment-receipt', component: BillingReceiptViewer, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/reports', component: Reports, roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
-  { path: '/consultation-receipts', component: React.lazy(() => import('./pages/ConsultationReceipts')), roles: ['STAFF','RECEPTIONIST','DOCTOR','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN'], authRequired: true },
+  { path: '/reports', component: Reports, module: 'REPORTS', roles: ['HOSPITAL_ADMIN', 'SUPER_ADMIN'], authRequired: true },
+  { path: '/consultation-receipts', module: 'CONSULTATION_BILLING', component: React.lazy(() => import('./pages/ConsultationReceipts')), roles: ['STAFF','RECEPTIONIST','DOCTOR','ACCOUNTANT','HOSPITAL_ADMIN','SUPER_ADMIN'], authRequired: true },
   { path: '/user-manual', component: UserManual, roles: [], authRequired: true },
 ];
 
@@ -161,12 +164,12 @@ const AppRoutes = () => {
       } />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/" element={<Layout />}>
-        {ROUTE_CONFIG.filter(r => r.authRequired).map(({ path, component, roles }) => (
+        {ROUTE_CONFIG.filter(r => r.authRequired).map(({ path, component, roles, module }) => (
           path !== '/' && (
             <Route
               key={path}
               path={path}
-              element={<ProtectedRoute component={component} roles={roles} />}
+              element={<ProtectedRoute component={component} roles={roles} module={module} />}
             />
           )
         ))}

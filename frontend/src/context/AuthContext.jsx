@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
     try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
   });
   const [loading, setLoading] = useState(false);
+  const [enabledModules, setEnabledModules] = useState({});
   const [lastActivity, setLastActivity] = useState(Date.now());
 
   const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes inactivity
@@ -65,6 +66,16 @@ export const AuthProvider = ({ children }) => {
       .finally(() => setLoading(false));
   }, []); // run once on mount
 
+  useEffect(() => {
+    if (!token) { setEnabledModules({}); return; }
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+    fetch(`${API_BASE}/module-settings/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(data => { if (data.success) setEnabledModules(data.data || {}); })
+      .catch(() => setEnabledModules({}));
+  }, [token]);
+
+  const isModuleEnabled = useCallback(key => user?.role === 'SUPER_ADMIN' || enabledModules[key] !== false, [enabledModules, user]);
+
   // Reset activity on login
   useEffect(() => {
     if (token) {
@@ -99,6 +110,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{
       token, user, isAuthenticated, loading,
       subscription, isTrial, isExpired, planSlug, daysUntilExpiry, prescriptionsEnabled,
+      enabledModules, isModuleEnabled,
       saveAuth, logout
     }}>
       {children}

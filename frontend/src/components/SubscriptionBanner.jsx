@@ -4,16 +4,16 @@ import { useAuth } from '../context/AuthContext';
 
 export default function SubscriptionBanner() {
   const navigate = useNavigate();
-  const { isAuthenticated, isTrial, isExpired, daysUntilExpiry, planSlug } = useAuth();
+  const { isAuthenticated, isTrial, isExpired, daysUntilExpiry, planSlug, isModuleEnabled } = useAuth();
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || !isModuleEnabled('BILLING_PLANS')) return null;
 
-  // Expired — blocking banner
+  // Expired - blocking banner
   if (isExpired) {
     return (
       <div className="subscription-banner banner-danger">
         <div className="banner-content">
-          <span className="banner-icon">⚠️</span>
+          <span className="banner-icon">&#9888;</span>
           <span className="banner-text">
             <strong>Subscription expired.</strong> Please renew to continue using all features.
           </span>
@@ -30,7 +30,7 @@ export default function SubscriptionBanner() {
     return (
       <div className={`subscription-banner ${daysUntilExpiry <= 2 ? 'banner-warning' : 'banner-info'}`}>
         <div className="banner-content">
-          <span className="banner-icon">⏳</span>
+          <span className="banner-icon">&#9203;</span>
           <span className="banner-text">
             Your trial ends in <strong>{daysUntilExpiry} day{daysUntilExpiry !== 1 ? 's' : ''}</strong>. Upgrade to keep full access.
           </span>
@@ -47,7 +47,7 @@ export default function SubscriptionBanner() {
     return (
       <div className="subscription-banner banner-info">
         <div className="banner-content">
-          <span className="banner-icon">🚀</span>
+          <span className="banner-icon">&#128640;</span>
           <span className="banner-text">
             You're on the <strong>Free plan</strong>. Upgrade to unlock prescriptions, SMS, and more.
           </span>

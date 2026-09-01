@@ -18,8 +18,8 @@ const getNavGroups = (role) => {
       key: 'appointments',
       label: 'Appointments',
       items: [
-        { id: 'book',         label: 'Book Appointment', icon: 'appointment' },
-        { id: 'appointments', label: 'All Appointments', icon: 'appointment' },
+        { id: 'book',         label: 'Book Appointment', icon: 'appointment', module: 'APPOINTMENTS' },
+        { id: 'appointments', label: 'All Appointments', icon: 'appointment', module: 'APPOINTMENTS' },
       ],
     },
   ];
@@ -32,8 +32,8 @@ const getNavGroups = (role) => {
       key: 'patients',
       label: 'Patients',
       items: [
-        { id: 'patient-form', label: 'Register Patient', icon: 'patient' },
-        { id: 'patients',     label: 'Patient Records',  icon: 'patient' },
+        { id: 'patient-form', label: 'Register Patient', icon: 'patient', module: 'PATIENTS' },
+        { id: 'patients',     label: 'Patient Records',  icon: 'patient', module: 'PATIENTS' },
       ],
     });
   }
@@ -43,7 +43,7 @@ const getNavGroups = (role) => {
       key: 'consultation-receipts',
       label: 'Consultation',
       items: [
-        { id: 'consultation-receipts', label: 'Consultation Receipts', icon: 'receipt' },
+        { id: 'consultation-receipts', label: 'Consultation Receipts', icon: 'receipt', module: 'CONSULTATION_BILLING' },
       ],
     });
   }
@@ -75,7 +75,7 @@ const getNavGroups = (role) => {
       key: 'reports',
       label: 'Reports',
       items: [
-        { id: 'reports', label: 'Patient Reports', icon: 'dashboard' },
+        { id: 'reports', label: 'Patient Reports', icon: 'dashboard', module: 'REPORTS' },
       ],
     });
   }
@@ -86,11 +86,12 @@ const getNavGroups = (role) => {
       label: 'Management',
       items: [
         { id: 'doctor-management', label: 'Manage Doctors', icon: 'doctor' },
-        { id: 'user-management',   label: 'Manage Users',   icon: 'user' },
+        { id: 'user-management',   label: 'Manage Users',   icon: 'user', module: 'USER_MANAGEMENT' },
         { id: 'hospital-settings', label: 'Hospital Settings', icon: 'department' },
         { id: 'departments',       label: 'Departments',    icon: 'department' },
         ...(role === 'SUPER_ADMIN' ? [{ id: 'hospital-verification', label: 'Hospital Verification', icon: 'receipt' }] : []),
         ...(role === 'SUPER_ADMIN' ? [{ id: 'legal-review', label: 'Legal Review', icon: 'receipt' }] : []),
+        ...(role === 'SUPER_ADMIN' ? [{ id: 'module-management', label: 'Module Management', icon: 'department' }] : []),
       ],
     });
   }
@@ -100,8 +101,8 @@ const getNavGroups = (role) => {
       key: 'billing',
       label: 'Billing & Plans',
       items: [
-        { id: 'subscription-plans', label: 'Plans', icon: 'appointment' },
-        { id: 'billing-history', label: 'Billing History', icon: 'patient' },
+        { id: 'subscription-plans', label: 'Plans', icon: 'appointment', module: 'BILLING_PLANS' },
+        { id: 'billing-history', label: 'Billing History', icon: 'patient', module: 'BILLING_PLANS' },
       ],
     });
   }
@@ -140,10 +141,12 @@ const getNavGroups = (role) => {
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, isModuleEnabled } = useAuth();
   const { role } = useRole();
 
-  const navGroups = getNavGroups(role);
+  const navGroups = getNavGroups(role).map(group => ({
+    ...group, items: group.items.filter(item => !item.module || isModuleEnabled(item.module)),
+  })).filter(group => group.items.length > 0);
 
   const getPath = (id) => {
     return id === 'book' ? '/book-appointment' : `/${id}`;
@@ -182,7 +185,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       {user?.hospital && (
         <div style={{ padding: '12px 12px 0' }}>
           <div className="sidebar-hospital">
-            <div className="sidebar-hospital-name">🏥 {user.hospital.name}</div>
+            <div className="sidebar-hospital-name">&#127973; {user.hospital.name}</div>
             {user.hospital.city && (
               <div className="sidebar-hospital-city">{user.hospital.city}</div>
             )}
@@ -211,7 +214,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         ))}
       </nav>
 
-      {/* Footer — user info + logout - Always visible at bottom */}
+      {/* Footer - user info + logout - Always visible at bottom */}
       <div className="sidebar-footer">
         {user && (
           <div style={{ padding: '14px 24px 6px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -242,7 +245,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           Sign Out
         </button>
         <div style={{ padding: '8px 24px 16px', fontSize: 11, color: 'rgba(240,235,227,0.2)' }}>
-          © 2026 MediCare+
+          &copy; 2026 MediCare+
         </div>
       </div>
     </aside>
