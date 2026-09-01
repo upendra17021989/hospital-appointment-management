@@ -4,9 +4,9 @@ import { useAuth } from '../context/AuthContext';
 
 export default function SubscriptionBanner() {
   const navigate = useNavigate();
-  const { isAuthenticated, isTrial, isExpired, daysUntilExpiry, planSlug, isModuleEnabled } = useAuth();
+  const { user, isAuthenticated, isTrial, isExpired, daysUntilExpiry, planSlug, isModuleEnabled } = useAuth();
 
-  if (!isAuthenticated || !isModuleEnabled('BILLING_PLANS')) return null;
+  if (!isAuthenticated || user?.role === 'SUPER_ADMIN' || !isModuleEnabled('BILLING_PLANS')) return null;
 
   // Expired - blocking banner
   if (isExpired) {

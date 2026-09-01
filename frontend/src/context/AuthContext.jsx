@@ -4,11 +4,17 @@ const AuthContext = createContext(null);
 
 const TOKEN_KEY   = 'hms_token';
 const USER_KEY    = 'hms_user';
+const THEME_KEY   = 'hms_theme';
+const VALID_THEMES = ['heritage', 'ocean', 'indigo'];
 
 export const AuthProvider = ({ children }) => {
   const [token,   setToken]   = useState(() => localStorage.getItem(TOKEN_KEY));
   const [user,    setUser]    = useState(() => {
     try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
+  });
+  const [theme, setThemeState] = useState(() => {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    return VALID_THEMES.includes(savedTheme) ? savedTheme : 'heritage';
   });
   const [loading, setLoading] = useState(false);
   const [enabledModules, setEnabledModules] = useState({});
@@ -18,6 +24,16 @@ export const AuthProvider = ({ children }) => {
   const CHECK_INTERVAL_MS = 30 * 1000; // 30 seconds check
 
   const isAuthenticated = !!token && !!user;
+
+  const setTheme = useCallback((nextTheme) => {
+    if (!VALID_THEMES.includes(nextTheme)) return;
+    localStorage.setItem(THEME_KEY, nextTheme);
+    setThemeState(nextTheme);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   // Subscription helpers derived from user data
   const subscription = useMemo(() => user?.subscription || null, [user]);
@@ -110,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{
       token, user, isAuthenticated, loading,
       subscription, isTrial, isExpired, planSlug, daysUntilExpiry, prescriptionsEnabled,
-      enabledModules, isModuleEnabled,
+      enabledModules, isModuleEnabled, theme, setTheme,
       saveAuth, logout
     }}>
       {children}

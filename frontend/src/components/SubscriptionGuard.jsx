@@ -7,9 +7,11 @@ import { useAuth } from '../context/AuthContext';
  * SUPER_ADMIN always passes. Free-plan users pass but may see upsells.
  */
 export default function SubscriptionGuard({ children, requireFeature }) {
-  const { isAuthenticated, isExpired, planSlug, prescriptionsEnabled } = useAuth();
+  const { user, isAuthenticated, isExpired, planSlug, prescriptionsEnabled } = useAuth();
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  if (user?.role === 'SUPER_ADMIN') return children;
 
   // Block if fully expired (not even free plan access)
   if (isExpired && planSlug !== 'free') {

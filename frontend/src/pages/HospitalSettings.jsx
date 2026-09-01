@@ -31,6 +31,12 @@ const emptyProfile = {
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
+const themeOptions = [
+  { id: 'heritage', name: 'Warm Heritage', description: 'Warm terracotta with classic neutral surfaces.', colors: ['#c5522a', '#d4a84b', '#1a1410'] },
+  { id: 'ocean', name: 'Clinical Ocean', description: 'Calm teal and blue for a clinical workspace.', colors: ['#087f8c', '#38a3a5', '#12343b'] },
+  { id: 'indigo', name: 'Modern Indigo', description: 'Focused indigo with a polished violet accent.', colors: ['#4f46e5', '#8b5cf6', '#1e1b4b'] },
+];
+
 const documentTypes = [
   ['HOSPITAL_REGISTRATION_CERTIFICATE', 'Hospital Registration Certificate'],
   ['CLINICAL_ESTABLISHMENT_REGISTRATION', 'Clinical Establishment Registration'],
@@ -43,7 +49,7 @@ const documentTypes = [
 ];
 
 const HospitalSettings = () => {
-  const { token, user, saveAuth } = useAuth();
+  const { token, user, saveAuth, theme, setTheme } = useAuth();
   const [form, setForm] = useState(emptyProfile);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -226,6 +232,37 @@ const HospitalSettings = () => {
           {error}
         </div>
       )}
+
+      <section className="theme-settings" aria-labelledby="theme-settings-title">
+        <div className="theme-settings__heading">
+          <div>
+            <h2 id="theme-settings-title" className="card-title">Appearance</h2>
+            <p>Choose the workspace theme for your admin account.</p>
+          </div>
+          <span className="badge badge-active">Applied instantly</span>
+        </div>
+        <div className="theme-options" role="radiogroup" aria-label="Application theme">
+          {themeOptions.map((option) => (
+            <button
+              type="button"
+              key={option.id}
+              className={`theme-option ${theme === option.id ? 'is-selected' : ''}`}
+              role="radio"
+              aria-checked={theme === option.id}
+              onClick={() => setTheme(option.id)}
+            >
+              <span className="theme-option__swatches" aria-hidden="true">
+                {option.colors.map((color) => <span key={color} style={{ background: color }} />)}
+              </span>
+              <span className="theme-option__copy">
+                <strong>{option.name}</strong>
+                <small>{option.description}</small>
+              </span>
+              <span className="theme-option__check" aria-hidden="true">{theme === option.id ? '✓' : ''}</span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <form onSubmit={saveProfile}>
         <div className="table-wrap" style={{ padding: 20 }}>
