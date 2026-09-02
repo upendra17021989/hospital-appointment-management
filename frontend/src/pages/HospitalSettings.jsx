@@ -35,6 +35,7 @@ const themeOptions = [
   { id: 'heritage', name: 'Warm Heritage', description: 'Warm terracotta with classic neutral surfaces.', colors: ['#c5522a', '#d4a84b', '#1a1410'] },
   { id: 'ocean', name: 'Clinical Ocean', description: 'Calm teal and blue for a clinical workspace.', colors: ['#087f8c', '#38a3a5', '#12343b'] },
   { id: 'indigo', name: 'Modern Indigo', description: 'Focused indigo with a polished violet accent.', colors: ['#4f46e5', '#8b5cf6', '#1e1b4b'] },
+  { id: 'snowwhite', name: 'Snow White', description: 'Crisp white surfaces with cool, minimal accents.', colors: ['#ffffff', '#e8eef5', '#334155'] },
 ];
 
 const documentTypes = [

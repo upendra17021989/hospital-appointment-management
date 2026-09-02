@@ -5,7 +5,7 @@ const AuthContext = createContext(null);
 const TOKEN_KEY   = 'hms_token';
 const USER_KEY    = 'hms_user';
 const THEME_KEY   = 'hms_theme';
-const VALID_THEMES = ['heritage', 'ocean', 'indigo'];
+const VALID_THEMES = ['heritage', 'ocean', 'indigo', 'snowwhite'];
 
 export const AuthProvider = ({ children }) => {
   const [token,   setToken]   = useState(() => localStorage.getItem(TOKEN_KEY));

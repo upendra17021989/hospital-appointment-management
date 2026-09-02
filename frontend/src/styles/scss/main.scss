@@ -31,6 +31,7 @@
 
 :root[data-theme='ocean']{--bg:#eaf4f4;--bg-card:#f7fbfb;--bg-dark:#12343b;--surface:#fff;--surface-muted:#e3f0f0;--primary:#087f8c;--primary-light:#0e9aa7;--accent:#2f7d6d;--accent-light:#4fa590;--gold:#e0a82e;--text:#173236;--text-muted:#60777a;--text-subtle:#829597;--border:#c7dcdc;--border-strong:#a8c7c7}
 :root[data-theme='indigo']{--bg:#f0effa;--bg-card:#faf9ff;--bg-dark:#1e1b4b;--surface:#fff;--surface-muted:#eceafd;--primary:#4f46e5;--primary-light:#655cf0;--accent:#7c3aed;--accent-light:#9461ef;--gold:#d59a28;--text:#27233f;--text-muted:#716d87;--text-subtle:#928fa4;--border:#d8d5e8;--border-strong:#bbb6d2}
+:root[data-theme='snowwhite']{--bg:#f8fafc;--bg-card:#fff;--bg-dark:#334155;--surface:#fff;--surface-muted:#f1f5f9;--primary:#475569;--primary-light:#64748b;--accent:#0f766e;--accent-light:#0d9488;--gold:#ca8a04;--text:#0f172a;--text-muted:#64748b;--text-subtle:#94a3b8;--border:#e2e8f0;--border-strong:#cbd5e1}
 body{background:var(--bg);color:var(--text);transition:background-color var(--duration-normal),color var(--duration-normal)}
 .sidebar,.mobile-header{background:var(--bg-dark)}
 .page-title,.card-title,.stat-value,label{color:var(--text)}
@@ -47,7 +48,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0
 .theme-settings{padding:20px;margin-bottom:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
 .theme-settings__heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
 .theme-settings__heading .card-title{margin-bottom:2px}.theme-settings__heading p{color:var(--text-muted);font-size:13px}
-.theme-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.theme-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .theme-option{min-width:0;padding:14px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);text-align:left;cursor:pointer;display:grid;grid-template-columns:auto 1fr 20px;align-items:center;gap:12px;transition:border-color var(--duration-normal),box-shadow var(--duration-normal),transform var(--duration-normal)}
 .theme-option:hover{transform:translateY(-1px);border-color:var(--primary)}
 .theme-option.is-selected{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 13%,transparent)}
