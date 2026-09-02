@@ -95,6 +95,9 @@
   bottom: 0;
   z-index: $z-sidebar;
   transition: transform $duration-slow $ease-standard;
+  // Preserve the browser's native sub-pixel rendering for small menu text.
+  -webkit-font-smoothing: auto;
+  text-rendering: auto;
 
   @include responsive-mobile {
     transform: translateX(-100%);
@@ -142,7 +145,8 @@
 
   &-tagline {
     font-size: 11px;
-    color: rgba(240, 235, 227, 0.45);
+    font-weight: 600;
+    color: rgba(240, 235, 227, 0.72);
     text-transform: uppercase;
     letter-spacing: 1.5px;
     margin-top: 4px;
@@ -189,9 +193,9 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: rgba(240, 235, 227, 0.3);
+  color: rgba(240, 235, 227, 0.62);
   padding: 12px 24px 6px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .nav-item {
@@ -199,7 +203,7 @@
   align-items: center;
   gap: 12px;
   padding: 11px 24px;
-  color: rgba(240, 235, 227, 0.65);
+  color: rgba(240, 235, 227, 0.86);
   cursor: pointer;
   border: none;
   background: none;
@@ -207,17 +211,18 @@
   text-align: left;
   font-family: $font-body;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
   border-left: 3px solid transparent;
 
   &:hover {
-    color: #f0ebe3;
-    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.09);
   }
 
   &.active {
-    color: #f0ebe3;
+    color: #ffffff;
+    font-weight: 700;
     background: rgba($primary, 0.15);
     border-left-color: $primary;
   }

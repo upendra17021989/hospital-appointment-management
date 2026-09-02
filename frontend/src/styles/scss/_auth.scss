@@ -94,7 +94,7 @@
 }
 
 .auth-hero-sub {
-  font-size: 14px;
+  font-size: 13px;
   color: rgba(240, 235, 227, 0.6);
   line-height: 1.7;
   margin-bottom: 36px;
@@ -291,7 +291,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   flex-shrink: 0;
   position: relative;
@@ -429,7 +429,7 @@
 .sidebar-hospital-name {
   font-weight: 700;
   font-size: 13px;
-  color: #f0ebe3;
+  color: #ffffff;
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -437,8 +437,9 @@
 }
 
 .sidebar-hospital-city {
-  font-size: 11px;
-  color: rgba(240, 235, 227, 0.45);
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(240, 235, 227, 0.72);
 }
 
 .sidebar-logout {
@@ -446,15 +447,15 @@
   align-items: center;
   gap: 10px;
   padding: 10px 24px;
-  color: rgba(240, 235, 227, 0.5);
+  color: rgba(240, 235, 227, 0.78);
   cursor: pointer;
   border: none;
   background: none;
   width: 100%;
   text-align: left;
   font-family: $font-body;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   transition: all 0.2s;
 
   &:hover {
